@@ -4,7 +4,7 @@ import {setImmediate} from 'node:timers/promises';
 import {completionFixture} from './completion-helper.js';
 import {ids} from '../packages/test-fixtures/fixtures.js';
 
-test('Protected access evidence commits before the response is released, even with a delayed database',async()=>{
+test('Protected access evidence commits before the response is released, even with a delayed database',{timeout:120000},async()=>{
   const f=await completionFixture();
   let release!:()=>void,entered!:()=>void;
   const gate=new Promise<void>(resolve=>{release=resolve;}),started=new Promise<void>(resolve=>{entered=resolve;});
@@ -26,5 +26,33 @@ test('Protected access evidence commits before the response is released, even wi
     assert.equal(event?.outcome,'allowed');
   } finally {
     release();await response;await f.close();
+  }
+});
+
+test('A failed protected-access commit withholds content, exposes no database details and can be retried',{timeout:120000},async()=>{
+  const f=await completionFixture();
+  const transaction=f.db.transaction.bind(f.db);
+  try {
+    const id=await f.job('100.00',false);
+    const count=async()=>Number((await f.db.query('SELECT count(*) AS n FROM protected_access_events WHERE job_id=$1',[id]))[0]!.n);
+    const before=await count();
+    f.db.transaction=fn=>transaction(tx=>fn({...tx,query:async<T extends Record<string,unknown>>(sql:string,params:unknown[]=[])=>{
+      if(sql.startsWith('INSERT INTO protected_access_events'))throw new Error('PRIVATE SQL PARAMETERS AND BANK DETAILS');
+      return tx.query<T>(sql,params);
+    }}));
+    const failed=await f.get('workspaces/'+id+'/comparison',f.mcst);
+    assert.equal(failed.statusCode,500);
+    assert.equal(failed.json().error.code,'INTERNAL_ERROR');
+    assert.doesNotMatch(failed.body,/PRIVATE|BANK|quotes|amountCents|plumbing/);
+    assert.equal(await count(),before,'The rejected access event must not be partially committed');
+    f.db.transaction=transaction;
+    f.okay(await f.get('workspaces/'+id+'/comparison',f.mcst));
+    assert.equal(await count(),before+1,'A successful retry commits exactly one access event');
+    const denied=await f.get('workspaces/'+id+'/comparison',f.rival);
+    assert.ok([403,404].includes(denied.statusCode));
+    const [event]=await f.db.query('SELECT outcome FROM protected_access_events WHERE job_id=$1 AND actor_id=(SELECT id FROM users WHERE email=$2)',[id,'completionrival@example.test']);
+    assert.equal(event?.outcome,'denied');
+  } finally {
+    f.db.transaction=transaction;await f.close();
   }
 });

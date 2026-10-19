@@ -1,5 +1,7 @@
 # Local PostgreSQL setup — 19 October 2026
 
+**Follow-up audit:** [corrections and stronger verification](LOCAL_POSTGRES_AUDIT_2026_10_19.md) supersede the original shared-host preview, inherited Compose settings and limited backup check below. The normal app was subsequently restarted on current source after a verified cold backup. The source checkpoint `067b7f6` completed [GitHub verification successfully](https://github.com/jerieltestai-maker/QF-codex-chap1-20/actions/runs/39199618124); the follow-up source has its own checks.
+
 The owner installed Docker Desktop and explicitly authorised configuration, fictional seeds and a version-controlled record. This is local development infrastructure, not a production release or a decision about hosted providers. [Repeatable commands](SETUP_GUIDE.md) are implemented in `tools/local-postgres.ps1`.
 
 ## Runtime and isolation

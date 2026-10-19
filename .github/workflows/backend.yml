@@ -1,8 +1,14 @@
 name: Backend foundations
 on: [push, pull_request]
+permissions:
+  contents: read
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.ref_name }}
+  cancel-in-progress: true
 jobs:
   verify:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     services:
       postgres:
         image: postgres:18
@@ -32,3 +38,11 @@ jobs:
         run: pnpm test
         env:
           TEST_DATABASE_URL: postgresql://quotefix:test-only@127.0.0.1:5432/quotefix_test
+  windows-helper:
+    runs-on: windows-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Windows PostgreSQL helper failure and isolation checks
+        shell: powershell
+        run: .\tools\test-local-postgres.ps1

@@ -6,20 +6,31 @@ The owner designated [QF-codex-chap1-20](https://github.com/jerieltestai-maker/Q
 
 The owner installed Docker Desktop and authorised local configuration and fictional seed data. WSL 2 was verified by launching Linux; restarting Docker cleared its earlier stale WSL prerequisite failure. PostgreSQL 18 is healthy in the existing Compose service. See [the execution record](LOCAL_POSTGRES_2026_10_19.md) for versions, seed inventory, verification, backup and remaining limits. No paid cloud service is required for this setup.
 
-Use the checked-in PowerShell helper from the repository root. It discovers Docker on PATH or in its per-user/system installation, uses the existing Compose volume, waits for database health and creates the test database only when absent. It does not edit `.env`, reset a database, migrate PGlite data or change the normal application on port 3000. Node.js 24 and installed project dependencies are required; Docker Desktop's Linux engine must be running.
+Use the checked-in PowerShell helper from the repository root. It selects the first Docker/Node executable, discovers Docker's per-user/system installation when needed, enforces Node.js 24, and verifies that `desktop-linux` uses the local Docker Desktop Linux named pipe. Explicit Compose file/project/directory/example-environment arguments keep inherited Docker/Compose settings from redirecting commands. The fixed `qfwebapp` project retains the existing volume. The helper does not edit `.env`, reset a database, migrate PGlite data or switch the normal app's database. Installed project dependencies are required; Docker Desktop's Linux engine must be running.
 
 ```powershell
 # Apply migrations and install/recheck the non-destructive fictional baseline:
 powershell -NoProfile -ExecutionPolicy Bypass -File tools/local-postgres.ps1 setup
 # Run the suite against isolated schemas in quotefix_test:
 powershell -NoProfile -ExecutionPolicy Bypass -File tools/local-postgres.ps1 test
-# Start a separate PostgreSQL preview, with local advice, on port 3001:
+# Start a separate PostgreSQL preview, with local advice, at http://localhost:3001:
 powershell -NoProfile -ExecutionPolicy Bypass -File tools/local-postgres.ps1 dev
 # Inspect the service:
 powershell -NoProfile -ExecutionPolicy Bypass -File tools/local-postgres.ps1 status
+# Create an immutable local dump, restore the saved Windows copy into a fresh database,
+# and compare all public-table rows against the dump's exported source snapshot:
+powershell -NoProfile -ExecutionPolicy Bypass -File tools/local-postgres.ps1 backup
+# Stop only this local project's PostgreSQL service, retaining its volume:
+powershell -NoProfile -ExecutionPolicy Bypass -File tools/local-postgres.ps1 stop
+# Run the Windows helper's isolated success/failure checks (no Docker needed):
+powershell -NoProfile -ExecutionPolicy Bypass -File tools/test-local-postgres.ps1
 ```
 
-The helper scopes environment overrides to its own execution and restores any previous process values. The existing loopback-only Compose password `local-only` is a development fixture, never a production credential. `quotefix_development` holds the fictional preview, while `quotefix_test` hosts temporary schemas created and removed by individual tests. The persistent volume is `qfwebapp_quotefix_dev` on this checkout. Stop with `docker compose stop postgres`; start again with the helper. Do not use `docker compose down -v`: that removes the database volume. Do not delete the current PGlite directory or copy its engine files into a server PostgreSQL directory.
+The helper restores the caller's environment, PATH and working directory after success or failure. Its `test` action also sets the default environment/database to **test**, disables the local account helper, and uses temporary test schemas; implicit configuration must not target development. The loopback-only Compose password `local-only` is a development fixture. `quotefix_development` holds the fictional preview; `quotefix_test` hosts test schemas. The persistent volume is `qfwebapp_quotefix_dev`. Start again with `setup`. Do not use `docker compose down -v`: that removes the database volume. Do not delete the current PGlite directory or copy its engine files into a server PostgreSQL directory.
+
+**Open the PostgreSQL preview at `http://localhost:3001`, and the existing app at `http://127.0.0.1:3000`.** Cookies are scoped by hostname, not port. Using `127.0.0.1` for both would let their same-named session cookies replace one another. The preview still binds only to the IPv4 loopback interface.
+
+Backups and manifests go to ignored, uniquely named `work/postgres-backups/<id>/` directories. Each restore uses a new `quotefix_restorecheck_<id>` database and never overwrites an existing one. A read-only repeatable-read snapshot supplies both the source fingerprints and `pg_dump`; the saved Windows dump is copied back and restored before every table's row count/content digest is compared. A successful manifest includes the dump checksum and exact restored database name. The database-only check does not back up local helper encryption keys, security mailbox or external evidence; preserve those separately before genuine cross-machine recovery. Old dumps/check databases remain available for inspection; this command does not delete them or implement a production backup/retention policy.
 
 The preview seed supplies six accounts (`admin`, `cm`, `cmtwo`, `mcst`, `mcsttwo`, `contractor` at `example.test`), two estates, one **unverified** contractor organisation and the approved development warning defaults. Use the local account picker or the fictional password documented in `packages/test-fixtures/fixtures.ts`. It intentionally creates no jobs, payments or reputation. Trade eligibility starts unconfigured and the contractor still needs the ordinary approval workflow; fixture setup does not invent verification evidence.
 

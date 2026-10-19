@@ -1,5 +1,5 @@
 {
-  "version": "ch01-ch02-v1",
+  "version": "ch01-ch18-v2",
   "provenance": "fictional",
   "environments": [
     "development",
@@ -8,10 +8,11 @@
   "liveUse": false,
   "scenarios": [
     "two estates for isolation",
-    "equal CM block labels",
-    "equal MCST titles",
+    "equal CM authority with different block labels",
+    "equal MCST authority with different titles",
     "platform admin",
-    "unverified contractor organisation"
+    "unverified contractor organisation",
+    "versioned estate warning settings: approved development defaults; relaxed fictional test policy"
   ],
   "idsSource": "fixtures.ts",
   "financialRecords": 0,

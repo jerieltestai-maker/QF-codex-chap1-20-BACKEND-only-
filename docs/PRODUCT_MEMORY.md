@@ -1,5 +1,11 @@
 # QuoteFix working product memory
 
+## PostgreSQL setup follow-up audit — 19 October 2026
+
+The owner requested another full audit and authorised fixes. [Audit findings and evidence](implementation/LOCAL_POSTGRES_AUDIT_2026_10_19.md) correct shared-host session cookies, inherited Docker/Compose targets, development defaults during tests, unsupported/multiple Node executables, narrow/non-repeatable backup evidence, missing audit-failure/Windows CI coverage and stale seed metadata. The PostgreSQL preview now uses `http://localhost:3001`, while the existing app uses `http://127.0.0.1:3000`. Eight isolated Windows helper checks and both adapters' two protected-access regressions passed. The complete corrected PostgreSQL helper run and fresh CI are tracked separately in the audit.
+
+The new repeatable backup command restored the actual Windows artifact into a fresh database and matched all 115 public tables/38 rows against the exact dump snapshot, with dump checksum recorded. Database-only scope excludes helper keys/mailbox/external evidence. The normal PGlite app was gracefully stopped, all 1,475 cold files copied and checksum-verified, then restarted on current source with the same `.env` bytes and database path (PID 32212). No reset/reseed, stale-marker removal or paid AI request occurred. PostgreSQL remains separate fictional data; no cloud provider, production release, scanning or open product policy was silently completed.
+
 ## Owner-authorised local Docker/PostgreSQL setup — 19 October 2026
 
 Final local verification: **232/232 PostgreSQL 18.6 records passed**, and **44/44 affected PGlite records passed** (overlap), with strict checks, compilation and documentation validation. A PostgreSQL preview passed readiness/login/context checks and was stopped; container restart preserved all seed counts, and the test database retained zero test schemas. The existing PGlite app remained healthy. Runtime source/setup is pushed in `5b5a1a1`; the execution record separates remote CI from these local results.
