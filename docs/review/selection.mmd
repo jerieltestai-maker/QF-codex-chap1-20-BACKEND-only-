@@ -1,0 +1,14 @@
+flowchart TB
+  s1["S1: CM freezes selection [C]"]:::c
+  s2["S2: MCST Reviewing selected Contractor [C]"]:::c
+  s3["S3: Rejected Contractor [C]"]:::c
+  w1["W1: Contractor prepares to start [C]"]:::c
+  c1["C1: CM or MCST cancels directly [C]"]:::c
+  s1 -->|"Above threshold"| s2
+  s1 -->|"At or below threshold"| w1
+  s2 -->|"MCST approves"| w1
+  s2 -->|"MCST rejects"| s3
+  s2 -.->|"Cancel before authorisation"| c1
+  classDef c fill:#dcfce7,stroke:#166534,color:#17211b
+  classDef p fill:#fef3c7,stroke:#92400e,color:#291c0c
+  classDef o fill:#fee2e2,stroke:#991b1b,color:#2a1111

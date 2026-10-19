@@ -1,0 +1,13 @@
+flowchart TB
+  q2["Q2: Comparing quotations [C]"]:::c
+  m1["M1: MCST acknowledges threshold [C]"]:::c
+  m2["M2: MCST selects and approves [C]"]:::c
+  w1["W1: Contractor prepares to start [C]"]:::c
+  q2 -->|"MCST selects above threshold"| m1
+  q2 -->|"MCST confirms at/below threshold"| m2
+  m1 -->|"Back; nothing committed"| q2
+  m1 -->|"Yes I know; select and approve"| m2
+  m2 -->|"Work authorised"| w1
+  classDef c fill:#dcfce7,stroke:#166534,color:#17211b
+  classDef p fill:#fef3c7,stroke:#92400e,color:#291c0c
+  classDef o fill:#fee2e2,stroke:#991b1b,color:#2a1111

@@ -1,0 +1,20 @@
+flowchart TB
+  p1["P1: MCST records payment [C]"]:::c
+  p2["P2: Contractor checks receipt [C]"]:::c
+  p3["P3: Unresolved payment [C]"]:::c
+  p4["P4: Payment received [C]"]:::c
+  p6["P6: Closed [C]"]:::c
+  e3["E3: Request Admin Support [C]"]:::c
+  p1 -->|"Proof and Payment Sent; notify"| p2
+  p2 -->|"Agreed partial balance"| p3
+  p3 -->|"Recorded transfer now needs receipt review"| p2
+  p3 -->|"Disputed payment"| e3
+  p2 -->|"Full receipt confirmed"| p4
+  p6 -.->|"Request Admin Support"| e3
+  p3 -->|"MCST must send remaining balance"| p1
+  p2 -.->|"Payment Issue"| e3
+  p4 -->|"Ordinary job: existing conditions satisfied"| p6
+  p1 -.->|"Request Admin Support"| e3
+  classDef c fill:#dcfce7,stroke:#166534,color:#17211b
+  classDef p fill:#fef3c7,stroke:#92400e,color:#291c0c
+  classDef o fill:#fee2e2,stroke:#991b1b,color:#2a1111

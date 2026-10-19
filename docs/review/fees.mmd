@@ -1,0 +1,14 @@
+flowchart TB
+  b1["B1: Contractor pays QuoteFix [C]"]:::c
+  b2["B2: Admin reconciles fee payment [C]"]:::c
+  b3["B3: Collecting overdue fees [C]"]:::c
+  b4["B4: QuoteFix fees settled [C]"]:::c
+  b1 -->|"Fee payment reported"| b2
+  b1 -->|"Deadline passes"| b3
+  b3 -->|"Payment evidence supplied"| b2
+  b2 -->|"Balance remains after deadline"| b3
+  b2 -->|"Full receipt verified"| b4
+  b1 -->|"Zero fees assessed"| b4
+  classDef c fill:#dcfce7,stroke:#166534,color:#17211b
+  classDef p fill:#fef3c7,stroke:#92400e,color:#291c0c
+  classDef o fill:#fee2e2,stroke:#991b1b,color:#2a1111

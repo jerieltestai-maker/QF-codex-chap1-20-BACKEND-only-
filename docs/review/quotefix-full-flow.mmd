@@ -1,0 +1,278 @@
+flowchart TB
+  i1["I1: Report an issue [C]"]:::c
+  i2["I2: AI is refining your draft [C]"]:::c
+  i3["I3: Approving AI input [C]"]:::c
+  q1["Q1: Requesting for quotes [C]"]:::c
+  q2["Q2: Comparing quotations [C]"]:::c
+  q3["Q3: CM answers questions [C]"]:::c
+  q4["Q4: Refreshing affected quotes [C]"]:::c
+  q5["Q5: CM reviews visit request [C]"]:::c
+  q6["Q6: Contractor updates quote [C]"]:::c
+  s1["S1: CM freezes selection [C]"]:::c
+  s2["S2: MCST Reviewing selected Contractor [C]"]:::c
+  s3["S3: Rejected Contractor [C]"]:::c
+  s4["S4: Selected quote terms held [C]"]:::c
+  w1["W1: Contractor prepares to start [C]"]:::c
+  w2["W2: Contractor carries out work [C]"]:::c
+  w3["W3: Contractor submits completion package [C]"]:::c
+  r1["R1: CM reviews completion [C]"]:::c
+  r2["R2: Contractor addresses issues [C]"]:::c
+  r3["R3: Explaining price change [C]"]:::c
+  r4["R4: MCST confirms invoice [C]"]:::c
+  p1["P1: MCST records payment [C]"]:::c
+  p2["P2: Contractor checks receipt [C]"]:::c
+  p3["P3: Unresolved payment [C]"]:::c
+  p4["P4: Payment received [C]"]:::c
+  p6["P6: Closed [C]"]:::c
+  v1["V1: Contractor defines variation [C]"]:::c
+  v2["V2: CM or MCST decides change [C]"]:::c
+  v3["V3: Approved variation recorded [C]"]:::c
+  c1["C1: CM or MCST cancels directly [C]"]:::c
+  c2["C2: CM or MCST confirms cancellation [C]"]:::c
+  c3["C3: Contractor explains cancellation concern [C]"]:::c
+  c4["C4: Cancelled; contractor responds [C]"]:::c
+  c6["C6: MCST confirms settlement [C]"]:::c
+  d1["D1: Contractor responds to concern [C]"]:::c
+  d2["D2: Admin reviews evidence [C]"]:::c
+  d3["D3: Parties supply evidence [C]"]:::c
+  d9["D9: Admin coordinates offline [C]"]:::c
+  d4["D4: Acknowledge final resolution [C]"]:::c
+  d5["D5: Admin issues binding decision [C]"]:::c
+  d6["D6: Carrying out agreed resolution [C]"]:::c
+  d7["D7: Admin follows up on unresolved case [C]"]:::c
+  d8["D8: Reuse or obtain the required verification [C]"]:::c
+  f1["F1: Feedback scheduled [C]"]:::c
+  f2["F2: CM provides feedback [C]"]:::c
+  f3["F3: Addressing a later issue [C]"]:::c
+  f4["F4: Admin reviews publication [C]"]:::c
+  u1["U1: Urgent job alerts admin [C]"]:::c
+  u2["U2: Admin takes coordination [C]"]:::c
+  u3["U3: Attendance arranged [C]"]:::c
+  u4["U4: Urgent sourcing unresolved [C]"]:::c
+  e1["E1: Following up on pending actions [C]"]:::c
+  e2["E2: Contractor cannot continue [C]"]:::c
+  e3["E3: Request Admin Support [C]"]:::c
+  c7["C7: Cancellation settled [C]"]:::c
+  f5["F5: Aftercare case resolved [C]"]:::c
+  f6["F6: Feedback recorded [C]"]:::c
+  p0["P0: Zero payable derived [C]"]:::c
+  v4["V4: Rejected or withdrawn variation recorded [C]"]:::c
+  v5["V5: Automatic variation return [C]"]:::c
+  p7["P7: Internal seven-day receipt rule [C]"]:::c
+  g1["G1: Admin verifies credentials [C]"]:::c
+  g2["G2: Verified credentials recorded [C]"]:::c
+  g3["G3: Credential renewal reminder [C]"]:::c
+  g4["G4: Credential expired [C]"]:::c
+  c8["C8: Cancellation claim opens intervention [C]"]:::c
+  c9["C9: Contractor accepts cancellation [C]"]:::c
+  a1["A1: Admin backtracks job status [C]"]:::c
+  a2["A2: Automatic restoration route [C]"]:::c
+  m1["M1: MCST acknowledges threshold [C]"]:::c
+  m2["M2: MCST selects and approves [C]"]:::c
+  s5["S5: Reopen quotation round [C]"]:::c
+  p8["P8: Admin follows up in payment case [C]"]:::c
+  p9["P9: MCST responds in payment case [C]"]:::c
+  p10["P10: Transfer and notification dates recorded [C]"]:::c
+  c10["C10: Additional claim window ends [C]"]:::c
+  f7["F7: Following up on missing feedback [C]"]:::c
+  f8["F8: Negative durability feedback [C]"]:::c
+  f9["F9: Positive durability feedback [C]"]:::c
+  f10["F10: Unable to assess recorded [C]"]:::c
+  i1 -->|"Improve with AI"| i2
+  i1 -->|"Continue manually"| i3
+  i2 -->|"Draft available"| i3
+  i3 -->|"Refine again"| i2
+  i3 -->|"CM or MCST publishes"| q1
+  q1 -->|"Valid quote arrives"| q2
+  q1 -.->|"Question received"| q3
+  q3 -->|"Ordinary answer"| q1
+  q3 -->|"Material answer"| q4
+  q1 -.->|"Scope change or expiry"| q4
+  q4 -->|"Valid update submitted"| q2
+  q1 -.->|"Visit requested"| q5
+  q5 -->|"Visit approved and held"| q6
+  q5 -->|"Visit declined"| q1
+  q6 -->|"Valid revision submitted"| q2
+  q2 -->|"CM selects with rationale"| s1
+  q1 -.->|"CM or MCST cancels"| c1
+  s1 -->|"Above threshold"| s2
+  s1 -->|"At or below threshold"| w1
+  s2 -->|"MCST approves"| w1
+  s2 -->|"MCST rejects"| s3
+  s2 -.->|"Cancel before authorisation"| c1
+  s2 -.->|"No response"| e1
+  w1 -->|"Valid estimate or reason, then Start"| w2
+  w2 -->|"Open completion form"| w3
+  w3 -->|"Invoice and declaration submitted together"| r1
+  w2 -.->|"Change proposed"| v1
+  w1 -.->|"CM or MCST chooses Cancel job"| c2
+  w2 -.->|"CM or MCST chooses Cancel job"| c2
+  w2 -.->|"Cannot continue"| e2
+  v1 -->|"Terms confirmed"| v2
+  v2 -->|"Required approval given"| v3
+  r1 -->|"Unsatisfactory work"| r2
+  r2 -->|"Repair submitted"| r1
+  r1 -->|"Invoice mismatch"| r3
+  r3 -->|"Inspection outstanding or acceptance affected"| r1
+  r3 -->|"Additional work claimed"| v1
+  r3 -->|"Difference disputed"| d1
+  r2 -->|"Remedy disputed"| d1
+  r1 -->|"Original job work accepted"| r4
+  r1 -.->|"No response"| e1
+  r4 -->|"Work or acceptance concern"| r1
+  r4 -->|"Nonzero invoice confirmed"| p1
+  r4 -.->|"No response"| e1
+  p1 -->|"Proof and Payment Sent; notify"| p2
+  p2 -->|"Agreed partial balance"| p3
+  p3 -->|"Recorded transfer now needs receipt review"| p2
+  p3 -->|"Disputed payment"| e3
+  p2 -->|"Full receipt confirmed"| p4
+  p4 -.->|"Full receipt or agreed fallback anchor"| f1
+  c6 -->|"Nonzero settlement due"| p1
+  d1 -->|"Remedy agreed"| r2
+  d1 -->|"Escalation or no response"| d2
+  d2 -->|"Request"| d3
+  d5 -->|"Unresolved external blocker"| d7
+  d6 -->|"Obligations performed"| d8
+  d6 -->|"Resolution fails"| d2
+  d7 -->|"New evidence or outcome"| d2
+  d8 -->|"Inspect"| r1
+  d8 -->|"Settlement confirmation still needed"| c6
+  d8 -->|"Agreed balance remains"| p3
+  f1 -.->|"30 days pass"| f2
+  f3 -->|"Contractor response required"| d1
+  p6 -.->|"Later fault reported"| f3
+  p6 -.->|"Request Admin Support"| e3
+  e3 -->|"Admin triages the same case"| d2
+  q1 -.->|"Urgent RFQ published"| u1
+  u1 -->|"Admin takes coordination"| u2
+  u2 -->|"Attendance found"| u3
+  u2 -->|"No attendance confirmed"| u4
+  u4 -->|"Continue human sourcing"| u2
+  u3 -->|"Normal selection applies"| s1
+  e1 -->|"Substantive dispute identified"| d2
+  e2 -->|"CM or MCST chooses Cancel job"| c2
+  e2 -->|"Previously started; authorised resumption"| w2
+  c6 -->|"Zero settlement, no cases"| c7
+  p4 -->|"Cancellation claim: verify settlement"| d8
+  d8 -->|"Aftercare obligation verified"| f5
+  f6 -.->|"Publication review needed"| f4
+  r4 -.->|"Zero payable confirmed"| p0
+  p0 -.->|"Performed work: zero-payable anchor"| f1
+  s4 -.->|"Rule: remain pending MCST"| s2
+  v1 -->|"Proposer withdraws"| v4
+  v2 -->|"Approver rejects or proposer withdraws"| v4
+  v3 -->|"Automatic context check"| v5
+  v4 -->|"Automatic context check"| v5
+  v5 -->|"Before start; able to proceed"| w1
+  v5 -->|"Work ongoing; safe and feasible"| w2
+  v5 -->|"Invoice context: reconcile first"| r3
+  v5 -->|"Review context; invoice already reconciled"| r1
+  v5 -.->|"Authorised work cannot continue"| e2
+  w1 -.->|"Change before start"| v1
+  e2 -.->|"Work still unauthorised"| c1
+  e2 -->|"Not started; authorised to begin"| w1
+  p2 -.->|"Notification + 7 calendar days; no response"| p7
+  p7 -->|"full balance covered"| p4
+  p7 -->|"Undisputed amount assumed; balance remains"| p3
+  p3 -->|"MCST must send remaining balance"| p1
+  q1 -.->|"Request Admin Support"| e3
+  w2 -.->|"Request Admin Support"| e3
+  r3 -.->|"Request Admin Support"| e3
+  p2 -.->|"Payment Issue"| e3
+  f4 -.->|"Request Admin Support"| e3
+  e2 -.->|"Evidence or outcome unresolved"| d2
+  g1 -.->|"Admin approves"| g2
+  g2 -.->|"One month before expiry"| g3
+  g3 -.->|"Renewal evidence supplied"| g1
+  g3 -.->|"Expiry reached"| g4
+  g4 -.->|"Renewal submitted"| g1
+  g4 -.->|"active work affected"| e2
+  c2 -->|"CM or MCST confirms; immediate"| c4
+  c1 -.->|"Selected contractor needs notice"| c4
+  c4 -->|"Okay plus no-additional-claim confirmation"| c9
+  c4 -->|"Contractor selects Admin Intervention"| c3
+  c3 -->|"Explanation submitted"| c8
+  c8 -->|"Admin reviews case"| d2
+  w3 -.->|"CM or MCST chooses Cancel job"| c2
+  r1 -.->|"CM or MCST chooses Cancel job"| c2
+  r2 -.->|"CM or MCST chooses Cancel job"| c2
+  r3 -.->|"CM or MCST chooses Cancel job"| c2
+  r4 -.->|"CM or MCST chooses Cancel job"| c2
+  d2 -.->|"Admin chooses status backtrack"| a1
+  p6 -.->|"Admin reopens a review"| a1
+  c8 -.->|"Explicit admin restoration"| a1
+  a1 -->|"Saved; route automatically"| a2
+  a2 -->|"Before start"| w1
+  a2 -->|"Work"| w2
+  a2 -->|"Work review"| r1
+  a2 -->|"Invoice correction"| r3
+  a2 -->|"Invoice confirmation"| r4
+  q2 -->|"MCST selects above threshold"| m1
+  q2 -->|"MCST confirms at/below threshold"| m2
+  m1 -->|"Back; nothing committed"| q2
+  m1 -->|"Yes I know; select and approve"| m2
+  m2 -->|"Work authorised"| w1
+  d8 -.->|"Cancellation obligations verified"| c7
+  w2 -.->|"Admin chooses status change"| a1
+  s3 -->|"compare remaining valid offers"| q2
+  s3 -->|"fresh offers needed"| s5
+  s5 -->|"explicitly publish next round"| q1
+  p4 -->|"Ordinary job: existing conditions satisfied"| p6
+  p0 -->|"Ordinary job: existing conditions satisfied"| p6
+  d8 -->|"Ordinary job: case resolved and all closure conditions hold"| p6
+  p4 -.->|"Existing blocking case remains open"| d2
+  p0 -.->|"Existing blocking case remains open"| d2
+  p1 -.->|"Approved follow-up; same support case"| p8
+  p8 -->|"Admin requests concrete payment update"| p9
+  p9 -->|"Not sent: MCST still owes payment"| p1
+  p9 -->|"Proof and Payment Sent; notify"| p2
+  p9 -.->|"Promised update missed"| p8
+  c9 -->|"Existing confirmed amount still unpaid"| p1
+  c9 -->|"No outstanding payment or blocking obligation"| c7
+  p4 -->|"Cancellation accepted; existing payment settled"| c7
+  p1 -.->|"Request Admin Support"| e3
+  r3 -->|"Reconciled; work acceptance still valid"| r4
+  r4 -->|"Invoice-only correction"| r3
+  d8 -->|"Original invoice needs confirmation"| r4
+  c6 -.->|"Confirmed zero; derive payment outcome"| p0
+  p1 -.->|"Record dates separately"| p10
+  p10 -.->|"First notification anchors T+7D"| p7
+  p9 -->|"Payment concern needs review"| d2
+  d8 -->|"Evidence still disputed"| d2
+  d8 -->|"Undisputed recorded transfer; verify receipt"| p2
+  f2 -.->|"No response"| f7
+  f7 -.->|"CM responds"| f2
+  c4 -.->|"Seven calendar days; internal cutoff"| c10
+  c10 -->|"Timely claim remains open"| c8
+  c10 -->|"Existing confirmed debt remains due"| p1
+  c10 -->|"No claim, debt or blocking obligation"| c7
+  f2 -->|"1–3 stars"| f8
+  f8 -->|"Saved"| f6
+  f2 -->|"4–5 stars"| f9
+  f9 -->|"Saved"| f6
+  f2 -.->|"Unable to assess"| f10
+  f10 -->|"Saved"| f6
+  d3 -->|"Submit evidence"| d2
+  d2 -->|"Sufficient"| d9
+  d9 -.->|"More facts"| d2
+  d9 -->|"Admin issues resolution"| d4
+  d9 -.->|"Admin records binding verdict"| d5
+  d9 -.->|"Offline outcome still unresolved"| d7
+  d5 -->|"Admin publishes recorded verdict"| d4
+  d4 -->|"Outstanding action proceeds"| d6
+  d4 -->|"Exact settlement needs confirmation"| c6
+  d4 -->|"Already performed; verify obligations"| d8
+  d6 -->|"Physical remedy remains"| r2
+  r1 -->|"Aftercare pass"| d8
+  q1 -.->|"Under 3 at sourcing checkpoint"| e1
+  q2 -.->|"Selection follow-up due"| e1
+  e1 -->|"Continue sourcing"| q1
+  e1 -->|"Selection action"| q2
+  w2 -.->|"Work or estimate deadline missed"| e1
+  e1 -->|"Follow up on work"| w2
+  w1 -.->|"Scheduled start not recorded"| e1
+  e1 -->|"Follow up on start"| w1
+  classDef c fill:#dcfce7,stroke:#166534,color:#17211b
+  classDef p fill:#fef3c7,stroke:#92400e,color:#291c0c
+  classDef o fill:#fee2e2,stroke:#991b1b,color:#2a1111

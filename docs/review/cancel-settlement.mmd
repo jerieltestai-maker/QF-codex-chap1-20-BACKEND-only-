@@ -1,0 +1,19 @@
+flowchart TB
+  c6["C6: MCST confirms settlement [C]"]:::c
+  p1["P1: MCST records payment [C]"]:::c
+  p2["P2: Contractor checks receipt [C]"]:::c
+  p4["P4: Payment received [C]"]:::c
+  d8["D8: Reuse or obtain the required verification [C]"]:::c
+  c7["C7: Cancellation settled [C]"]:::c
+  p1 -->|"Proof and Payment Sent; notify"| p2
+  p2 -->|"Full receipt confirmed"| p4
+  c6 -->|"Nonzero settlement due"| p1
+  d8 -->|"Settlement confirmation still needed"| c6
+  c6 -->|"Zero settlement, no cases"| c7
+  p4 -->|"Cancellation claim: verify settlement"| d8
+  d8 -.->|"Cancellation obligations verified"| c7
+  p4 -->|"Cancellation accepted; existing payment settled"| c7
+  d8 -->|"Undisputed recorded transfer; verify receipt"| p2
+  classDef c fill:#dcfce7,stroke:#166534,color:#17211b
+  classDef p fill:#fef3c7,stroke:#92400e,color:#291c0c
+  classDef o fill:#fee2e2,stroke:#991b1b,color:#2a1111

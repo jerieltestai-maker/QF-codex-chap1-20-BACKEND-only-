@@ -1,0 +1,16 @@
+flowchart TB
+  d2["D2: Admin reviews evidence [C]"]:::c
+  d3["D3: Parties supply evidence [C]"]:::c
+  d9["D9: Admin coordinates offline [C]"]:::c
+  d4["D4: Acknowledge final resolution [C]"]:::c
+  d7["D7: Admin follows up on unresolved case [C]"]:::c
+  d2 -->|"Request"| d3
+  d7 -->|"New evidence or outcome"| d2
+  d3 -->|"Submit evidence"| d2
+  d2 -->|"Sufficient"| d9
+  d9 -.->|"More facts"| d2
+  d9 -->|"Admin issues resolution"| d4
+  d9 -.->|"Offline outcome still unresolved"| d7
+  classDef c fill:#dcfce7,stroke:#166534,color:#17211b
+  classDef p fill:#fef3c7,stroke:#92400e,color:#291c0c
+  classDef o fill:#fee2e2,stroke:#991b1b,color:#2a1111

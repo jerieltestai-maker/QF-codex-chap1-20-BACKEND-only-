@@ -1,0 +1,13 @@
+flowchart TB
+  i1["I1: Report an issue [C]"]:::c
+  i2["I2: AI is refining your draft [C]"]:::c
+  i3["I3: Approving AI input [C]"]:::c
+  q1["Q1: Requesting for quotes [C]"]:::c
+  i1 -->|"Improve with AI"| i2
+  i1 -->|"Continue manually"| i3
+  i2 -->|"Draft available"| i3
+  i3 -->|"Refine again"| i2
+  i3 -->|"CM or MCST publishes"| q1
+  classDef c fill:#dcfce7,stroke:#166534,color:#17211b
+  classDef p fill:#fef3c7,stroke:#92400e,color:#291c0c
+  classDef o fill:#fee2e2,stroke:#991b1b,color:#2a1111

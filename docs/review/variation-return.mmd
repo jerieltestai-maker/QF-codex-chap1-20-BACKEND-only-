@@ -1,0 +1,15 @@
+flowchart LR
+  v5["V5: Automatic variation return [C]"]:::c
+  w1["W1: Contractor prepares to start [C]"]:::c
+  w2["W2: Contractor carries out work [C]"]:::c
+  r3["R3: Explaining price change [C]"]:::c
+  r1["R1: CM reviews completion [C]"]:::c
+  e2["E2: Contractor cannot continue [C]"]:::c
+  v5 -->|"Before start; able to proceed"| w1
+  v5 -->|"Work ongoing; safe and feasible"| w2
+  v5 -->|"Invoice context: reconcile first"| r3
+  v5 -->|"Review context; invoice already reconciled"| r1
+  v5 -.->|"Authorised work cannot continue"| e2
+  classDef c fill:#dcfce7,stroke:#166534,color:#17211b
+  classDef p fill:#fef3c7,stroke:#92400e,color:#291c0c
+  classDef o fill:#fee2e2,stroke:#991b1b,color:#2a1111
