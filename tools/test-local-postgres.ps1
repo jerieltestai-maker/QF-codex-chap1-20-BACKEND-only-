@@ -82,7 +82,6 @@ exit /b 0
   }
   Assert-Qf ((Get-Location).Path -eq $qfMockRoot) 'Caller location changed after failure'
   Assert-Qf (-not (Get-Content -LiteralPath $env:QF_TEST_LOG -Raw).Contains('apps/api/src/main.ts')) 'Server started after seed failure'
-  Write-Output 'PASS: failed setup restores caller state and never starts the server'
   $env:QF_TEST_NODE_FAILURE = '0'
   $qfBeforeUp = @(Select-String -LiteralPath $env:QF_TEST_LOG -Pattern ' up ').Count
   $env:QF_TEST_NODE_VERSION = 'v20.0.0'
@@ -106,6 +105,11 @@ exit /b 0
   Assert-Qf ((Get-Content -LiteralPath $env:QF_TEST_LOG -Raw).Contains(' stop postgres')) 'Stop is not scoped to the PostgreSQL service'
   Assert-Qf ($env:DATABASE_URL -ceq $qfExpected.DATABASE_URL) 'Stop changed database settings'
   Write-Output 'PASS: stop uses the same explicit local project and preserves caller settings'
+  $qfBeforeDev = (Get-Content -LiteralPath $env:QF_TEST_LOG -Raw).Length
+  & $qfHelper dev *> (Join-Path $qfMockRoot 'dev.log')
+  $qfDevCommands = (Get-Content -LiteralPath $env:QF_TEST_LOG -Raw).Substring($qfBeforeDev)
+  Assert-Qf ($qfDevCommands.Contains('--import tsx apps/api/src/main.ts')) 'Development server uses a nested tsx launcher'
+  Write-Output 'PASS: development uses direct Node; failed setup restores caller state and never starts it'
 } finally {
   foreach ($qfKey in $qfVariables) { [Environment]::SetEnvironmentVariable($qfKey,$qfPrevious[$qfKey],'Process') }
   Set-Location $qfCallerLocation

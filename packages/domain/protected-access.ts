@@ -9,7 +9,8 @@ import {createAttention} from './verification-service.js';
 // Independent committed security evidence survives a rejected/rolled-back command.
 // Request bodies, cookies, URLs, grants, allegation contents and original filenames are never recorded.
 export async function recordProtectedAccess(db:Database,identity:IdentityService,token:string|undefined,route:string,params:Record<string,string>,status:number) {
-  if(!params?.id||!(status>=200&&status<300||[401,403,404].includes(status)))return;
+  // onRequest can reject the origin before parameter validation. Invalid identifiers have no UUID resource to record.
+  if(!params?.id||!/^[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}$/i.test(params.id)||!(status>=200&&status<300||[401,403,404].includes(status)))return;
   let type:string|undefined;
   if(route==='/api/v1/workspaces/:id/comparison'||route==='/api/v1/workspaces/:id/selections')type='sealed_quotes';
   else if(route.includes('/passports/')||route.includes('/passport'))type='masked_identity';

@@ -81,7 +81,7 @@ try {
     if ($LASTEXITCODE -ne 0) { throw 'PostgreSQL migration/fictional seed failed.' }
     if ($Action -eq 'dev') {
       Write-Host 'Fictional PostgreSQL development app: http://localhost:3001 (Ctrl+C to stop)'
-      & $qfNode.Source node_modules/tsx/dist/cli.mjs apps/api/src/main.ts
+      & $qfNode.Source --import tsx apps/api/src/main.ts
       if ($LASTEXITCODE -ne 0) { throw 'PostgreSQL development server failed.' }
     } else {
       Write-Host 'PostgreSQL development fixtures are ready; the existing .env and PGlite database were not changed.'

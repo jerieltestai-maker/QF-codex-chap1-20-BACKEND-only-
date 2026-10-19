@@ -1,9 +1,9 @@
 param([ValidateSet('dev','test','typecheck','build','migrate','fixtures','install')][string]$Action = 'dev')
 $ErrorActionPreference = 'Stop'
 Set-Location (Split-Path -Parent $PSScriptRoot)
-$qfNode = Get-Command node -ErrorAction SilentlyContinue
+$qfNode = Get-Command node -CommandType Application -ErrorAction SilentlyContinue | Select-Object -First 1
 if (-not $qfNode) { throw 'Install Node.js 24 LTS first.' }
-$qfPnpm = Get-Command pnpm -ErrorAction SilentlyContinue
+$qfPnpm = Get-Command pnpm -CommandType Application -ErrorAction SilentlyContinue | Select-Object -First 1
 if (-not $qfPnpm) {
   $qfRuntime = 'C:\Users\jerie\.cache\codex-runtimes\codex-primary-runtime\dependencies\node\node_modules\pnpm\bin\pnpm.mjs'
   if (-not (Test-Path -LiteralPath $qfRuntime)) { throw 'Install pnpm 11.25.0 first.' }
@@ -22,7 +22,7 @@ switch ($Action) {
   'dev' {
     & $qfNode.Source $qfTsx tools/database.ts fixtures
     if ($LASTEXITCODE -ne 0) { throw 'Fixture setup failed' }
-    & $qfNode.Source $qfTsx apps/api/src/main.ts
+    & $qfNode.Source --import tsx apps/api/src/main.ts
   }
   'test' { & $qfNode.Source $qfTsx --test --test-concurrency=4 'tests/*.test.ts' }
   'typecheck' { & $qfNode.Source node_modules/typescript/bin/tsc --noEmit }

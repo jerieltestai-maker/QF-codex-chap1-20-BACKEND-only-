@@ -37,6 +37,7 @@ const password = {type:'string',minLength:15,maxLength:128};
 function schema(properties: Record<string,unknown>, required = Object.keys(properties)) {
   return {type:'object',additionalProperties:false,properties,required};
 }
+function requestFailure(requestId:string) {return {error:{code:'INTERNAL_ERROR',message:'Request could not be completed',requestId}};}
 export async function buildApp(config: Config, db: Database, identity: IdentityService, logging = false) {
   const app = Fastify({logger:logging ? {redact:['req.headers.cookie','req.headers.authorization','req.headers.x-csrf-token'], serializers:{req: (req: FastifyRequest) => ({method:req.method,url:String(req.url).split('?')[0] ?? '/'})}} : false,
     bodyLimit: 16384, genReqId: () => randomUUID(),
@@ -46,8 +47,17 @@ export async function buildApp(config: Config, db: Database, identity: IdentityS
   await app.register(rateLimit,{max:120,timeWindow:'1 minute'});
   // Commit protected-access evidence before releasing the response, including with server PostgreSQL latency.
   app.addHook('onSend',async(req,reply,payload)=>{
-    await recordProtectedAccess(db,identity,req.cookies.qf_session,req.routeOptions.url??'',req.params as Record<string,string>,reply.statusCode);
-    return payload;
+    try {
+      await recordProtectedAccess(db,identity,req.cookies.qf_session,req.routeOptions.url??'',req.params as Record<string,string>,reply.statusCode);
+      return payload;
+    } catch {
+      // Throwing while an error response is already being sent invokes Fastify's fallback handler,
+      // which can expose the raw database message. Sanitize here, including denied/error responses.
+      req.log.error({requestId:req.id},'Protected access recording failed');
+      reply.code(500).type('application/json; charset=utf-8');
+      reply.removeHeader('content-length');reply.removeHeader('content-disposition');
+      return JSON.stringify(requestFailure(req.id));
+    }
   });
   app.addHook('onRequest',async(req,reply) => {
     reply.header('X-Request-Id',req.id).header('Cache-Control','no-store');
@@ -61,7 +71,7 @@ export async function buildApp(config: Config, db: Database, identity: IdentityS
     if (error.statusCode && error.statusCode >= 400 && error.statusCode < 500)
       return reply.code(error.statusCode).send({error:{code:'INVALID_REQUEST',message:'Request could not be processed',requestId:req.id}});
     req.log.error({requestId:req.id},'Request failed'); // Do not log DB errors, SQL parameters or private bodies.
-    return reply.code(500).send({error:{code:'INTERNAL_ERROR',message:'Request could not be completed',requestId:req.id}});
+    return reply.code(500).send(requestFailure(req.id));
   });
   app.setNotFoundHandler((req,reply) => reply.code(404).send({error:{code:'NOT_FOUND',message:'Resource unavailable',requestId:req.id}}));
   const token = (req: FastifyRequest) => {

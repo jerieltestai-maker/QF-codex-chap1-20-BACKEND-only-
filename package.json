@@ -8,7 +8,7 @@
   },
   "packageManager": "pnpm@11.25.0",
   "scripts": {
-    "dev": "tsx apps/api/src/main.ts",
+    "dev": "node --import tsx apps/api/src/main.ts",
     "db:migrate": "tsx tools/database.ts migrate",
     "db:fixtures": "tsx tools/database.ts fixtures",
     "typecheck": "tsc --noEmit && tsx tools/check-web.ts",

@@ -33,7 +33,12 @@ test('A failed protected-access commit withholds content, exposes no database de
   const f=await completionFixture();
   const transaction=f.db.transaction.bind(f.db);
   try {
+    const malformed=await f.app.inject({method:'POST',url:'/api/v1/support/not-a-uuid/resolve',headers:{origin:'https://unrelated.invalid'},payload:{}});
+    assert.equal(malformed.statusCode,403);
+    assert.equal(malformed.json().error?.code,'ORIGIN_INVALID');
+    assert.doesNotMatch(malformed.body,/22P02|invalid input syntax|uuid/i);
     const id=await f.job('100.00',false);
+    const fileId=await f.file(id,'evidence');
     const count=async()=>Number((await f.db.query('SELECT count(*) AS n FROM protected_access_events WHERE job_id=$1',[id]))[0]!.n);
     const before=await count();
     f.db.transaction=fn=>transaction(tx=>fn({...tx,query:async<T extends Record<string,unknown>>(sql:string,params:unknown[]=[])=>{
@@ -44,6 +49,17 @@ test('A failed protected-access commit withholds content, exposes no database de
     assert.equal(failed.statusCode,500);
     assert.equal(failed.json().error.code,'INTERNAL_ERROR');
     assert.doesNotMatch(failed.body,/PRIVATE|BANK|quotes|amountCents|plumbing/);
+    const failedDenial=await f.get('workspaces/'+id+'/comparison',f.rival);
+    assert.equal(failedDenial.statusCode,500);
+    assert.equal(failedDenial.json().error?.code,'INTERNAL_ERROR');
+    assert.doesNotMatch(failedDenial.body,/PRIVATE|BANK|quotes|amountCents|plumbing/);
+    const failedDownload=await f.get('files/'+fileId,f.contractor);
+    assert.equal(failedDownload.statusCode,500);
+    assert.equal(failedDownload.json().error?.code,'INTERNAL_ERROR');
+    assert.match(String(failedDownload.headers['content-type']),/^application\/json/);
+    assert.equal(failedDownload.headers['content-disposition'],undefined,'An error must not retain download headers');
+    if(failedDownload.headers['content-length'])assert.equal(Number(failedDownload.headers['content-length']),Buffer.byteLength(failedDownload.body));
+    assert.doesNotMatch(failedDownload.body,/PRIVATE|BANK|PNG/);
     assert.equal(await count(),before,'The rejected access event must not be partially committed');
     f.db.transaction=transaction;
     f.okay(await f.get('workspaces/'+id+'/comparison',f.mcst));
