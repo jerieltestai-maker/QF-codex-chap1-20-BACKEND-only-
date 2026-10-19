@@ -13,14 +13,14 @@ const id=randomUUID().replaceAll('-',''),directory=resolve('work/postgres-backup
 const containerFile='/tmp/quotefix-backup-'+id+'.dump',dump=resolve(directory,'database.dump');
 const restoreFile='/tmp/quotefix-backup-'+id+'-copied-back.dump';
 const restoredDatabase='quotefix_restorecheck_'+id;
-const source=new pg.Pool({connectionString:'postgresql://quotefix:local-only@127.0.0.1:5432/quotefix_development',max:1,connectionTimeoutMillis:5000,statement_timeout:30000});
-let restored:pg.Pool|undefined,phase='starting',transaction=false;
+const source=new pg.Client({connectionString:'postgresql://quotefix:local-only@127.0.0.1:5432/quotefix_development',connectionTimeoutMillis:5000,statement_timeout:30000});
+let restored:pg.Client|undefined,phase='starting',transaction=false;
 function run(args:string[]) {
   const result=spawnSync(docker!,[...compose,...args],{encoding:'utf8',windowsHide:true,timeout:120000});
   // Never print raw driver/tool errors, row bodies or credentials to an execution record.
   if(result.status!==0||result.error)throw new Error('Local PostgreSQL operation failed');
 }
-async function fingerprint(db:pg.Pool) {
+async function fingerprint(db:pg.Client) {
   const {rows:tables}=await db.query<{tablename:string}>("SELECT tablename FROM pg_tables WHERE schemaname='public' ORDER BY tablename");
   const results=[];
   for(const {tablename} of tables) {
@@ -34,6 +34,7 @@ async function fingerprint(db:pg.Pool) {
 try {
   await mkdir(directory,{recursive:true});
   phase='source snapshot';
+  await source.connect();
   await source.query('BEGIN ISOLATION LEVEL REPEATABLE READ READ ONLY');transaction=true;
   await source.query("SET LOCAL TIME ZONE 'UTC'");
   const {rows:[identity]}=await source.query('SELECT environment FROM deployment_identity');
@@ -50,7 +51,8 @@ try {
   phase='backup round trip';run(['cp',dump,'postgres:'+restoreFile]);
   phase='fresh restore database';run(['exec','-T','postgres','createdb','-U','quotefix',restoredDatabase]);
   phase='restore';run(['exec','-T','postgres','pg_restore','-U','quotefix','--exit-on-error','-d',restoredDatabase,restoreFile]);
-  restored=new pg.Pool({connectionString:'postgresql://quotefix:local-only@127.0.0.1:5432/'+restoredDatabase,max:1,connectionTimeoutMillis:5000,statement_timeout:30000});
+  restored=new pg.Client({connectionString:'postgresql://quotefix:local-only@127.0.0.1:5432/'+restoredDatabase,connectionTimeoutMillis:5000,statement_timeout:30000});
+  await restored.connect();
   await restored.query("SET TIME ZONE 'UTC'");
   phase='full-row verification';
   const actual=await fingerprint(restored);

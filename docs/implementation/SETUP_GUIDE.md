@@ -13,6 +13,8 @@ Use the checked-in PowerShell helper from the repository root. It selects the fi
 powershell -NoProfile -ExecutionPolicy Bypass -File tools/local-postgres.ps1 setup
 # Run the suite against isolated schemas in quotefix_test:
 powershell -NoProfile -ExecutionPolicy Bypass -File tools/local-postgres.ps1 test
+# Optional smaller concurrency for a busy machine (allowed range 1–4; default 2):
+powershell -NoProfile -ExecutionPolicy Bypass -File tools/local-postgres.ps1 test -TestConcurrency 1
 # Start a separate PostgreSQL preview, with local advice, at http://localhost:3001:
 powershell -NoProfile -ExecutionPolicy Bypass -File tools/local-postgres.ps1 dev
 # Inspect the service:

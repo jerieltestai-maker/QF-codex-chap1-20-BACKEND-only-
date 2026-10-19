@@ -1,4 +1,7 @@
-param([ValidateSet('setup','test','dev','status','stop','backup')][string]$Action = 'setup')
+param(
+  [ValidateSet('setup','test','dev','status','stop','backup')][string]$Action = 'setup',
+  [ValidateRange(1,4)][int]$TestConcurrency = 2
+)
 $ErrorActionPreference = 'Stop'
 $qfOriginalLocation = Get-Location
 $qfOriginalPath = $env:PATH
@@ -71,7 +74,7 @@ try {
     [Environment]::SetEnvironmentVariable($qfKey,$qfEnvironment[$qfKey],'Process')
   }
   if ($Action -eq 'test') {
-    & $qfNode.Source node_modules/tsx/dist/cli.mjs --test --test-concurrency=4 'tests/*.test.ts'
+    & $qfNode.Source node_modules/tsx/dist/cli.mjs --test "--test-concurrency=$TestConcurrency" 'tests/*.test.ts'
     if ($LASTEXITCODE -ne 0) { throw 'PostgreSQL tests failed.' }
   } else {
     & $qfNode.Source node_modules/tsx/dist/cli.mjs tools/database.ts fixtures

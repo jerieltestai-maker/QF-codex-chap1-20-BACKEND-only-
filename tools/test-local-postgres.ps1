@@ -72,6 +72,7 @@ exit /b 0
   & $qfHelper test *> (Join-Path $qfMockRoot 'test.log')
   $qfCommands = Get-Content -LiteralPath $env:QF_TEST_LOG -Raw
   Assert-Qf ($qfCommands.Contains('node|test|postgres|postgresql://quotefix:local-only@127.0.0.1:5432/quotefix_test|memory://|false|')) 'Test defaults can target development'
+  Assert-Qf ($qfCommands.Contains('--test-concurrency=2')) 'Local default concurrency is not bounded to two files'
   Write-Output 'PASS: every default test setting targets the isolated test environment'
   $env:QF_TEST_NODE_FAILURE = '1'
   Expect-QfFailure { & $qfHelper dev *> (Join-Path $qfMockRoot 'failure.log') } 'migration/fictional seed failed'
