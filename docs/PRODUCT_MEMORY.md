@@ -1,5 +1,11 @@
 # QuoteFix working product memory
 
+## Owner-authorised local Docker/PostgreSQL setup — 19 October 2026
+
+The owner installed Docker Desktop and explicitly authorised configuration, fictional seeding and version-controlled records. WSL 2 launches and the Linux Docker engine is running after clearing a stale startup precondition. The existing Compose PostgreSQL 18 service is healthy with separate development/test databases. All 13 migrations applied; repeating the seed preserved 6 users, 6 memberships, 2 estates, 1 unverified organisation, 2 approved development warning settings and 0 jobs. No current PGlite data or `.env` was switched/reset, and no paid service was provisioned. `tools/local-postgres.ps1` supplies repeatable setup/test/status and a separate foreground preview on port 3001, with scoped environment overrides and local advice.
+
+[Execution record](implementation/LOCAL_POSTGRES_2026_10_19.md) documents a real local dump/restore check and server compatibility corrections: explicit JSON-array serialization at warning/support/correction writes; protected-access evidence committed before releasing the HTTP response; driver-neutral assertions for cents/counts without changing integer parsers. The initial GitHub PostgreSQL run failed (206/231 passing), and the intermediate focused run exposed one additional correction writer (34/35 passing); these failures are not presented as passes. Final regression status belongs to the execution record. Production providers, real-data migration, scanning, release gates, open product policies and the Chapter 20 reminder remain unchanged.
+
 ## Git checkpoint published — 19 October 2026
 
 The audited Chapters 01–18 baseline is committed and pushed to `origin/codex/chapters-01-18-baseline`, retaining the repository's initial commit. [Draft PR 1](https://github.com/jerieltestai-maker/QF-codex-chap1-20/pull/1) makes the import reviewable. This resolves the earlier absence of a committed source baseline. Ignored runtime/configuration/key/data paths were checked; common credential-pattern scanning found no candidate secret in the source set. Every staged SQL migration matched its original working-file bytes. GitHub verification status must be checked separately from successful source publication; no production deployment or cloud purchase occurred.

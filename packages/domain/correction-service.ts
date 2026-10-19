@@ -71,7 +71,7 @@ export class CorrectionService {
           if(!body.followUpAt)throw new AppError(422,'FOLLOW_UP_REQUIRED','A fresh repair requires a dated Admin follow-up');
           await tx.query('UPDATE completion_state SET accepted_round=NULL WHERE job_id=$1',[id]);
           if(target==='restore_work')await tx.query("UPDATE work_state SET status='active',interruption_id=NULL WHERE job_id=$1",[id]);
-          await tx.query("INSERT INTO support_resolutions VALUES($1,1,'Perform a fresh physical remedy',$2,$3,$4,$5)",[supportId,reason,[{kind:'repair',description:reason}],a.id,now.toISOString()]);
+          await tx.query("INSERT INTO support_resolutions VALUES($1,1,'Perform a fresh physical remedy',$2,$3,$4,$5)",[supportId,reason,JSON.stringify([{kind:'repair',description:reason}]),a.id,now.toISOString()]);
           const task=await caseAttention(tx,supportId,'support.execution','Perform the authorised remedy, then submit a fresh physical completion round for inspection.',now,'contractor');await tx.query('UPDATE tasks SET response_rule=NULL WHERE id=$1',[task]);
           await datedTask(tx,task,reason,body.followUpAt,now);
           const [lastRound]=await tx.query('SELECT max(round) AS round FROM completion_rounds WHERE job_id=$1',[id]);

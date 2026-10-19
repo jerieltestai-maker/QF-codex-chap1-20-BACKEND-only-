@@ -2,24 +2,26 @@
 
 The owner designated [QF-codex-chap1-20](https://github.com/jerieltestai-maker/QF-codex-chap1-20) for source version control. Its visibility was verified as private. The initial README commit is retained as the parent of the application baseline. Local secrets, databases, security mailboxes, recovery copies, uploads and generated builds remain outside Git.
 
-## What to set up now
+## Local PostgreSQL is configured — 19 October 2026
 
-**Install and open Docker Desktop for Windows using its WSL 2 backend.** Docker Desktop and the PostgreSQL command-line client were not found on this machine during this check. Follow [Docker's Windows installation guide](https://docs.docker.com/desktop/setup/install/windows-install/); complete any requested Windows/WSL prerequisites and restart yourself if required. Docker's licensing eligibility depends on your organisation; check its terms during setup. No paid cloud service needs to be purchased for local PostgreSQL validation.
+The owner installed Docker Desktop and authorised local configuration and fictional seed data. WSL 2 was verified by launching Linux; restarting Docker cleared its earlier stale WSL prerequisite failure. PostgreSQL 18 is healthy in the existing Compose service. See [the execution record](LOCAL_POSTGRES_2026_10_19.md) for versions, seed inventory, verification, backup and remaining limits. No paid cloud service is required for this setup.
 
-Tell the coding chat when Docker Desktop shows that its engine is running. The repository already contains `compose.yaml` for PostgreSQL 18. The coding agent can then start the server, create a separate test database, apply migrations and run the real PostgreSQL suite. The existing PGlite development database should remain in place while these tests run.
-
-For reference, these are the local-only commands the agent will use after Docker is ready:
+Use the checked-in PowerShell helper from the repository root. It discovers Docker on PATH or in its per-user/system installation, uses the existing Compose volume, waits for database health and creates the test database only when absent. It does not edit `.env`, reset a database, migrate PGlite data or change the normal application on port 3000. Node.js 24 and installed project dependencies are required; Docker Desktop's Linux engine must be running.
 
 ```powershell
-docker compose up -d postgres
-# Run once for a fresh local PostgreSQL instance:
-docker compose exec -T postgres createdb -U quotefix quotefix_test
-$env:TEST_DATABASE_URL = 'postgresql://quotefix:local-only@127.0.0.1:5432/quotefix_test'
-pnpm test
-Remove-Item Env:TEST_DATABASE_URL
+# Apply migrations and install/recheck the non-destructive fictional baseline:
+powershell -NoProfile -ExecutionPolicy Bypass -File tools/local-postgres.ps1 setup
+# Run the suite against isolated schemas in quotefix_test:
+powershell -NoProfile -ExecutionPolicy Bypass -File tools/local-postgres.ps1 test
+# Start a separate PostgreSQL preview, with local advice, on port 3001:
+powershell -NoProfile -ExecutionPolicy Bypass -File tools/local-postgres.ps1 dev
+# Inspect the service:
+powershell -NoProfile -ExecutionPolicy Bypass -File tools/local-postgres.ps1 status
 ```
 
-The password in this example is the existing loopback-only Compose development password, never a production credential. The tests use separate temporary schemas and do not target the application's current PGlite data. Merely starting PostgreSQL does not move that data or switch the application to it. Do not delete the current data directory or copy its engine files into a server PostgreSQL directory.
+The helper scopes environment overrides to its own execution and restores any previous process values. The existing loopback-only Compose password `local-only` is a development fixture, never a production credential. `quotefix_development` holds the fictional preview, while `quotefix_test` hosts temporary schemas created and removed by individual tests. The persistent volume is `qfwebapp_quotefix_dev` on this checkout. Stop with `docker compose stop postgres`; start again with the helper. Do not use `docker compose down -v`: that removes the database volume. Do not delete the current PGlite directory or copy its engine files into a server PostgreSQL directory.
+
+The preview seed supplies six accounts (`admin`, `cm`, `cmtwo`, `mcst`, `mcsttwo`, `contractor` at `example.test`), two estates, one **unverified** contractor organisation and the approved development warning defaults. Use the local account picker or the fictional password documented in `packages/test-fixtures/fixtures.ts`. It intentionally creates no jobs, payments or reputation. Trade eligibility starts unconfigured and the contractor still needs the ordinary approval workflow; fixture setup does not invent verification evidence.
 
 The repository's GitHub Actions workflow is also configured to run strict checks, compilation, PGlite tests and the suite against a temporary PostgreSQL 18 service. That service is created by the workflow; no cloud database password or production secret is needed. Check the actual Actions result before treating server PostgreSQL verification as passed. If repository Actions are disabled or the account has reached its usage allowance, the owner must enable/approve the relevant account setting or wait for the allowance to renew.
 
@@ -28,7 +30,7 @@ The repository's GitHub Actions workflow is also configured to run strict checks
 | Item | Plain-language purpose | Needed now? |
 | --- | --- | --- |
 | GitHub | Saves source versions, supports review/rollback and runs automated checks | Yes; repository supplied |
-| Local PostgreSQL server | Tests database behavior with actual server connections, transactions and locks | Next; Docker Desktop provides the local runtime |
+| Local PostgreSQL server | Tests database behavior with actual server connections, transactions and locks | Configured through Docker Desktop |
 | Managed PostgreSQL | Stores live jobs, quotes, approvals, payments and audit records online | Before a hosted pilot |
 | Managed authentication | Provides production login, email verification and password recovery | Before staging/pilot; the current adapter deliberately refuses staging/production |
 | Private file storage | Keeps invoices, photos, transfer proofs and other evidence with server-enforced access | Before a hosted pilot; private access rules need implementation and tests |

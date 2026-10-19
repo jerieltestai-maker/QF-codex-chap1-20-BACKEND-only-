@@ -166,7 +166,7 @@ test('Chapters 07/08: sealed quotes, questions, visits, exact selection and dura
       const comparison=okay(await get('workspaces/'+heldId+'/comparison',mcst)),history=comparison.history[0];
       assert.equal(comparison.quotes[0].held,true);assert.equal(comparison.quotes[0].expired,false);
       okay(await post('workspaces/'+heldId+'/selection/decide',{selectionId:selection.selectionId,outcome:'approved',reason:'',confirmed:true,acknowledgedCautions:history.cautions},mcst,comparison.version));
-      assert.equal((await db.query('SELECT amount_cents FROM work_authorisations WHERE job_id=$1',[heldId]))[0]!.amount_cents,10100);
+      assert.equal(String((await db.query('SELECT amount_cents FROM work_authorisations WHERE job_id=$1',[heldId]))[0]!.amount_cents),'10100');
       assert.equal(okay(await get('opportunities/'+heldId+'/conversation',contractor)).reveals.length,1);
     });
     await t.test('CH08-T07: rejection permits valid reselection and explicit new round without revived offers',async()=>{
@@ -213,7 +213,7 @@ test('Chapters 07/08: sealed quotes, questions, visits, exact selection and dura
     await t.test('CH07-T09 selection/revision race never substitutes an unseen price',async()=>{
       const race=await job(cm),q=await offer(race,contractor,'20'),ready=await selectBody(race,cm,q.quoteId);
       const [selection,revision]=await Promise.all([post('workspaces/'+race+'/select',ready.body,cm,ready.version),post('opportunities/'+race+'/quotes',{rfqRevision:1,terms:terms('21')},contractor,q.version)]);
-      if(selection.statusCode===200){assert.equal(revision.statusCode,404);assert.equal((await db.query('SELECT amount_cents FROM work_authorisations WHERE job_id=$1',[race]))[0]!.amount_cents,2000);}
+      if(selection.statusCode===200){assert.equal(revision.statusCode,404);assert.equal(String((await db.query('SELECT amount_cents FROM work_authorisations WHERE job_id=$1',[race]))[0]!.amount_cents),'2000');}
       else{assert.equal(selection.statusCode,412,selection.body);okay(revision);assert.equal((await db.query('SELECT id FROM work_authorisations WHERE job_id=$1',[race])).length,0);const refreshed=await selectBody(race,cm,q.quoteId);okay(await post('workspaces/'+race+'/select',refreshed.body,cm,refreshed.version));assert.equal((await db.query('SELECT amount_cents FROM work_authorisations WHERE job_id=$1',[race]))[0]!.amount_cents,2100);}
     });
     await t.test('T22 first successful issuance anchors response deadlines; reading is not answering',async()=>{

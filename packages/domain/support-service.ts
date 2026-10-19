@@ -172,7 +172,7 @@ export class SupportService {
         if(['action','repair'].includes(ob.kind)&&!ob.reuseObligationId&&!ob.followUpAt)throw new AppError(422,'FOLLOW_UP_REQUIRED','Name a dated action for unresolved execution');
         if(['payment','refund'].includes(ob.kind)&&!financial)throw new AppError(409,'FINANCIAL_CONFIRMATION_REQUIRED','Confirm the exact payable settlement/invoice before issuing financial execution obligations');
       }
-      await tx.query('INSERT INTO support_resolutions VALUES($1,$2,$3,$4,$5,$6,$7)',[id,version,outcome,reason,body.obligations,a.id,now.toISOString()]);
+      await tx.query('INSERT INTO support_resolutions VALUES($1,$2,$3,$4,$5,$6,$7)',[id,version,outcome,reason,JSON.stringify(body.obligations),a.id,now.toISOString()]);
       if(pending.length){await tx.query('UPDATE support_obligations SET superseded_at=$1 WHERE support_id=$2 AND verified_at IS NULL AND superseded_at IS NULL',[now.toISOString(),id]);await caseEvent(tx,a,id,'resolution.superseded',{priorResolutionVersion:c.resolution_version,obligationIds:pending.map(o=>o.id),reason},now);}
       await closeCaseTasks(tx,id);
       const [lastRound]=s.job_id?await tx.query('SELECT max(round) AS round FROM completion_rounds WHERE job_id=$1',[j]):[];

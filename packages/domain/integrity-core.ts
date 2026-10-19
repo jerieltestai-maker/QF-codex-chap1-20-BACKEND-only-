@@ -54,7 +54,7 @@ export async function recordCard(tx:Sql,a:Actor,jobId:string,roundId:string,even
     if(same)return String(same.id);
   }
   const id=randomUUID();
-  await tx.query('INSERT INTO integrity_cards VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)',[id,jobId,roundId,eventKey,eventType,sourceId,sourceVersion,e.policy??{unavailable:true},e.triggers,e.evidence,a.id,now.toISOString()]);
+  await tx.query('INSERT INTO integrity_cards VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)',[id,jobId,roundId,eventKey,eventType,sourceId,sourceVersion,e.policy??{unavailable:true},JSON.stringify(e.triggers),e.evidence,a.id,now.toISOString()]);
   const [j]=await tx.query('SELECT estate_id FROM job_records WHERE id=$1',[jobId]);
   for(const role of ['mcst','admin'])await createAttention(tx,now,{kind:role==='mcst'?(eventType==='quote.revision'?'integrity.review':eventType.startsWith('variation.')?'integrity.hold':'integrity.warning'):'integrity.warning',resourceId:id,estateId:String(j!.estate_id),ownerRole:role,
     action:eventType.startsWith('variation.')?'Ordinary work is paused. Review the grouped variation warning and explicitly clear continuation; withdrawing or rejecting the proposal does not resume work.':'Review the grouped procurement warning and exact source evidence. A warning is not a misconduct finding.',informational:role==='admin'||eventType==='selection'});

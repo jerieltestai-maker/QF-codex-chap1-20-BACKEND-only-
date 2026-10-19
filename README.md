@@ -7,7 +7,7 @@ This repository contains the complete **20-chapter implementation plan** and loc
 
 ## Run the local application
 
-See the [owner setup guide](docs/implementation/SETUP_GUIDE.md) for version control, the next local PostgreSQL step and the later hosting/authentication/storage accounts.
+See the [owner setup guide](docs/implementation/SETUP_GUIDE.md) for version control, the configured local PostgreSQL server and the later hosting/authentication/storage accounts. The [PostgreSQL setup record](docs/implementation/LOCAL_POSTGRES_2026_10_19.md) covers fictional seeds, server compatibility fixes and backup/restore evidence. Run `powershell -NoProfile -ExecutionPolicy Bypass -File tools/local-postgres.ps1 dev` for a separate PostgreSQL preview on port 3001.
 
 The [Chapters 09–18 adversarial audit](docs/implementation/CHAPTERS_09_18_AUDIT.md) records cross-chapter fixes, the final 231-record regression, browser verification and remaining release/source-control concerns.
 

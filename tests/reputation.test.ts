@@ -73,7 +73,7 @@ test('Chapter 16: real evidence, moderation, passports, immutable calculations a
       assert.equal((await f.db.query("SELECT id FROM reputation_entries WHERE job_id=$1 AND kind='inspection'",[id])).length,1);
       await assert.rejects(()=>f.db.query("UPDATE reputation_entry_versions SET facts='{}' WHERE entry_id=$1",[inspectionId]),/immutable|append|audit|cannot/i);
       await assert.rejects(()=>f.db.query("UPDATE reputation_snapshots SET result='{}' WHERE id=$1",[before.snapshotId]),/immutable|append|audit|cannot/i);
-      assert.equal((await f.db.query('SELECT COUNT(*) AS n FROM reputation_entry_versions WHERE entry_id=$1',[inspectionId]))[0]!.n,2);
+      assert.equal(Number((await f.db.query('SELECT COUNT(*) AS n FROM reputation_entry_versions WHERE entry_id=$1',[inspectionId]))[0]!.n),2);
     });
     await t.test('CH16-T05: unavailable, contested and unmoderated durability never add clean points',async()=>{
       await f.transfer(id);const [transfer]=await f.db.query('SELECT id FROM payment_transfers WHERE job_id=$1',[id]);

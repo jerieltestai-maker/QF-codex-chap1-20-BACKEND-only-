@@ -44,8 +44,10 @@ export async function buildApp(config: Config, db: Database, identity: IdentityS
   await app.register(cookie);
   await app.register(helmet,{contentSecurityPolicy:{directives:{upgradeInsecureRequests:null,defaultSrc:["'self'"],scriptSrc:["'self'"],styleSrc:["'self'"],objectSrc:["'none'"],frameAncestors:["'none'"]}}});
   await app.register(rateLimit,{max:120,timeWindow:'1 minute'});
-  app.addHook('onResponse',async(req,reply)=>{
+  // Commit protected-access evidence before releasing the response, including with server PostgreSQL latency.
+  app.addHook('onSend',async(req,reply,payload)=>{
     await recordProtectedAccess(db,identity,req.cookies.qf_session,req.routeOptions.url??'',req.params as Record<string,string>,reply.statusCode);
+    return payload;
   });
   app.addHook('onRequest',async(req,reply) => {
     reply.header('X-Request-Id',req.id).header('Cache-Control','no-store');
