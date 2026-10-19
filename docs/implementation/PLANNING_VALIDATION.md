@@ -15,7 +15,7 @@ These checks validate documentation only. Local construction through Chapters 01
 | Valid conditional next targets | 66 |
 | Timer ownership | 23 / 23 |
 | Source diagram views | 34 |
-| Local Markdown file references | 974 |
+| Local Markdown file references | 976 |
 | Forward/cyclic dependencies | Checked |
 | Decision-gate references and Markdown fences | Checked |
 | Retired C5/P5 and Admin-only evidence routing | Checked |
