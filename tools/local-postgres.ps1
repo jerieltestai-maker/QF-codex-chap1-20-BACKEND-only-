@@ -1,5 +1,5 @@
 param(
-  [ValidateSet('setup','test','dev','status','stop','backup')][string]$Action = 'setup',
+  [ValidateSet('setup','test','dev','status','stop','backup','drill')][string]$Action = 'setup',
   [ValidateRange(1,4)][int]$TestConcurrency = 2
 )
 $ErrorActionPreference = 'Stop'
@@ -58,7 +58,14 @@ try {
   $qfNodeVersion = & $qfNode.Source --version
   if ($LASTEXITCODE -ne 0 -or $qfNodeVersion -notmatch '^v24\.') { throw 'Install Node.js 24; this project requires >=24 <25. No container changes were attempted.' }
   if (-not (Test-Path -LiteralPath 'node_modules/tsx/dist/cli.mjs')) { throw 'Run pnpm install --frozen-lockfile first.' }
-  if ($Action -eq 'backup') {
+  if ($Action -eq 'backup' -or $Action -eq 'drill') {
+    if ($Action -eq 'drill') {
+      $qfSavedEnvironment.TEST_DATABASE_URL = [Environment]::GetEnvironmentVariable('TEST_DATABASE_URL','Process')
+      [Environment]::SetEnvironmentVariable('TEST_DATABASE_URL',$qfEnvironment.TEST_DATABASE_URL,'Process')
+      & $qfNode.Source node_modules/tsx/dist/cli.mjs tools/recovery-drill.ts $qfDocker.Source @qfCompose
+      if ($LASTEXITCODE -ne 0) { throw 'PostgreSQL recovery drill failed; inspect retained artifacts.' }
+      return
+    }
     & $qfNode.Source node_modules/tsx/dist/cli.mjs tools/postgres-backup.ts $qfDocker.Source @qfCompose
     if ($LASTEXITCODE -ne 0) { throw 'PostgreSQL backup/restore verification failed; inspect the retained local artifact directory.' }
     return

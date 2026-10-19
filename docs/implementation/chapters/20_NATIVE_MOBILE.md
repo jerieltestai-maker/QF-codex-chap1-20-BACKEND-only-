@@ -4,6 +4,8 @@
 
 **Dependencies:** proven web/backend contracts 01–19; mobile infrastructure decisions G13/G14. **Confirmed:** web first, eventual native mobile, shared system; O37-A offline drafts/uploads with online decisions. **Proposal:** React Native/Expo as first candidate, validated with real device transfer/authentication spikes.
 
+**19 October 2026 initial implementation:** G13 initial role/storage scope is owner-approved; the connected Expo application, local PKCE bridge, shared client and foreground resumable capture queue exist. See [build evidence](../CHAPTERS_19_20_BUILD.md) and [native development guide](../../../apps/mobile/README.md). G14 remains open. The owner has neither physical-device setup available; background OS transfer/device/store certification remains incomplete. This chapter is **not finished**, so its completion reminder below remains active.
+
 ## 1. What is reused and what is new
 
 Reuse accounts/memberships, permissions, domain commands, API schemas/typed client, IDs, files, audit, tasks/timers and server business rules. No second mobile operational database/rule engine to reconcile with web. Device database is a cache/draft store, never authority for payment or approval.

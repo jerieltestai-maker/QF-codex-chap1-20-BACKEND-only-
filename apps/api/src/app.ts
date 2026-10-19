@@ -29,6 +29,9 @@ import {feedbackTimers} from '../../../packages/domain/feedback-core.js';
 import {GeminiAdviceProvider} from '../../../packages/infrastructure/gemini-advice.js';
 import {oversightRoutes} from './oversight-routes.js';
 import {recordProtectedAccess} from '../../../packages/domain/protected-access.js';
+import {operationsRoutes} from './operations-routes.js';
+import {nativeRoutes} from './native-routes.js';
+import {hashToken} from '../../../packages/infrastructure/local-identity.js';
 
 const text = {type:'string',minLength:1,maxLength:500};
 const email = {type:'string',format:'email',maxLength:254};
@@ -61,7 +64,17 @@ export async function buildApp(config: Config, db: Database, identity: IdentityS
   });
   app.addHook('onRequest',async(req,reply) => {
     reply.header('X-Request-Id',req.id).header('Cache-Control','no-store');
-    if (!['GET','HEAD','OPTIONS'].includes(req.method) && req.headers.origin !== config.origin)
+    let native=false;
+    if(req.headers.authorization) {
+      const match=/^Bearer ([A-Za-z0-9_-]{43})$/.exec(req.headers.authorization);
+      if(!match||req.cookies.qf_session||!req.url.startsWith('/api/v1/')||req.url.startsWith('/api/v1/dev/'))throw new AppError(401,'SESSION_REQUIRED','Sign in to continue');
+      const [session]=await db.query("SELECT token_hash FROM sessions WHERE token_hash=$1 AND client_type='native'",[hashToken(match[1]!)]);
+      if(!session)throw new AppError(401,'SESSION_REQUIRED','Sign in to continue');
+      await identity.actor(match[1]);
+      req.cookies.qf_session=match[1]!;native=true;
+    }
+    const codeExchange=req.method==='POST'&&req.url==='/api/v1/native/token';
+    if (!['GET','HEAD','OPTIONS'].includes(req.method) && !(native&&!req.headers.origin) && !(codeExchange&&!req.headers.origin) && req.headers.origin !== config.origin)
       throw new AppError(403,'ORIGIN_INVALID','Request origin is not permitted');
   });
   app.setErrorHandler<FastifyError>((error,req,reply) => {
@@ -109,6 +122,7 @@ export async function buildApp(config: Config, db: Database, identity: IdentityS
   app.get('/feedback.js',async(_req,reply)=>reply.type('application/javascript').send(await readFile('apps/web/feedback.js','utf8')));
   app.get('/oversight.js',async(_req,reply)=>reply.type('application/javascript').send(await readFile('apps/web/oversight.js','utf8')));
   app.get('/integrity.js',async(_req,reply)=>reply.type('application/javascript').send(await readFile('apps/web/integrity.js','utf8')));
+  app.get('/operations.js',async(_req,reply)=>reply.type('application/javascript').send(await readFile('apps/web/operations.js','utf8')));
   const localAccounts = (req: FastifyRequest) => {
     if (!config.localAccountHelper || config.environment !== 'development' || !identity.localAccounts)
       throw new AppError(404,'NOT_FOUND','Resource unavailable');
@@ -204,6 +218,8 @@ export async function buildApp(config: Config, db: Database, identity: IdentityS
   await billingSupportRoutes(app,commands);
   await feedbackRoutes(app,commands,config.adviceProvider==='gemini'?new GeminiAdviceProvider(config.geminiApiKey!,config.geminiModel):undefined);
   await oversightRoutes(app,commands);
+  await operationsRoutes(app,commands);
+  await nativeRoutes(app,commands);
   app.addHook('onClose',async()=>db.close());
   return app;
 }

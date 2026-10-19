@@ -1,5 +1,13 @@
 # QuoteFix working product memory
 
+## Chapters 19–20 construction and native scope — 19 October 2026
+
+The owner authorises Chapters 19–20 implementation with simple code, backend accuracy and thorough verification. **G13 initial scope resolved by direct answer:** all four roles have connected native screens; CM/Contractor capture comes first. Only account-partitioned unfinished drafts and pending uploads persist on-device. Confidential cases, payment proofs and other server records remain online-only. Sign-out/account switching clears local data. No native push. G14 deletion/retention and actual cloud/store release remain open; this scope answer does not settle them. Physical-device/background-transfer proof must be reported separately from automated checks.
+
+The owner confirms **neither Android nor Mac/iPhone test setup is available**. The initial native build therefore cannot complete Chapter 20's physical-device/OS-transfer gate. Its fault/callback-percentage reminder remains due at actual completion, not handled by this checkpoint. [Chapters 19–20 build record](implementation/CHAPTERS_19_20_BUILD.md), [runbook](implementation/OPERATIONS_RUNBOOK.md) and [ADR 010](architecture/ADR_010_RELEASE_AND_NATIVE_FOUNDATIONS.md) record actual scope, recovery evidence and remaining gates.
+
+Local full regression: **254/254 records on each database adapter**, zero failures/skips/cancellations; final affected PostgreSQL checks **21/21** overlap, plus **nine Windows helper checks** and backend/native checks/bundles/docs. An actual copied-artifact restore of an isolated fictional financial journey matched all table fingerprints and **4 file objects/1 export** in 34,047 ms. Admin processing-health browser verification passed. Three Expo/Metro toolchain advisories remain release blockers. Existing normal API PID 14344/readiness was confirmed directly; its live database/configuration was not changed or restarted. New routes require a planned safe restart. Native runtime/OS background transfer, G14 and production release remain incomplete, not silently certified.
+
 ## PostgreSQL setup follow-up audit — 19 October 2026
 
 Final code checkpoint **`e7c5ee0` passed CI**: 233/233 records on PGlite, 233/233 on PostgreSQL, eight Windows helper checks and strict checks/build. Actual logs were inspected; the audit links run 39208120867. This includes all final error guards and launcher changes. Subsequent evidence edits are documentation only. The intermittent local abort/timeout remains a disclosed reliability concern; no production/scanning/recovery gate was silently closed.

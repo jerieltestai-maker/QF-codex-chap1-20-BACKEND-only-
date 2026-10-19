@@ -4,6 +4,7 @@ import {createReadStream} from 'node:fs';
 import {mkdir,writeFile} from 'node:fs/promises';
 import {resolve} from 'node:path';
 import pg from 'pg';
+import {verifyEvidenceIntegrity} from '../packages/infrastructure/recovery.js';
 
 // Invoked by local-postgres.ps1 after validating the local Docker Desktop endpoint.
 // Exported-snapshot fingerprints and pg_dump observe the same committed database state.
@@ -42,6 +43,8 @@ try {
   const {rows:[snapshot]}=await source.query<{id:string}>('SELECT pg_export_snapshot() AS id');
   const {rows:[version]}=await source.query<{server_version:string}>('SHOW server_version');
   const expected=await fingerprint(source);
+  const queryAdapter=(client:pg.Client)=>({query:async<T extends Record<string,unknown>>(sql:string,params:unknown[]=[]) => (await client.query<T>(sql,params)).rows,exec:async(sql:string)=>{await client.query(sql);}});
+  const expectedEvidence=await verifyEvidenceIntegrity(queryAdapter(source));
   phase='database dump';
   run(['exec','-T','postgres','pg_dump','-U','quotefix','-d','quotefix_development','-Fc','--snapshot='+snapshot!.id,'-f',containerFile]);
   await source.query('COMMIT');transaction=false;
@@ -57,8 +60,10 @@ try {
   phase='full-row verification';
   const actual=await fingerprint(restored);
   if(JSON.stringify(actual)!==JSON.stringify(expected))throw new Error('Restored rows differ from the exported snapshot');
+  const evidence=await verifyEvidenceIntegrity(queryAdapter(restored));
+  if(JSON.stringify(evidence)!==JSON.stringify(expectedEvidence))throw new Error('Restored evidence differs from the exported snapshot');
   await writeFile(resolve(directory,'manifest.json'),JSON.stringify({createdAt:new Date().toISOString(),serverVersion:version!.server_version,
-    source:'quotefix_development',restoredDatabase,dumpSha256:hash.digest('hex'),tables:expected,verified:true,
+    source:'quotefix_development',restoredDatabase,dumpSha256:hash.digest('hex'),tables:expected,evidence,verified:true,
     scope:'Database-only local development restore check. Preserve local helper encryption keys, mailbox and any external evidence separately; this is not a production recovery certification.'},null,2),{flag:'wx'});
   console.log('Database backup and full-row restore verification passed. Record: '+resolve(directory,'manifest.json'));
 } catch {

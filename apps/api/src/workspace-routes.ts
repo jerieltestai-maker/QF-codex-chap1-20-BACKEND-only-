@@ -7,7 +7,7 @@ import {CommandService,type WorkspaceCommand} from '../../../packages/domain/com
 import {WorkspaceService} from '../../../packages/domain/workspace-service.js';
 import {TaskService,authorizedTask} from '../../../packages/domain/task-service.js';
 import {FileService} from '../../../packages/domain/file-service.js';
-import {authorizedJob} from '../../../packages/domain/workspace-service.js';
+import {authorizedJob,authorizedSupport} from '../../../packages/domain/workspace-service.js';
 
 const uuid={type:'string',format:'uuid'},text={type:'string',maxLength:10000},short={type:'string',minLength:1,maxLength:500};
 const integer={type:'integer',minimum:0,maximum:2147483647};
@@ -74,9 +74,10 @@ export async function workspaceRoutes(app:FastifyInstance,db:Database,identity:I
     if(work.kind==='notification.issue'||work.kind==='task.changed')await authorizedTask(sql,actor,String(work.resource_id));
     if(work.kind==='workspace.changed'||work.kind==='workspace.evidence')await authorizedJob(sql,actor,String(work.resource_id));
     if(work.kind==='file.scan') {
-      const [upload]=await sql.query('SELECT job_id,organisation_id FROM upload_intents WHERE id=$1',[work.resource_id]);
+      const [upload]=await sql.query('SELECT job_id,organisation_id,support_id FROM upload_intents WHERE id=$1',[work.resource_id]);
       if(!upload)throw new AppError(404,'NOT_FOUND','Work unavailable');
-      if(upload.organisation_id) {
+      if(upload.support_id)await authorizedSupport(sql,actor,String(upload.support_id));
+      else if(upload.organisation_id) {
         const {authorizedOrganisation}=await import('../../../packages/domain/verification-service.js');
         await authorizedOrganisation(sql,actor,String(upload.organisation_id));
       } else await authorizedJob(sql,actor,String(upload.job_id));

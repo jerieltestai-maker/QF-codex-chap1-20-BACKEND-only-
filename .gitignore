@@ -13,3 +13,6 @@ node_modules/
 Thumbs.db
 dist/
 *.tsbuildinfo
+.expo/
+apps/mobile/ios/
+apps/mobile/android/

@@ -2,7 +2,9 @@
 
 **Plan 0.3 · 13 October 2026 · Web first, native mobile later**
 
-This repository contains the complete **20-chapter implementation plan** and local construction through Chapters 01–18: procurement, work/inspection, payments/closure, billing/support, Feedback/reputation, versioned MCST warning clearance, oversight, canonical role queues and private HTML/JSON decision-pack exports. [Chapters 17–18 build evidence](docs/implementation/CHAPTERS_17_18_BUILD.md) records the latest scope and verification limits; [Chapters 13–14](docs/implementation/CHAPTERS_13_14_BUILD.md) and [Chapters 15–16](docs/implementation/CHAPTERS_15_16_BUILD.md) retain their earlier evidence. Gemini 3.5 Flash-Lite is configured locally; [setup/cost boundaries](docs/implementation/GEMINI_SETUP.md). Chapters 19–20, fault-percentage rules, optional video and production release remain outstanding.
+This repository contains the complete **20-chapter implementation plan**, local web construction through Chapters 01–18 and the Chapters 19–20 operations/native foundations. [Chapters 19–20 build evidence](docs/implementation/CHAPTERS_19_20_BUILD.md) separates verified backend/restore work and the initial connected native application from outstanding production and physical-device gates. [Chapters 17–18](docs/implementation/CHAPTERS_17_18_BUILD.md), [13–14](docs/implementation/CHAPTERS_13_14_BUILD.md) and [15–16](docs/implementation/CHAPTERS_15_16_BUILD.md) retain earlier scope/evidence. Gemini 3.5 Flash-Lite is configured locally; [setup/cost boundaries](docs/implementation/GEMINI_SETUP.md). Production/native release, device/background-transfer certification, retention, fault-percentage rules and optional video remain outstanding.
+
+The [operations runbook](docs/implementation/OPERATIONS_RUNBOOK.md) covers Admin processing health, failure recovery, snapshot/evidence restoration and `pnpm release:check`. The [native development guide](apps/mobile/README.md) covers account-partitioned drafts/capture, PKCE sign-in, SDK/build commands and explicit device/release limits. A blocked release check is expected until actual launch evidence exists.
 
 
 ## Run the local application

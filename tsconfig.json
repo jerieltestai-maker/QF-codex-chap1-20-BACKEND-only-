@@ -6,5 +6,6 @@
     "esModuleInterop": true, "skipLibCheck": true, "outDir": "dist", "rootDir": ".",
     "forceConsistentCasingInFileNames": true
   },
-  "include": ["apps/**/*.ts", "packages/**/*.ts", "tools/*.ts", "tests/**/*.ts"]
+  "include": ["apps/**/*.ts", "packages/**/*.ts", "tools/*.ts", "tests/**/*.ts"],
+  "exclude": ["apps/mobile"]
 }

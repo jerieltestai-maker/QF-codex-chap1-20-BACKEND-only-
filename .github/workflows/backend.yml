@@ -32,6 +32,12 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm typecheck
       - run: pnpm build
+      - name: Native contract typecheck and SDK compatibility
+        run: |
+          pnpm --filter @quotefix/mobile typecheck
+          pnpm --filter @quotefix/mobile exec expo install --check
+      - name: Native Android and iOS JavaScript bundles
+        run: pnpm --filter @quotefix/mobile export
       - name: PGlite regression
         run: pnpm test
       - name: PostgreSQL 18 regression

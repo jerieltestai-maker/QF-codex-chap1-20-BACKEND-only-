@@ -1,5 +1,13 @@
 # QuoteFix decisions and remaining questions
 
+## Chapters 19–20 construction and native scope — 19 October 2026
+
+The owner authorises implementation and explicitly approves G13's initial scope: connected native screens for CM/MCST/Contractor/Admin; CM/Contractor capture first; persistent account-partitioned unfinished drafts/pending uploads only; confidential cases, payment proofs and other server records online-only; sign-out/account switching clears local data; no push notifications. G14 account deletion/retention, production providers and cloud/store release remain open. Real-device evidence is required before native completion; local automated tests alone cannot close that gate.
+
+The owner confirms that neither physical-device setup is available. Initial local construction is recorded in [the build evidence](implementation/CHAPTERS_19_20_BUILD.md); Android/iOS runtime/background-transfer/store checks remain open. Do not mark Chapter 20 finished or its fault/callback policy reminder handled. No account deletion or production retention policy is inferred.
+
+Both local full suites passed **254/254 records**, final affected PostgreSQL **21/21** (overlap), with nine Windows helper checks and strict checks/bundles/docs. Isolated PostgreSQL restoration matched every table and evidence checksum. This evidence closes those local engineering checks only: G14, physical devices/OS transfers, production providers/monitoring/rollout, complete native workflow parity and three Expo/Metro toolchain advisories remain outstanding. The normal API remains on its existing running process/database; new backend routes require a safe restart.
+
 ## PostgreSQL setup follow-up audit — 19 October 2026
 
 Final code checkpoint **`e7c5ee0` passed CI**: 233/233 records on PGlite, 233/233 on PostgreSQL, eight Windows helper checks and strict checks/build. Actual logs were inspected; the audit links run 39208120867. This includes all final error guards and launcher changes. Subsequent evidence edits are documentation only. The intermittent local abort/timeout remains a disclosed reliability concern; no production/scanning/recovery gate was silently closed.

@@ -16,6 +16,7 @@ import {cancellationTimers,issuedCancellation} from '../domain/cancellation-serv
 import {supportExecutionTimers} from '../domain/support-clocks.js';
 import {feedbackTimers} from '../domain/feedback-core.js';
 import {generateExport} from '../domain/export-service.js';
+import {recordWorkerTick} from './operations.js';
 
 interface Work extends Record<string,unknown> {id:string;kind:string;resource_id:string;payload:Record<string,unknown>;lease_token:string;attempts:number}
 const instant=(value:Date|string)=>new Date(value).toISOString();
@@ -195,7 +196,14 @@ export class Worker {
     });
   }
   async tick(limit=25) {
-    await this.timers();
-    for(let i=0;i<limit;i++) {const work=await this.claim();if(!work)break;await this.process(work);}
+    try {
+      await this.timers();
+      for(let i=0;i<limit;i++) {const work=await this.claim();if(!work)break;await this.process(work);}
+      await recordWorkerTick(this.db,this.now(),true);
+    } catch(error) {
+      // Preserve the original failure even if the database is itself unavailable.
+      await recordWorkerTick(this.db,this.now(),false).catch(()=>{});
+      throw error;
+    }
   }
 }

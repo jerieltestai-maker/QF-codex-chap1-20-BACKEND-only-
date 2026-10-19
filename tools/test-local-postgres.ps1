@@ -101,6 +101,15 @@ exit /b 0
   Assert-Qf ((Get-Content -LiteralPath $env:QF_TEST_LOG -Raw).Contains('tools/postgres-backup.ts')) 'Backup did not invoke the verifier'
   Assert-Qf (@(Select-String -LiteralPath $env:QF_TEST_LOG -Pattern ' up ').Count -eq $qfBeforeUp) 'Backup started or seeded a database'
   Write-Output 'PASS: backup invokes verification without starting or seeding a database'
+  & $qfHelper drill *> (Join-Path $qfMockRoot 'drill.log')
+  Assert-Qf ((Get-Content -LiteralPath $env:QF_TEST_LOG -Raw).Contains('tools/recovery-drill.ts')) 'Recovery drill did not invoke the isolated verifier'
+  Assert-Qf (@(Select-String -LiteralPath $env:QF_TEST_LOG -Pattern ' up ').Count -eq $qfBeforeUp) 'Recovery drill started or seeded a database'
+  Assert-Qf ($env:TEST_DATABASE_URL -ceq $qfExpected.TEST_DATABASE_URL) 'Recovery drill leaked its test database setting'
+  $env:QF_TEST_NODE_FAILURE = '1'
+  Expect-QfFailure { & $qfHelper drill *> (Join-Path $qfMockRoot 'drill-failure.log') } 'recovery drill failed'
+  Assert-Qf ($env:TEST_DATABASE_URL -ceq $qfExpected.TEST_DATABASE_URL) 'Failed recovery drill leaked its test database setting'
+  $env:QF_TEST_NODE_FAILURE = '0'
+  Write-Output 'PASS: isolated recovery drill restores caller settings on success and failure without setup or seed'
   & $qfHelper stop *> (Join-Path $qfMockRoot 'stop.log')
   Assert-Qf ((Get-Content -LiteralPath $env:QF_TEST_LOG -Raw).Contains(' stop postgres')) 'Stop is not scoped to the PostgreSQL service'
   Assert-Qf ($env:DATABASE_URL -ceq $qfExpected.DATABASE_URL) 'Stop changed database settings'

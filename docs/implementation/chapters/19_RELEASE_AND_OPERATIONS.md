@@ -4,6 +4,8 @@
 
 **Dependencies:** all web chapters 01–18 and their required decisions. **Purpose:** prove the complete application, not just individual happy paths. This chapter specifies future tests; no production implementation/tests are claimed complete.
 
+**19 October 2026 local construction:** operations diagnostics/worker health, source-bound release checks and evidence-aware restoration are implemented. [Build record](../CHAPTERS_19_20_BUILD.md) distinguishes actual automated evidence from outstanding release/whole-device certification. [Operations runbook](../OPERATIONS_RUNBOOK.md). The acceptance IDs below remain requirements; this note does not mark every gate complete.
+
 ## 1. Release prerequisites and compulsory evidence
 
 | Area | Required before pilot | Owner/evidence |
