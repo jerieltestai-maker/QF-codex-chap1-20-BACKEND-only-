@@ -1,5 +1,7 @@
 # Chapters 09–18 adversarial stocktake — 18 October 2026
 
+**19 October infrastructure follow-up:** the owner-authorised [local PostgreSQL setup](LOCAL_POSTGRES_2026_10_19.md) exposed and corrected three JSON-array writes and protected-access response ordering, with driver-neutral raw-value assertions. The complete server PostgreSQL suite now passes **232 records**, and the affected PGlite suites pass **44 overlapping records**. Local seed backup/restore and container persistence checks also passed. This resolves the local server-database gap in concern 1 below; production infrastructure, real-data/evidence recovery, load/device/accessibility and open policy gates retain their separate limits.
+
 Chapters 09–18 are implemented locally. This review found and fixed integration defects; the earlier passing chapter suites did not establish that every combined journey worked. This report supplements the chapter build records rather than replacing their original evidence. The latest owner decisions in PRODUCT_MEMORY.md and OPEN_DECISIONS.md remain authoritative. No open product policy was decided during this audit.
 
 ## Findings and corrections

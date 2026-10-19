@@ -24,7 +24,15 @@ The first GitHub verification passed typecheck, compilation and the 231-record P
 2. Protected-access evidence was recorded in `onResponse`, permitting callers to receive a result before that independent transaction committed. The hook now awaits the evidence in `onSend` before releasing content. A delayed-database regression checks this ordering directly.
 3. Three assertions assumed PostgreSQL `bigint`/`COUNT` values were JavaScript numbers. They now compare the actual cents/count across driver representations without changing numeric parsers or sacrificing integer precision.
 
-The intermediate local focused run passed **34/35** records, exposing the third JSONB writer in the correction-created resolution; that writer was then fixed. Final verification results are recorded below after execution. Earlier failing runs remain disclosed here.
+The intermediate local focused run passed **34/35** records, exposing the third JSONB writer in the correction-created resolution; that writer was then fixed. Earlier failing runs remain disclosed here.
+
+The affected PGlite suites subsequently passed **44 records**, with zero failures/cancellations/skips/todos (317,897 ms; one file at a time to limit memory demand alongside PostgreSQL). Suites: billing/support, the cross-chapter audit, feedback integration, integrity and protected access. Log: ignored `work/pglite-postgres-fixes-final.log`. Strict TypeScript/browser syntax checks and compilation also passed after the final source changes.
+
+The **complete local PostgreSQL 18.6 suite passed 232 records**, with zero failures/cancellations/skips/todos (574,948 ms, four-file concurrency). Log: ignored `work/postgres-full-final.log`. This includes the three previously failing JSONB paths, protected-access ordering, confidentiality, financial/repair execution, integer representations and real server transaction/race checks. The 44 affected records overlap this full suite; do not add them into a distinct coverage count.
+
+The separate port-3001 PostgreSQL preview passed readiness, six-account discovery, Admin login and authenticated account-context checks, then was stopped. The original port-3000 PGlite app remained healthy. After all tests, PostgreSQL was restarted: health returned and readback retained the same environment and seed counts. The test database had **zero leftover `qf_test_*` schemas**. Docker/PostgreSQL remain running; the optional preview is started with the documented `dev` action.
+
+Runtime changes and setup were published in commit `5b5a1a13d479425154dc99e548168675ef1f9ab1` on `codex/chapters-01-18-baseline`, under [draft PR 1](https://github.com/jerieltestai-maker/QF-codex-chap1-20/pull/1). [GitHub verification for that source](https://github.com/jerieltestai-maker/QF-codex-chap1-20/actions/runs/39198785643) is a separate server/Linux result; check its actual conclusion rather than inferring it from local success. Database dumps, test logs and operational configuration are ignored and were not committed.
 
 ## Backup and recovery
 
