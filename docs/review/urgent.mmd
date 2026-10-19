@@ -1,0 +1,12 @@
+flowchart TB
+  u1["U1: Urgent job alerts admin [C]"]:::c
+  u2["U2: Admin takes coordination [C]"]:::c
+  u3["U3: Attendance arranged [C]"]:::c
+  u4["U4: Urgent sourcing unresolved [C]"]:::c
+  u1 -->|"Admin takes coordination"| u2
+  u2 -->|"Attendance found"| u3
+  u2 -->|"No attendance confirmed"| u4
+  u4 -->|"Continue human sourcing"| u2
+  classDef c fill:#dcfce7,stroke:#166534,color:#17211b
+  classDef p fill:#fef3c7,stroke:#92400e,color:#291c0c
+  classDef o fill:#fee2e2,stroke:#991b1b,color:#2a1111

@@ -1,0 +1,21 @@
+# ADR 001 — Local foundations and identity boundary
+
+13 October 2026. Accepted for local construction following explicit owner approval of TypeScript/Fastify and PostgreSQL. No paid services provisioned.
+
+Use Node 24 LTS, TypeScript 5.9, Fastify 5, PostgreSQL SQL, node-postgres, and plain inspectable SQL migrations. Resolved patch versions are in pnpm-lock.yaml. Pin pnpm 11.25.0 for this workspace. The web shell uses ordinary same-origin HTML/JavaScript; React is unnecessary for these small account forms.
+
+The target server database is PostgreSQL 18. Docker Compose binds the development database to loopback. PGlite 0.3 runs PostgreSQL in-process as a local/test fallback because Docker and PostgreSQL binaries are unavailable here. PGlite tests execute real PostgreSQL constraints and rollback, but do not prove independent server connections, pool behavior or multi-process lock contention. Those are separate release checks on server PostgreSQL.
+
+A local identity adapter implements the approved email/password, verification/recovery, Admin invitations and contractor application flows. Development security messages are written into the ignored work/security-mailbox directory; no external messages are sent. Both staging and production startup refuse this adapter. Managed identity, production mail delivery, hosting, storage, region, operational ownership and costs remain release choices. Local software has no service fees; this does not estimate production costs. Compare a managed PostgreSQL/identity bundle such as Supabase against separately managed PostgreSQL and identity before procurement.
+
+Passwords use Node scrypt with N=32768/r=8/p=3 and independent random salts. Tokens are 256-bit random values stored as SHA-256 hashes. Sessions last eight hours; verification 24 hours, recovery 30 minutes, invitations 72 hours. These are bounded local security settings, not customer task clocks or permanent production policies. Registration/recovery responses are generic. There are no credentials or privileged role claims in browser storage.
+
+Memberships, roles, estate/company scope and verification come from current SQL rows on every request. A context is selected from those rows, never a user-supplied role. Confidential subject exclusions take precedence. CM block labels and MCST titles are descriptive only. Account deletion, durable client cache policy and erasure are not implemented while G14 remains open.
+
+Identity mutation commands take one short transaction-scoped advisory lock. This deliberately simple initial serialization protects invitation consumption, membership revocation, password reset and command receipts. It must be replaced with documented compatible per-aggregate locks before larger workflow traffic; no external network calls occur inside these transactions. The local mailbox writes before commit; rollback can leave an invalid orphaned development message, and the production adapter must use durable provider delivery/recovery instead.
+
+Membership changes commit audit, command receipt and outbox intent atomically. Outbox records are scaffolding; no Chapter 4 worker or customer timers are claimed here. Audit UPDATE/DELETE is rejected by a database trigger; a privileged database owner can still alter schema. Operator backup/permissions/tamper controls remain release work.
+
+Migrations have checksums, ordered filenames and a transaction. Never edit an applied migration; add an expand migration instead. Never automatically drop/reset a database. The persistent database environment marker must agree with the explicit APP_ENV. Fixtures are isolated, deterministic, named Fictional and use example.test addresses. There is no production Admin credential or production bootstrap bypass.
+
+Official references checked during implementation: [Node release policy](https://github.com/nodejs/Release), [Fastify validation](https://fastify.dev/docs/latest/Reference/Validation-and-Serialization/), [PostgreSQL constraints](https://www.postgresql.org/docs/current/ddl-constraints.html), [PGlite filesystem support](https://pglite.dev/docs/filesystems), [OWASP authentication](https://cheatsheetseries.owasp.org/cheatsheets/Authentication_Cheat_Sheet.html), [OWASP CSRF](https://cheatsheetseries.owasp.org/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.html).

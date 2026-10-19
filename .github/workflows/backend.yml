@@ -1,0 +1,32 @@
+name: Backend foundations
+on: [push, pull_request]
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:18
+        env:
+          POSTGRES_USER: quotefix
+          POSTGRES_PASSWORD: test-only
+          POSTGRES_DB: quotefix_test
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U quotefix -d quotefix_test"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.25.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm typecheck
+      - run: pnpm build
+      - run: pnpm test
+      - run: pnpm test
+        env:
+          TEST_DATABASE_URL: postgresql://quotefix:test-only@127.0.0.1:5432/quotefix_test

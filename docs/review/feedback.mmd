@@ -1,0 +1,22 @@
+flowchart TB
+  f1["F1: Feedback scheduled [C]"]:::c
+  f2["F2: CM provides feedback [C]"]:::c
+  f8["F8: Negative durability feedback [C]"]:::c
+  f9["F9: Positive durability feedback [C]"]:::c
+  f7["F7: Following up on missing feedback [C]"]:::c
+  f10["F10: Unable to assess recorded [C]"]:::c
+  f6["F6: Feedback recorded [C]"]:::c
+  f4["F4: Admin reviews publication [C]"]:::c
+  f1 -.->|"30 days pass"| f2
+  f6 -.->|"Publication review needed"| f4
+  f2 -.->|"No response"| f7
+  f7 -.->|"CM responds"| f2
+  f2 -->|"1–3 stars"| f8
+  f8 -->|"Saved"| f6
+  f2 -->|"4–5 stars"| f9
+  f9 -->|"Saved"| f6
+  f2 -.->|"Unable to assess"| f10
+  f10 -->|"Saved"| f6
+  classDef c fill:#dcfce7,stroke:#166534,color:#17211b
+  classDef p fill:#fef3c7,stroke:#92400e,color:#291c0c
+  classDef o fill:#fee2e2,stroke:#991b1b,color:#2a1111

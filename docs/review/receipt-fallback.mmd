@@ -1,0 +1,16 @@
+flowchart TB
+  p2["P2: Contractor checks receipt [C]"]:::c
+  p7["P7: Internal seven-day receipt rule [C]"]:::c
+  p3["P3: Unresolved payment [C]"]:::c
+  p4["P4: Payment received [C]"]:::c
+  f1["F1: Feedback scheduled [C]"]:::c
+  p2 -->|"Agreed partial balance"| p3
+  p3 -->|"Recorded transfer now needs receipt review"| p2
+  p2 -->|"Full receipt confirmed"| p4
+  p4 -.->|"Full receipt or agreed fallback anchor"| f1
+  p2 -.->|"Notification + 7 calendar days; no response"| p7
+  p7 -->|"full balance covered"| p4
+  p7 -->|"Undisputed amount assumed; balance remains"| p3
+  classDef c fill:#dcfce7,stroke:#166534,color:#17211b
+  classDef p fill:#fef3c7,stroke:#92400e,color:#291c0c
+  classDef o fill:#fee2e2,stroke:#991b1b,color:#2a1111

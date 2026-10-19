@@ -1,0 +1,15 @@
+flowchart TB
+  g1["G1: Admin verifies credentials [C]"]:::c
+  g2["G2: Verified credentials recorded [C]"]:::c
+  g3["G3: Credential renewal reminder [C]"]:::c
+  g4["G4: Credential expired [C]"]:::c
+  e2["E2: Contractor cannot continue [C]"]:::c
+  g1 -.->|"Admin approves"| g2
+  g2 -.->|"One month before expiry"| g3
+  g3 -.->|"Renewal evidence supplied"| g1
+  g3 -.->|"Expiry reached"| g4
+  g4 -.->|"Renewal submitted"| g1
+  g4 -.->|"active work affected"| e2
+  classDef c fill:#dcfce7,stroke:#166534,color:#17211b
+  classDef p fill:#fef3c7,stroke:#92400e,color:#291c0c
+  classDef o fill:#fee2e2,stroke:#991b1b,color:#2a1111

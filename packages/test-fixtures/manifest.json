@@ -1,0 +1,19 @@
+{
+  "version": "ch01-ch02-v1",
+  "provenance": "fictional",
+  "environments": [
+    "development",
+    "test"
+  ],
+  "liveUse": false,
+  "scenarios": [
+    "two estates for isolation",
+    "equal CM block labels",
+    "equal MCST titles",
+    "platform admin",
+    "unverified contractor organisation"
+  ],
+  "idsSource": "fixtures.ts",
+  "financialRecords": 0,
+  "reputationRecords": 0
+}

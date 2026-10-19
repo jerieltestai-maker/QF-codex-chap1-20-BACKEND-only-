@@ -1,0 +1,18 @@
+flowchart TB
+  f3["F3: Addressing a later issue [C]"]:::c
+  d1["D1: Contractor responds to concern [C]"]:::c
+  r2["R2: Contractor addresses issues [C]"]:::c
+  r1["R1: CM reviews completion [C]"]:::c
+  d8["D8: Reuse or obtain the required verification [C]"]:::c
+  f5["F5: Aftercare case resolved [C]"]:::c
+  r1 -->|"Unsatisfactory work"| r2
+  r2 -->|"Repair submitted"| r1
+  r2 -->|"Remedy disputed"| d1
+  d1 -->|"Remedy agreed"| r2
+  d8 -->|"Inspect"| r1
+  f3 -->|"Contractor response required"| d1
+  d8 -->|"Aftercare obligation verified"| f5
+  r1 -->|"Aftercare pass"| d8
+  classDef c fill:#dcfce7,stroke:#166534,color:#17211b
+  classDef p fill:#fef3c7,stroke:#92400e,color:#291c0c
+  classDef o fill:#fee2e2,stroke:#991b1b,color:#2a1111

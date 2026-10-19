@@ -1,0 +1,17 @@
+flowchart LR
+  a1["A1: Admin backtracks job status [C]"]:::c
+  a2["A2: Automatic restoration route [C]"]:::c
+  w1["W1: Contractor prepares to start [C]"]:::c
+  w2["W2: Contractor carries out work [C]"]:::c
+  r1["R1: CM reviews completion [C]"]:::c
+  r3["R3: Explaining price change [C]"]:::c
+  r4["R4: MCST confirms invoice [C]"]:::c
+  a1 -->|"Saved; route automatically"| a2
+  a2 -->|"Before start"| w1
+  a2 -->|"Work"| w2
+  a2 -->|"Work review"| r1
+  a2 -->|"Invoice correction"| r3
+  a2 -->|"Invoice confirmation"| r4
+  classDef c fill:#dcfce7,stroke:#166534,color:#17211b
+  classDef p fill:#fef3c7,stroke:#92400e,color:#291c0c
+  classDef o fill:#fee2e2,stroke:#991b1b,color:#2a1111

@@ -1,0 +1,13 @@
+flowchart TB
+  e1["E1: Following up on pending actions [C]"]:::c
+  e2["E2: Contractor cannot continue [C]"]:::c
+  e3["E3: Request Admin Support [C]"]:::c
+  d2["D2: Admin reviews evidence [C]"]:::c
+  c2["C2: CM or MCST confirms cancellation [C]"]:::c
+  e3 -->|"Admin triages the same case"| d2
+  e1 -->|"Substantive dispute identified"| d2
+  e2 -->|"CM or MCST chooses Cancel job"| c2
+  e2 -.->|"Evidence or outcome unresolved"| d2
+  classDef c fill:#dcfce7,stroke:#166534,color:#17211b
+  classDef p fill:#fef3c7,stroke:#92400e,color:#291c0c
+  classDef o fill:#fee2e2,stroke:#991b1b,color:#2a1111

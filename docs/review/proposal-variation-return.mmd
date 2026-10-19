@@ -1,0 +1,13 @@
+flowchart LR
+  xv2["XV2: V2: Decide variation [C]"]:::c
+  xvv["XVV: V3/V4/V5: Record and route [C]"]:::c
+  xvw["XVW: W1/W2: Work stage [C]"]:::c
+  xvr["XVR: R3/R1: Review stage [C]"]:::c
+  xve["XVE: E2: Cannot proceed [C]"]:::c
+  xv2 -->|"Decision saved"| xvv
+  xvv -->|"Work context; feasible"| xvw
+  xvv -->|"Invoice/review context"| xvr
+  xvv -.->|"Cannot continue"| xve
+  classDef c fill:#dcfce7,stroke:#166534,color:#17211b
+  classDef p fill:#fef3c7,stroke:#92400e,color:#291c0c
+  classDef o fill:#fee2e2,stroke:#991b1b,color:#2a1111

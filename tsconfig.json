@@ -1,0 +1,10 @@
+{
+  "compilerOptions": {
+    "target": "ES2023", "module": "NodeNext", "moduleResolution": "NodeNext",
+    "strict": true, "noUncheckedIndexedAccess": true, "exactOptionalPropertyTypes": true,
+    "noUnusedLocals": true, "noUnusedParameters": true,
+    "esModuleInterop": true, "skipLibCheck": true, "outDir": "dist", "rootDir": ".",
+    "forceConsistentCasingInFileNames": true
+  },
+  "include": ["apps/**/*.ts", "packages/**/*.ts", "tools/*.ts", "tests/**/*.ts"]
+}

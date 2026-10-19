@@ -1,0 +1,16 @@
+flowchart TB
+  r1["R1: CM reviews completion [C]"]:::c
+  r2["R2: Contractor addresses issues [C]"]:::c
+  d1["D1: Contractor responds to concern [C]"]:::c
+  d8["D8: Reuse or obtain the required verification [C]"]:::c
+  r4["R4: MCST confirms invoice [C]"]:::c
+  r1 -->|"Unsatisfactory work"| r2
+  r2 -->|"Repair submitted"| r1
+  r2 -->|"Remedy disputed"| d1
+  r1 -->|"Original job work accepted"| r4
+  d8 -->|"Inspect"| r1
+  d8 -->|"Original invoice needs confirmation"| r4
+  r1 -->|"Aftercare pass"| d8
+  classDef c fill:#dcfce7,stroke:#166534,color:#17211b
+  classDef p fill:#fef3c7,stroke:#92400e,color:#291c0c
+  classDef o fill:#fee2e2,stroke:#991b1b,color:#2a1111

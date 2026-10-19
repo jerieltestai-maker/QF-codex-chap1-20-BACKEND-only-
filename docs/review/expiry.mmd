@@ -1,0 +1,9 @@
+flowchart TB
+  s4["S4: Selected quote terms held [C]"]:::c
+  s2["S2: MCST Reviewing selected Contractor [C]"]:::c
+  w1["W1: Contractor prepares to start [C]"]:::c
+  s2 -->|"MCST approves"| w1
+  s4 -.->|"Rule: remain pending MCST"| s2
+  classDef c fill:#dcfce7,stroke:#166534,color:#17211b
+  classDef p fill:#fef3c7,stroke:#92400e,color:#291c0c
+  classDef o fill:#fee2e2,stroke:#991b1b,color:#2a1111
