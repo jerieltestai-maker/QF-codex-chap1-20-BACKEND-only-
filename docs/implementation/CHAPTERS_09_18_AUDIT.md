@@ -45,6 +45,8 @@ After the desktop execution-session interruption, recovery verified another **1,
 
 ## Remaining concerns and boundaries
 
+**19 October update:** the owner supplied a private GitHub repository. The application now has a pushed source checkpoint and [draft PR 1](https://github.com/jerieltestai-maker/QF-codex-chap1-20/pull/1), resolving item 2 below. The [setup guide](SETUP_GUIDE.md) explains the remaining infrastructure steps; the other audit limits remain applicable until their own checks are completed.
+
 1. **Release readiness remains unproven.** The local suite uses PGlite unless TEST_DATABASE_URL is explicitly supplied; server PostgreSQL, production identity/storage/scanning/hosting, recovery/load verification and broader browser/device/accessibility checks still require Chapter 19 evidence. The global database command lock deliberately serialises the local monolith; production throughput has not been established. No production release or real bank execution is claimed.
 2. **There is no committed source baseline.** Git reports an unborn master branch and the entire source tree as untracked. This review cannot supply a trustworthy before/after Git diff or rollback commit. The project needs a reviewed source-control checkpoint; this audit did not publish or commit it automatically.
 3. **Deferred rules remain deferred.** Ordinary extra Admin repetition, warranty automation, retention/deletion, unresolved-case archival, specialty-strength thresholds, fault/callback percentages and later native role/cache/push choices retain their existing gates. The Chapter 20 fault-percentage reminder remains in place. They are not silently treated as completed behavior.

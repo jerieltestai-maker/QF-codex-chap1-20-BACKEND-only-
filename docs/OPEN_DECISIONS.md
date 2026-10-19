@@ -1,5 +1,9 @@
 # QuoteFix decisions and remaining questions
 
+## Git checkpoint published — 19 October 2026
+
+The audited Chapters 01–18 baseline is committed and pushed to `origin/codex/chapters-01-18-baseline`, retaining the repository's initial commit. [Draft PR 1](https://github.com/jerieltestai-maker/QF-codex-chap1-20/pull/1) makes the import reviewable. This resolves the earlier absence of a committed source baseline. Ignored runtime/configuration/key/data paths were checked; common credential-pattern scanning found no candidate secret in the source set. Every staged SQL migration matched its original working-file bytes. GitHub verification status must be checked separately from successful source publication; no production deployment or cloud purchase occurred.
+
 ## Version-control repository designated — 19 October 2026
 
 The owner explicitly designates the private GitHub repository https://github.com/jerieltestai-maker/QF-codex-chap1-20 for version control and requests guidance on remaining infrastructure setup. Preserve its initial README history; use codex/ work branches and reviewable commits. Keep local secrets, operational data, upload/recovery folders and generated outputs out of source control. Checksum-protected SQL migration bytes must survive Git line-ending handling unchanged.

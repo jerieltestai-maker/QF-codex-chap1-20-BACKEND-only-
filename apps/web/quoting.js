@@ -333,4 +333,3 @@
     if(job)return openOpportunity({jobId:id,revision:job.rfqRevision,roundId:job.roundId,description:job.rfq.publicDescription,accessEquipmentRequired:job.rfq.accessEquipmentRequired??false},job);
     return openOpportunity(await qf.api('opportunities/'+id));}};
 })();
-
