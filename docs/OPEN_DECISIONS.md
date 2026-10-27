@@ -1,5 +1,9 @@
 # QuoteFix decisions and remaining questions
 
+## Owner-authorised stability repairs — 27 October 2026
+
+Direct owner answers: **desktop prototype only**, **no physical-device setup yet**. Local desktop PostgreSQL/storage and P1/P2 functional repairs are authorised; the owner asks the agent to solve available technical work independently. The [stability record](implementation/STABILITY_2026_10_27.md) covers the implementation and current local operating instructions. This resolves the uncertainty about hosted live users, not a product-policy gate. G02 additional ordinary repeats, G04 warranty automation, G14 deletion/retention, G15 archival, specialist thresholds and the actual-Chapter-20-completion fault/callback reminder remain open. No cloud deployment, store release or new retention/deletion policy is approved by these answers.
+
 ## Full Chapters 01–20 audit — 27 October 2026
 
 [The owner-requested implementation/accuracy report](implementation/FULL_AUDIT_2026_10_27.md) separates reproduced code gaps, approved-but-partial features, fresh verification failures and remaining KIV/release decisions. This is an audit checkpoint only: no open policy is resolved and no application behavior is changed. G02 additional ordinary repeats, G04 warranty automation, G14 deletion/retention, G15 archival, specialist strength thresholds and the actual-Chapter-20-completion fault/callback follow-up retain their existing status. G13's initial scope and G01/G03/G05–G12's settled answers are not reopened.

@@ -2,7 +2,7 @@
 
 Plan 0.3 · 2026-10-13 · lifecycle 2026-10-12-v14. [Master](../IMPLEMENTATION_PLAN.md). Generated from the manifest and current sources; no policy is decided by generation.
 
-**206 scenario specifications across 20 chapters.** These rows define requirements rather than claiming completion. Executed local subsets are recorded separately in [01–02 evidence](CH01_CH02_VERIFICATION.md), [03–04 evidence](CHAPTERS_03_04_BUILD.md), [05–06 evidence](CHAPTERS_05_06_BUILD.md), [07–08 evidence](CHAPTERS_07_08_BUILD.md), [09–10 evidence](CHAPTERS_09_10_BUILD.md), [11–12 evidence](CHAPTERS_11_12_BUILD.md), [13–14 evidence](CHAPTERS_13_14_BUILD.md), [15–16 evidence](CHAPTERS_15_16_BUILD.md) and [17–18 evidence](CHAPTERS_17_18_BUILD.md). Chapter 19 release and Chapter 20 native scenarios remain planned; local checks do not establish production readiness.
+**206 scenario specifications across 20 chapters.** These rows define requirements rather than claiming completion. Executed local subsets are recorded separately in [01–02 evidence](CH01_CH02_VERIFICATION.md), [03–04 evidence](CHAPTERS_03_04_BUILD.md), [05–06 evidence](CHAPTERS_05_06_BUILD.md), [07–08 evidence](CHAPTERS_07_08_BUILD.md), [09–10 evidence](CHAPTERS_09_10_BUILD.md), [11–12 evidence](CHAPTERS_11_12_BUILD.md), [13–14 evidence](CHAPTERS_13_14_BUILD.md), [15–16 evidence](CHAPTERS_15_16_BUILD.md) and [17–18 evidence](CHAPTERS_17_18_BUILD.md). Chapters 19–20 have partial local implementation; see [19–20 evidence](CHAPTERS_19_20_BUILD.md) and [stability repairs](STABILITY_2026_10_27.md). Hosted release and physical-device gates remain outstanding; local checks do not establish production readiness.
 
 ## Evidence to retain
 

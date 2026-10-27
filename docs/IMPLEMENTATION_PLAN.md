@@ -1,10 +1,10 @@
 # QuoteFix — master implementation plan
 
-**Construction update, 13 October 2026:** local construction now includes Chapters 07-08 following 01-06, with owner-approved G05/G06/G07 policies. See [07-08 build evidence](implementation/CHAPTERS_07_08_BUILD.md) for quotations, Q&A/visits, exact-version selection/approval, privacy, clocks and executed checks. The tables below retain the complete requirements; implementation is not production certification.
+**Construction update, 27 October 2026:** Chapters 01–18 have local implementation evidence; Chapters 19–20 have partial operations/native foundations. The [full audit](implementation/FULL_AUDIT_2026_10_27.md) and [stability follow-up](implementation/STABILITY_2026_10_27.md) distinguish implemented behaviour, repairs, KIV items and release gates. The owner confirms this is a desktop prototype. Local verification does not certify a hosted release or physical native devices.
 
 **Plan 0.3 · 13 October 2026 · Lifecycle baseline 2026-10-12-v14**
 
-**Status: local construction through Chapters 07-08; Chapters 09-20 remain planned.** See [01-02 evidence](implementation/CH01_CH02_VERIFICATION.md), [03-04 evidence](implementation/CHAPTERS_03_04_BUILD.md), [05-06 evidence](implementation/CHAPTERS_05_06_BUILD.md), [07-08 evidence](implementation/CHAPTERS_07_08_BUILD.md) and [local setup](implementation/LOCAL_DEVELOPMENT.md). External recommendation/reputation AI, optional video and production deployment remain separate work.
+**Status: Chapters 01–18 locally implemented; Chapters 19–20 partially implemented.** See the [verification index](implementation/VERIFICATION_INDEX.md), [19–20 build record](implementation/CHAPTERS_19_20_BUILD.md) and [current desktop instructions](implementation/STABILITY_2026_10_27.md). Remaining approved feature gaps and open policies are recorded in the full audit; they are not silently removed from the plan.
 
 ## 1. Start here
 
@@ -144,7 +144,7 @@ Current chapter set supersedes only the old delivery organization. [Draft 0.2](I
 
 All confirmed first-release capabilities are represented: authentication, role access, verification, RFQs, AI-assisted factual drafting, Q&A/visits, quotes/comparison/approval, work/variations, inspections/invoices, payment/receipt, fees, cancellation/claims/support, durability Feedback, reputation/AI evidence, approved integrity warnings, dashboards, decision packs and operations.
 
-Unresolved parameters stay marked in [Decision gates](implementation/DECISION_GATES.md). Examples: login/invitation mechanics, quote expiry default, precise trade eligibility configuration, fee-cent rounding, specialist scoring/risk settings, extra ordinary repeat rules, unspecified start scheduling and retention. Each gate blocks only its dependent behavior, not documentation of the whole app.
+Unresolved parameters stay marked in [Open decisions](OPEN_DECISIONS.md). These include G02 extra ordinary repeats, G04 warranty automation, G14 deletion/retention, G15 unresolved-case archival and specialist scoring settings. Previously resolved identity, expiry, billing and warning policies must follow the latest owner decisions. Each open gate blocks only its dependent behaviour.
 
 Later or expressly KIV: unresolved-case archive, warranty automation beyond recorded terms, recurring contracts, escrow, predictive market pricing, automatic fraud conclusions, unapproved risk add-ons, email/WhatsApp/native push, and native delivery choices. Do not silently ship these as defaults. Conversely, deferral of an unresolved parameter is not permission to omit an approved feature from the web release without an explicit scope change.
 

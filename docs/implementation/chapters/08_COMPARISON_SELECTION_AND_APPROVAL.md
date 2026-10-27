@@ -50,7 +50,7 @@ Display pending concrete CM or MCST, plus quote-count/coverage context. Do not p
 
 Select/approve locks/version-checks the affected ticket, quote, authority/threshold and eligibility dependencies. It atomically creates selection/comparison snapshot/authorization-or-task/audit/outbox. MCST rejection retains original decision and current pointers, rather than deleting selection history. Simultaneous CM/MCST choices can produce only one current valid selection/authorisation.
 
-AI verdict is evidence-based advice; selection can remain human. Do not ship an invented reputation score while waiting for chapter 16's policy. Preserve recommendation/evidence/version shown at selection. Chapter 17 cautions remain advisory and never create an extra MCST gate below threshold.
+AI verdict is evidence-based advice; selection can remain human. Do not ship an invented reputation score while waiting for chapter 16's policy. Preserve recommendation/evidence/version shown at selection. The later owner-approved G12 rule supersedes advisory-only cautions: active Chapter 17 warnings require MCST review below threshold, with exact warning/settings/version acknowledgement and explicit clearance; no warning itself approves work.
 
 ## 6. Verification tests
 
