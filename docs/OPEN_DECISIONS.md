@@ -1,5 +1,9 @@
 # QuoteFix decisions and remaining questions
 
+## Full Chapters 01–20 audit — 27 October 2026
+
+[The owner-requested implementation/accuracy report](implementation/FULL_AUDIT_2026_10_27.md) separates reproduced code gaps, approved-but-partial features, fresh verification failures and remaining KIV/release decisions. This is an audit checkpoint only: no open policy is resolved and no application behavior is changed. G02 additional ordinary repeats, G04 warranty automation, G14 deletion/retention, G15 archival, specialist strength thresholds and the actual-Chapter-20-completion fault/callback follow-up retain their existing status. G13's initial scope and G01/G03/G05–G12's settled answers are not reopened.
+
 ## Chapters 19–20 construction and native scope — 19 October 2026
 
 The owner authorises implementation and explicitly approves G13's initial scope: connected native screens for CM/MCST/Contractor/Admin; CM/Contractor capture first; persistent account-partitioned unfinished drafts/pending uploads only; confidential cases, payment proofs and other server records online-only; sign-out/account switching clears local data; no push notifications. G14 account deletion/retention, production providers and cloud/store release remain open. Real-device evidence is required before native completion; local automated tests alone cannot close that gate.

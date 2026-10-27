@@ -1,5 +1,9 @@
 # QuoteFix working product memory
 
+## Full Chapters 01–20 audit — 27 October 2026
+
+The owner requests a complete implementation/accuracy audit and report. [The audit](implementation/FULL_AUDIT_2026_10_27.md) reviews source `9d687ba` against all 20 chapters/206 acceptance scenarios. It reproduces missing native-upload attachment, truncated opportunity/moderation lists, incomplete Contractor chronology and missing cancellation acceptance in decision packs; source review identifies cold-offline native draft access and completed-upload cleanup gaps. Refreshed dependency/SDK checks and complete-suite reliability are recorded separately from historical CI. No application fix, product-policy answer, deployment or Chapter 20 completion is implied. Existing open policies and the actual-completion fault/callback reminder remain unchanged.
+
 ## Chapters 19–20 construction and native scope — 19 October 2026
 
 The owner authorises Chapters 19–20 implementation with simple code, backend accuracy and thorough verification. **G13 initial scope resolved by direct answer:** all four roles have connected native screens; CM/Contractor capture comes first. Only account-partitioned unfinished drafts and pending uploads persist on-device. Confidential cases, payment proofs and other server records remain online-only. Sign-out/account switching clears local data. No native push. G14 deletion/retention and actual cloud/store release remain open; this scope answer does not settle them. Physical-device/background-transfer proof must be reported separately from automated checks.

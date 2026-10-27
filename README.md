@@ -1,5 +1,7 @@
 # QuoteFix — backend foundations and implementation blueprint
 
+[Full Chapters 01–20 implementation and accuracy audit — 27 October 2026](docs/implementation/FULL_AUDIT_2026_10_27.md) records current functional gaps, refreshed dependency/SDK checks, KIV items and release limits. It is a report, not an application-fix or release sign-off.
+
 **Plan 0.3 · 13 October 2026 · Web first, native mobile later**
 
 This repository contains the complete **20-chapter implementation plan**, local web construction through Chapters 01–18 and the Chapters 19–20 operations/native foundations. [Chapters 19–20 build evidence](docs/implementation/CHAPTERS_19_20_BUILD.md) separates verified backend/restore work and the initial connected native application from outstanding production and physical-device gates. [Chapters 17–18](docs/implementation/CHAPTERS_17_18_BUILD.md), [13–14](docs/implementation/CHAPTERS_13_14_BUILD.md) and [15–16](docs/implementation/CHAPTERS_15_16_BUILD.md) retain earlier scope/evidence. Gemini 3.5 Flash-Lite is configured locally; [setup/cost boundaries](docs/implementation/GEMINI_SETUP.md). Production/native release, device/background-transfer certification, retention, fault-percentage rules and optional video remain outstanding.
