@@ -1,5 +1,7 @@
 # QuoteFix setup guide — 19 October 2026
 
+**Current entry point, 27 October 2026:** use [Clone and data setup](CLONE_AND_DATA_SETUP.md) for reproducible installation/seeding/private dataset transfer and [stability operations](STABILITY_2026_10_27.md) for the owner’s current PostgreSQL prototype. The dated sections below preserve earlier setup context. The normal app has since moved to PostgreSQL; a restart does not install fixtures.
+
 The owner designated [QF-codex-chap1-20](https://github.com/jerieltestai-maker/QF-codex-chap1-20) for source version control. Its visibility was verified as private. The initial README commit is retained as the parent of the application baseline. Local secrets, databases, security mailboxes, recovery copies, uploads and generated builds remain outside Git.
 
 ## Local PostgreSQL is configured — 19 October 2026
@@ -28,7 +30,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File tools/local-postgres.ps1 sto
 powershell -NoProfile -ExecutionPolicy Bypass -File tools/test-local-postgres.ps1
 ```
 
-The helper restores the caller's environment, PATH and working directory after success or failure. Its `test` action also sets the default environment/database to **test**, disables the local account helper, and uses temporary test schemas; implicit configuration must not target development. The loopback-only Compose password `local-only` is a development fixture. `quotefix_development` holds the fictional preview; `quotefix_test` hosts test schemas. The persistent volume is `qfwebapp_quotefix_dev`. Start again with `setup`. Do not use `docker compose down -v`: that removes the database volume. Do not delete the current PGlite directory or copy its engine files into a server PostgreSQL directory.
+The helper restores the caller's environment, PATH and working directory after success or failure. Its `test` action also sets the default environment/database to **test**, disables the local account helper, and uses temporary test schemas; implicit configuration must not target development. The loopback-only Compose password `local-only` is a development fixture. `quotefix_development` holds the fictional preview; `quotefix_test` hosts test schemas. The persistent volume is `qfwebapp_quotefix_dev`. Restart the existing service with `start`; `setup` additionally installs fictional fixtures. Do not use `docker compose down -v`: that removes the database volume. Do not delete the current PGlite directory or copy its engine files into a server PostgreSQL directory.
 
 **Open the PostgreSQL preview at `http://localhost:3001`, and the existing app at `http://127.0.0.1:3000`.** Cookies are scoped by hostname, not port. Using `127.0.0.1` for both would let their same-named session cookies replace one another. The preview still binds only to the IPv4 loopback interface.
 
@@ -49,7 +51,7 @@ The repository's GitHub Actions workflow is also configured to run strict checks
 | Private file storage | Keeps invoices, photos, transfer proofs and other evidence with server-enforced access | Before a hosted pilot; private access rules need implementation and tests |
 | Application hosting | Runs the Fastify app and its continuous database-backed worker | Before a hosted pilot |
 | Authentication email delivery | Sends verification/recovery/invitation security messages | Before external-user authentication; customer activity alerts remain in-app only |
-| Upload malware scanning | Checks uploaded documents before they become usable | Local configuration and production deployment still need a working scanner; missing ClamAV leaves uploads processing |
+| Upload malware scanning | Checks uploaded documents before they become usable | Windows prototype uses installed Defender; other platforms need configured ClamAV. Production scanning remains a release gate |
 | Domain/DNS | Gives the hosted application and authentication sender a stable address | Later, when naming and hosting are chosen |
 | Backups and monitoring | Detects failures and supports recovery of records together with evidence | Required before a real pilot, including an actual restore exercise |
 | Gemini | Supplies the already configured optional comparison advice | Already configured locally; no replacement key requested |

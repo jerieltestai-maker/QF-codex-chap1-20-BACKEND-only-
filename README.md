@@ -1,6 +1,6 @@
 # QuoteFix — backend foundations and implementation blueprint
 
-[Full Chapters 01–20 implementation and accuracy audit — 27 October 2026](docs/implementation/FULL_AUDIT_2026_10_27.md) records current functional gaps, refreshed dependency/SDK checks, KIV items and release limits. It is a report, not an application-fix or release sign-off.
+[P1/P2 stability repairs — 27 October 2026](docs/implementation/STABILITY_2026_10_27.md) records the implemented fixes, 267-record PostgreSQL verification, data-preserving local PostgreSQL adoption and remaining limits. The [original full audit](docs/implementation/FULL_AUDIT_2026_10_27.md) preserves the pre-fix findings.
 
 **Plan 0.3 · 13 October 2026 · Web first, native mobile later**
 
@@ -9,23 +9,21 @@ This repository contains the complete **20-chapter implementation plan**, local 
 The [operations runbook](docs/implementation/OPERATIONS_RUNBOOK.md) covers Admin processing health, failure recovery, snapshot/evidence restoration and `pnpm release:check`. The [native development guide](apps/mobile/README.md) covers account-partitioned drafts/capture, PKCE sign-in, SDK/build commands and explicit device/release limits. A blocked release check is expected until actual launch evidence exists.
 
 
-## Run the local application
+## Clone, seed and run
 
-See the [owner setup guide](docs/implementation/SETUP_GUIDE.md) for version control, local PostgreSQL and later hosting/authentication/storage accounts. The [PostgreSQL setup record](docs/implementation/LOCAL_POSTGRES_2026_10_19.md) and [follow-up audit](docs/implementation/LOCAL_POSTGRES_AUDIT_2026_10_19.md) cover fictional seeds, compatibility/isolation fixes and backup/restore evidence. Run `powershell -NoProfile -ExecutionPolicy Bypass -File tools/local-postgres.ps1 dev` for the PostgreSQL preview at **http://localhost:3001**, separate from the existing app's cookie hostname.
+Use the [clone and data setup guide](docs/implementation/CLONE_AND_DATA_SETUP.md) for exact clone/install commands, the pinned stack, six fictional accounts, isolated tests and private database/image/draft transfer. A Git clone contains source and seed definitions; operational data and secrets stay outside Git. The desktop prototype is not a hosted production release.
 
-The [Chapters 09–18 adversarial audit](docs/implementation/CHAPTERS_09_18_AUDIT.md) records cross-chapter fixes, the final 231-record regression, browser verification and remaining release/source-control concerns.
+A fresh Windows setup uses Node.js 24, pnpm 11.25.0 and Docker Desktop/PostgreSQL 18. Install with `pnpm install --frozen-lockfile`, create your own ignored `.env`, and follow the guide's explicit fresh-only fixture setup. Normal startup verifies migrations without reseeding.
 
-The [Chapters 01–08 audit](docs/implementation/CHAPTERS_01_08_AUDIT.md) preserves the earlier stocktake and 79-test baseline. The [Chapters 09–10 build record](docs/implementation/CHAPTERS_09_10_BUILD.md) and [Chapters 11–12 build record](docs/implementation/CHAPTERS_11_12_BUILD.md) record subsequent implementation and validation.
-
-The [Chapters 11–12 interruption audit](docs/implementation/CHAPTERS_11_12_AUDIT.md) maps every planned verification ID to actual assertions, fixes missed backend/UI paths and distinguishes later chapter integrations from locally verified behavior.
-
-Use Node.js 24 LTS. From this directory on Windows, run:
+For an **already-configured** PostgreSQL desktop checkout:
 
 ```powershell
-.\tools\dev.ps1
+./tools/local-postgres.ps1 start
+node tools/prototype.mjs start
+node tools/prototype.mjs status
 ```
 
-Open http://127.0.0.1:3000. The script installs dependencies, prepares a local PostgreSQL-compatible database and fictional accounts, then starts the API. Read [local development and test accounts](docs/implementation/LOCAL_DEVELOPMENT.md), [technical decisions](docs/architecture/ADR_001_LOCAL_FOUNDATIONS.md) and [verification evidence](docs/implementation/CH01_CH02_VERIFICATION.md). The local identity adapter refuses staging/production. No paid services have been provisioned.
+Open http://127.0.0.1:3000. The [stability record](docs/implementation/STABILITY_2026_10_27.md) covers stop/restart and verified backup commands. The [owner setup guide](docs/implementation/SETUP_GUIDE.md) retains historical setup/provider context; it does not replace the clone guide. Read the [operations runbook](docs/implementation/OPERATIONS_RUNBOOK.md) and [native development guide](apps/mobile/README.md) for their separate remaining release gates.
 
 ## Read in this order
 
