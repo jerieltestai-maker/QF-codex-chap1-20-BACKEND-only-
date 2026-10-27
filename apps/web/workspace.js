@@ -26,6 +26,19 @@
     if(result.serverTime)serverOffset=Date.parse(result.serverTime)-Date.now();
     return result;
   }
+  async function all(route,field) {
+    const items=[],generation=epoch;let result;
+    for(let offset=0;;offset+=100) {
+      if(generation!==epoch)throw new Error('Account or context changed. Refresh this list.');
+      const query=new URLSearchParams({limit:'100',offset:String(offset)});
+      result=await api(route+(route.includes('?')?'&':'?')+query);
+      if(generation!==epoch)throw new Error('Account or context changed. Refresh this list.');
+      const page=field?result[field]:result;
+      if(!Array.isArray(page))throw new Error('The server returned an invalid list. Refresh and try again.');
+      items.push(...page);if(page.length<100)break;
+    }
+    return field?{...result,[field]:items}:items;
+  }
   const commandClient=window.qfCommands.create({api,partition,generation:()=>epoch,storage:sessionStorage,online:()=>navigator.onLine,digest});
   const submit=commandClient.submit;
   function button(label,action) {
@@ -35,14 +48,15 @@
   function line(value) {const p=document.createElement('p');p.textContent=value;return p;}
   async function refreshDrafts() {
     const copies=localDrafts();
-    if(navigator.onLine)for(const server of await api('drafts'))if(!copies.some(d=>d.id===server.id))copies.push({id:server.id,revision:server.revision,baseVersion:server.base_version,jobId:server.job_id,fields:server.fields,serverOnly:true});
-    el('saved-drafts').replaceChildren(new Option('Choose a draft',''),...copies.map(item=>new Option(item.fields.title||'Untitled draft',item.id)));
-    el('saved-drafts').onchange=()=>{const chosen=copies.find(d=>d.id===el('saved-drafts').value);if(chosen){draft={...chosen};fill(draft.fields);status(chosen.serverOnly?'Loaded server draft.':'Loaded device draft.');}};
+    if(navigator.onLine)for(const server of await all('drafts'))if(!copies.some(d=>d.id===server.id&&d.revision===server.revision&&window.qfCommands.sameInput(d.fields,server.fields)))copies.push({id:server.id,revision:server.revision,baseVersion:server.base_version,jobId:server.job_id,fields:server.fields,serverOnly:true});
+    const choice=item=>(item.serverOnly?'server:':'device:')+item.id;
+    el('saved-drafts').replaceChildren(new Option('Choose a draft',''),...copies.map(item=>new Option((item.fields.title||'Untitled draft')+' · '+(item.serverOnly?'server':'device'),choice(item))));
+    el('saved-drafts').onchange=()=>{const chosen=copies.find(d=>choice(d)===el('saved-drafts').value);if(chosen){jobLoad++;job=null;el('workspace-detail').hidden=true;draft={...chosen};fill(draft.fields);el('workspace-submit').textContent=draft.jobId?'Save workspace changes':'Create private workspace';status(chosen.serverOnly?'Loaded server draft.':'Loaded device draft.');}};
   }
   async function loadJob(id,loadFields=true) {
     const load=++jobLoad,generation=epoch,result=await api('workspaces/'+id);
     if(load!==jobLoad||generation!==epoch)return;
-    const [history,supports]=await Promise.all([api('workspaces/'+id+'/history'),api('workspaces/'+id+'/support')]);
+    const [history,supports]=await Promise.all([all('workspaces/'+id+'/history'),all('workspaces/'+id+'/support')]);
     if(load!==jobLoad||generation!==epoch)return;
     job=result.job;
     el('workspace-detail').hidden=false;el('workspace-title').textContent=job.title;el('workspace-stage').textContent=job.stage;
@@ -59,13 +73,13 @@
   }
   async function refreshLists() {
     if(!context?.context||!navigator.onLine)return;
-    const jobs=await api('workspaces');el('workspace-list').replaceChildren(...jobs.map(item=>button(item.title+' · '+item.stage,()=>loadJob(item.id))));
-    const bells=await api('notifications');el('bell-count').textContent='('+bells.unreadCount+' unread)';
+    const jobs=await all('workspaces');el('workspace-list').replaceChildren(...jobs.map(item=>button(item.title+' · '+item.stage,()=>loadJob(item.id))));
+    const bells=await all('notifications','notifications');el('bell-count').textContent='('+bells.unreadCount+' unread)';
     el('bell-list').replaceChildren(...bells.notifications.map(n=>{const p=line(n.message+' · '+new Date(n.issued_at).toLocaleString('en-SG',{timeZone:'Asia/Singapore'})+' SGT');
       if(!n.read_at)p.append(button('Mark read',async()=>{await api('notifications/'+n.id+'/read',{});await refreshLists();}));return p;}));
-    const result=await api('tasks');el('task-list').replaceChildren(...result.tasks.map(t=>line(t.owner_role.toUpperCase()+': '+t.action)));
+    const result=await all('tasks','tasks');el('task-list').replaceChildren(...result.tasks.map(t=>line(t.owner_role.toUpperCase()+': '+t.action)));
     if(context.context.role==='admin') {
-      const attention=await api('admin/attention');el('attention-list').replaceChildren(...attention.tasks.filter(t=>t.owner_role==='admin').map(t=>{
+      const attention=await all('admin/attention','tasks');el('attention-list').replaceChildren(...attention.tasks.filter(t=>t.owner_role==='admin').map(t=>{
         const p=line(t.action+(t.acknowledged_at?' · Acknowledged; follow-up remains open.':' · Unacknowledged.'));
         const action=document.createElement('input');action.placeholder='Next action';action.setAttribute('aria-label','Next action');action.value=t.next_action||'';
         const at=document.createElement('input');at.type='datetime-local';at.setAttribute('aria-label','Next follow-up in Singapore time');
@@ -83,7 +97,7 @@
         }));
         if(t.follow_up_at){const countdown=line('');countdown.dataset.due=t.follow_up_at;p.append(countdown);}return p;
       }));
-      const failures=await api('admin/failed-work');el('failed-list').replaceChildren(...failures.map(w=>{const p=line(w.kind+' · '+w.last_error_code+' · '+w.attempts+' attempts');p.append(button('Retry after fixing cause',async()=>{await api('admin/failed-work/'+w.id+'/retry',{});await refreshLists();}));return p;}));
+      const failures=await all('admin/failed-work');el('failed-list').replaceChildren(...failures.map(w=>{const p=line(w.kind+' · '+w.last_error_code+' · '+w.attempts+' attempts');p.append(button('Retry after fixing cause',async()=>{await api('admin/failed-work/'+w.id+'/retry',{});await refreshLists();}));return p;}));
     }
     document.dispatchEvent(new CustomEvent('qf:lists-refreshed'));
   }
@@ -183,5 +197,5 @@
     node.textContent=(milliseconds<=0?(node.dataset.overdueLabel||'Follow-up is due'):(node.dataset.followupPrefix||'Follow up in')+' '+Math.floor(hours/24)+'d '+hours%24+'h')+' — '+new Date(node.dataset.due).toLocaleString('en-SG',{timeZone:'Asia/Singapore'})+' SGT';
   });},1000);
   window.addEventListener('online',()=>{if(context?.context&&job)resumeUploads().catch(error=>status(error.message));});
-  window.qfWorkspace={api,submit,loadJob,refreshLists,get context(){return context;},get job(){return job;}};
+  window.qfWorkspace={api,all,submit,loadJob,refreshLists,get context(){return context;},get job(){return job;}};
 })();

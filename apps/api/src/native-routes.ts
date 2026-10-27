@@ -20,6 +20,6 @@ export async function nativeRoutes(app:FastifyInstance,commands:CommandService) 
     const actor=await commands.identity.actor(r.cookies.qf_session,tx);
     // No cached server projections in the initial scope: re-fetch every protected resource.
     const accessContext=createHash('sha256').update(JSON.stringify([actor.id,actor.accessVersion,actor.context??null,actor.memberships])).digest('hex');
-    return {accountId:actor.id,accessContext,contractVersion:1,mode:'canonical-refresh',purgeServerCache:true,serverTime:commands.now().toISOString()};
+    return {accountId:actor.id,contextId:actor.context?.id??null,accessContext,contractVersion:1,mode:'canonical-refresh',purgeServerCache:true,serverTime:commands.now().toISOString()};
   }));
 }

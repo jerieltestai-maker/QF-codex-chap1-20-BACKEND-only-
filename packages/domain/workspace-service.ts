@@ -74,9 +74,9 @@ export class WorkspaceService {
   async list(token:string) {
     const actor=await this.identity.actor(token);
     if(!actor.context)return [];
-    if(actor.context.role==='admin')return this.db.query('SELECT id,title,stage,version,estate_id FROM job_records ORDER BY created_at DESC,id LIMIT 100');
+    if(actor.context.role==='admin')return this.db.query('SELECT id,title,stage,version,estate_id FROM job_records ORDER BY created_at DESC,id');
     if(actor.context.role==='contractor')return []; // RFQ opportunity access is bound in Chapter 06, never estate-wide.
-    return this.db.query('SELECT id,title,stage,version,estate_id FROM job_records WHERE estate_id=$1 ORDER BY created_at DESC,id LIMIT 100',[actor.context.estate_id]);
+    return this.db.query('SELECT id,title,stage,version,estate_id FROM job_records WHERE estate_id=$1 ORDER BY created_at DESC,id',[actor.context.estate_id]);
   }
   async detail(token:string,id:string) {
     const actor=await this.identity.actor(token),job=await authorizedJob(this.db,actor,id);
@@ -94,7 +94,7 @@ export class WorkspaceService {
     const actor=await this.identity.actor(token);await authorizedJob(this.db,actor,id);
     // Only explicitly job-scoped events; support descriptions, fees and access logs have separate scopes.
     const events=await this.db.query(`SELECT id,action,actor_id,actor_role,before_value,after_value,reason,recorded_at FROM audit_events
-      WHERE resource_id=$1 AND action IN ('workspace.create','workspace.edit','file.attach','rfq.intake','rfq.publish','rfq.revise','rfq.split','rfq.refine','rfq.accept-refinement','rfq.coordinate') ORDER BY recorded_at,id LIMIT 200`,[id]);
+      WHERE resource_id=$1 AND action IN ('workspace.create','workspace.edit','file.attach','rfq.intake','rfq.publish','rfq.revise','rfq.split','rfq.refine','rfq.accept-refinement','rfq.coordinate') ORDER BY recorded_at,id`,[id]);
     if(actor.context?.role==='cm'){const [estate]=await this.db.query('SELECT contractor_identities_visible FROM estates WHERE id=$1',[actor.context.estate_id]);if(!estate?.contractor_identities_visible)return events.filter(e=>e.action!=='rfq.coordinate');}
     return events;
   }
@@ -151,7 +151,7 @@ export class WorkspaceService {
   async drafts(token:string) {
     const actor=await this.identity.actor(token);
     if(!actor.context || actor.context.role==='contractor')return [];
-    return this.db.query('SELECT * FROM workspace_drafts WHERE owner_id=$1 AND estate_id=$2 ORDER BY updated_at DESC LIMIT 100',[actor.id,actor.context.estate_id]);
+    return this.db.query("SELECT * FROM workspace_drafts WHERE owner_id=$1 AND ($3='admin' OR estate_id=$2) ORDER BY updated_at DESC,id",[actor.id,actor.context.estate_id,actor.context.role]);
   }
   async support(token:string,meta:WorkspaceCommand,id:string,body:{description:string;privacy:'ordinary'|'confidential';subjectUserIds:string[];subjectOrganisationIds:string[]}) {
     return this.commands.run(token,meta,'support.submit',{id,...body},async(tx,actor)=>{await authorizedJob(tx,actor,id);},async(tx,actor)=>{
@@ -169,7 +169,7 @@ export class WorkspaceService {
   }
   async supports(token:string,id:string) {
     const actor=await this.identity.actor(token);await authorizedJob(this.db,actor,id);
-    const rows=await this.db.query('SELECT id FROM support_requests WHERE job_id=$1 ORDER BY created_at DESC LIMIT 100',[id]);
+    const rows=await this.db.query('SELECT id FROM support_requests WHERE job_id=$1 ORDER BY created_at DESC',[id]);
     const visible=[];
     for(const row of rows)try{visible.push(await authorizedSupport(this.db,actor,String(row.id)));}catch(error){if(!(error instanceof AppError && error.status===404))throw error;}
     if(actor.context?.role==='cm') {

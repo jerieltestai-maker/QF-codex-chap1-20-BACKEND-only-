@@ -22,7 +22,7 @@
   async function refreshVerification() {
     const generation=epoch,role=qf.context?.context?.role;
     if(!['admin','contractor'].includes(role))return;
-    const data=await qf.api('verification/rules'),companies=await qf.api('contractors');if(generation!==epoch)return;
+    const data=await qf.api('verification/rules'),companies=await (qf.all||qf.api)('contractors');if(generation!==epoch)return;
     rules=data;el('credential-type').replaceChildren(...data.types.map(t=>new Option(t.name+' · '+t.holder_kind,t.id)));
     showTrade();
     el('verification-list').replaceChildren(...companies.map(c=>{const b=button(c.name+' · '+(c.state??'Draft'),()=>loadOrganisation(c.id));b.dataset.organisation=c.id;return b;}));
@@ -42,7 +42,7 @@
     el('trade-reason').value='';await refreshVerification();status('verification-status','Trade requirement matrix recorded with named Admin and reason.');
   });
   async function refreshOpportunities() {
-    const generation=epoch,result=await qf.api('opportunities');if(generation!==epoch)return;
+    const generation=epoch,result=await (qf.all||qf.api)('opportunities');if(generation!==epoch)return;
     el('opportunities-list').replaceChildren(...result.map(r=>{const article=document.createElement('article'),h=document.createElement('h3'),p=document.createElement('p');h.textContent=r.description;p.textContent=r.location+' · '+r.categories.join(', ')+' · Revision '+r.revision;
       article.dataset.opportunity=r.jobId;article.append(h,p);for(const id of r.evidenceIds){const a=document.createElement('a');a.href='/api/v1/files/'+id;a.textContent='View reviewed photo';article.append(a);}return article;}));
     document.dispatchEvent(new CustomEvent('qf:opportunities',{detail:result}));

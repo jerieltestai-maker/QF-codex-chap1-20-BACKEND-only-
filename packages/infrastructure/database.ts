@@ -29,8 +29,12 @@ export async function openDatabase(config: Config, testSchema?: string): Promise
   }
   if (testSchema && (config.environment !== 'test' || !/^qf_test_[0-9a-f]{16}$/.test(testSchema)))
     throw new Error('Invalid isolated test schema');
-  const pool = new pg.Pool({connectionString: config.databaseUrl, max: 10,
+  const pool = new pg.Pool({connectionString: config.databaseUrl, max: 10, connectionTimeoutMillis:5000,
     ...(testSchema ? {options:'-c search_path=' + testSchema} : {})});
+  // Idle connections can disappear when the local database restarts. pg removes
+  // the affected client; handle its event so readiness can fail and later recover.
+  // Never log raw driver/client objects (they can contain connection secrets).
+  pool.on('error',()=>{console.error('Database idle connection lost; a fresh connection will be used.');});
   if (testSchema) await pool.query('CREATE SCHEMA ' + testSchema);
   return {
     exec: async sql => {await pool.query(sql);},
@@ -38,6 +42,9 @@ export async function openDatabase(config: Config, testSchema?: string): Promise
       (await pool.query<T>(sql, params)).rows,
     transaction: async fn => {
       const client = await pool.connect();
+      let connectionLost=false;
+      const lost=()=>{connectionLost=true;};
+      client.on('error',lost);
       try {
         await client.query('BEGIN');
         const result = await fn({exec: async sql => {await client.query(sql);}, query: async <T extends Record<string, unknown>>(sql: string, params: unknown[] = []) =>
@@ -45,8 +52,8 @@ export async function openDatabase(config: Config, testSchema?: string): Promise
         await client.query('COMMIT');
         return result;
       } catch (error) {
-        await client.query('ROLLBACK'); throw error;
-      } finally {client.release();}
+        await client.query('ROLLBACK').catch(()=>{}); throw error;
+      } finally {client.release(connectionLost);client.removeListener('error',lost);}
     },
     close: async () => {
       try { if (testSchema) await pool.query('DROP SCHEMA ' + testSchema + ' CASCADE'); }

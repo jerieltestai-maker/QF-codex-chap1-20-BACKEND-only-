@@ -20,11 +20,11 @@ if ($Action -eq 'install' -or -not (Test-Path -LiteralPath node_modules)) {
 $qfTsx = 'node_modules/tsx/dist/cli.mjs'
 switch ($Action) {
   'dev' {
-    & $qfNode.Source $qfTsx tools/database.ts fixtures
-    if ($LASTEXITCODE -ne 0) { throw 'Fixture setup failed' }
+    & $qfNode.Source $qfTsx tools/database.ts migrate
+    if ($LASTEXITCODE -ne 0) { throw 'Migration failed' }
     & $qfNode.Source --import tsx apps/api/src/main.ts
   }
-  'test' { & $qfNode.Source $qfTsx --test --test-concurrency=4 'tests/*.test.ts' }
+  'test' { & $qfNode.Source tools/run-tests.mjs }
   'typecheck' { & $qfNode.Source node_modules/typescript/bin/tsc --noEmit }
   'build' { & $qfNode.Source node_modules/typescript/bin/tsc }
   'migrate' { & $qfNode.Source $qfTsx tools/database.ts migrate }

@@ -1,3 +1,4 @@
+import {listPage} from './list-pages.js';
 import type {FastifyInstance,FastifyRequest} from 'fastify';
 import {randomUUID} from 'node:crypto';
 import type {Database} from '../../../packages/infrastructure/database.js';
@@ -27,7 +28,7 @@ export function workspaceMeta(req:FastifyRequest):WorkspaceCommand {
 const meta=workspaceMeta;
 export async function workspaceRoutes(app:FastifyInstance,db:Database,identity:IdentityService,commands=new CommandService(db,identity,identity.now)) {
   const workspace=new WorkspaceService(commands),files=new FileService(commands),tasks=new TaskService(commands);
-  app.get('/api/v1/workspaces',async req=>workspace.list(token(req)));
+  app.get('/api/v1/workspaces',async req=>workspace.list(token(req)).then(rows=>listPage(req,rows)));
   app.post<{Body:{title:string;observations:string;affectedLocation:string;estateId:string}}>('/api/v1/workspaces',
     {schema:{body:schema({...fields,estateId:uuid})}},async req=>workspace.create(token(req),meta(req),req.body));
   app.get<{Params:{id:string}}>('/api/v1/workspaces/:id',{schema:{params}},async(req,reply)=>{
@@ -35,16 +36,16 @@ export async function workspaceRoutes(app:FastifyInstance,db:Database,identity:I
   });
   app.post<{Params:{id:string};Body:{title:string;observations:string;affectedLocation:string}}>('/api/v1/workspaces/:id/edit',
     {schema:{params,body:schema(fields)}},async req=>workspace.edit(token(req),meta(req),req.params.id,req.body));
-  app.get<{Params:{id:string}}>('/api/v1/workspaces/:id/history',{schema:{params}},async req=>workspace.history(token(req),req.params.id));
-  app.get('/api/v1/drafts',async req=>workspace.drafts(token(req)));
+  app.get<{Params:{id:string}}>('/api/v1/workspaces/:id/history',{schema:{params}},async req=>workspace.history(token(req),req.params.id).then(rows=>listPage(req,rows)));
+  app.get('/api/v1/drafts',async req=>workspace.drafts(token(req)).then(rows=>listPage(req,rows)));
   app.post<{Body:{id:string;estateId:string;jobId?:string;baseVersion:number;fields:{title:string;observations:string;affectedLocation:string}}}>('/api/v1/drafts',
-    {schema:{body:schema({id:uuid,estateId:uuid,jobId:uuid,baseVersion:integer,fields:schema(fields)},['id','estateId','baseVersion','fields'])}},
+    {schema:{body:schema({id:uuid,estateId:uuid,jobId:uuid,baseVersion:integer,fields:schema({title:{type:'string',maxLength:500},observations:text,affectedLocation:{type:'string',maxLength:500}})},['id','estateId','baseVersion','fields'])}},
     async req=>workspace.saveDraft(token(req),meta(req),req.body));
   app.get<{Params:{id:string}}>('/api/v1/operations/:id',{schema:{params}},async req=>workspace.operation(token(req),req.params.id));
   app.post<{Params:{id:string};Body:{description:string;privacy:'ordinary'|'confidential';subjectUserIds:string[];subjectOrganisationIds:string[]}}>('/api/v1/workspaces/:id/support',
     {schema:{params,body:schema({description:{...text,minLength:1},privacy:{enum:['ordinary','confidential']},subjectUserIds:{type:'array',items:uuid,maxItems:20,uniqueItems:true},subjectOrganisationIds:{type:'array',items:uuid,maxItems:20,uniqueItems:true}})}},
     async req=>workspace.support(token(req),meta(req),req.params.id,req.body));
-  app.get<{Params:{id:string}}>('/api/v1/workspaces/:id/support',{schema:{params}},async req=>workspace.supports(token(req),req.params.id));
+  app.get<{Params:{id:string}}>('/api/v1/workspaces/:id/support',{schema:{params}},async req=>workspace.supports(token(req),req.params.id).then(rows=>listPage(req,rows)));
   app.post<{Params:{id:string};Body:{purpose:string;mediaType:string;byteSize:number;checksum:string}}>('/api/v1/workspaces/:id/uploads',
     {schema:{params,body:schema({purpose:{enum:['evidence','invoice','payment_proof']},mediaType:{enum:['image/png','image/jpeg','application/pdf']},byteSize:{type:'integer',minimum:1,maximum:10485760},checksum:{type:'string',pattern:'^[a-f0-9]{64}$'}})}},
     async req=>files.intent(token(req),meta(req),req.params.id,req.body));
@@ -61,10 +62,10 @@ export async function workspaceRoutes(app:FastifyInstance,db:Database,identity:I
     return reply.header('Content-Disposition',`attachment; filename="evidence.${file.mediaType==='application/pdf'?'pdf':file.mediaType==='image/png'?'png':'jpg'}"`)
       .header('X-Content-Type-Options','nosniff').type(file.mediaType).send(file.bytes);
   });
-  app.get('/api/v1/tasks',async req=>tasks.list(token(req)));
-  app.get('/api/v1/notifications',async req=>tasks.bells(token(req)));
+  app.get('/api/v1/tasks',async req=>tasks.list(token(req)).then(r=>({...r,total:r.tasks.length,tasks:listPage(req,r.tasks)})));
+  app.get('/api/v1/notifications',async req=>tasks.bells(token(req)).then(r=>({...r,total:r.notifications.length,notifications:listPage(req,r.notifications)})));
   app.post<{Params:{id:string}}>('/api/v1/notifications/:id/read',{schema:{params,body:schema({})}},async req=>tasks.read(token(req),csrf(req),req.params.id));
-  app.get('/api/v1/admin/attention',async req=>tasks.list(token(req),true));
+  app.get('/api/v1/admin/attention',async req=>tasks.list(token(req),true).then(r=>({...r,total:r.tasks.length,tasks:listPage(req,r.tasks)})));
   app.post<{Params:{id:string};Body:{nextAction:string;followUpAt:string}}>('/api/v1/admin/attention/:id/acknowledge',
     {schema:{params,body:schema({nextAction:short,followUpAt:short})}},async req=>tasks.acknowledge(token(req),meta(req),req.params.id,req.body));
   const failedVisible=async(id:string,actor:Awaited<ReturnType<IdentityService['actor']>>,sql=db as import('../../../packages/infrastructure/database.js').Sql)=>{
@@ -87,10 +88,10 @@ export async function workspaceRoutes(app:FastifyInstance,db:Database,identity:I
   app.get('/api/v1/admin/failed-work',async req=>{
     const actor=await identity.actor(token(req));
     if(actor.context?.role!=='admin')throw new AppError(403,'FORBIDDEN','Admin access is required');
-    const rows=await db.query('SELECT id,kind,attempts,last_error_code,failed_at,created_at FROM outbox WHERE failed_at IS NOT NULL AND processed_at IS NULL ORDER BY failed_at LIMIT 200');
+    const rows=await db.query('SELECT id,kind,attempts,last_error_code,failed_at,created_at FROM outbox WHERE failed_at IS NOT NULL AND processed_at IS NULL ORDER BY failed_at,id');
     const visible=[];
     for(const row of rows)try{await failedVisible(String(row.id),actor);visible.push(row);}catch(error){if(!(error instanceof AppError&&error.status===404))throw error;}
-    return visible;
+    return listPage(req,visible);
   });
   app.post<{Params:{id:string}}>('/api/v1/admin/failed-work/:id/retry',{schema:{params,body:schema({})}},async req=>{
     const id=req.params.id;

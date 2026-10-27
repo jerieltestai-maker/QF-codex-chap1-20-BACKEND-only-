@@ -1,3 +1,4 @@
+import {listPage} from './list-pages.js';
 import type {FastifyInstance,FastifyRequest} from 'fastify';
 import {AppError} from '../../../packages/contracts/primitives.js';
 import type {CommandService,WorkspaceCommand} from '../../../packages/domain/commands.js';
@@ -25,7 +26,7 @@ export async function feedbackRoutes(app:FastifyInstance,commands:CommandService
   post('workspaces/:id/aftercare/inspect',schema({caseId:uuid,round:version,outcome:{enum:['accepted','unsatisfactory']},findings:text,scopeReviewed:bool,evidenceReviewed:bool,confirmed:bool}),f.inspect.bind(f));
   post('workspaces/:id/aftercare/decide',schema({caseId:uuid,outcome:{enum:['physical_remedy','explanation','resolved']},reason:text,executionEvidence:text}),f.decide.bind(f));
   post('admin/organisations/:id/reputation/references',schema({workDate:text,trade:{enum:['handyman','plumbing','electrical']},workDescription:text,source:text,refereeContact:text,independentChannel:text,interviewEvidence:text,uncertainty:text,independentlyVerified:bool,rubric,reason:text,referenceKey:{type:'string',minLength:1,maxLength:200}}),r.external.bind(r));
-  app.get('/api/v1/admin/reputation',req=>r.queue(token(req)));
+  app.get('/api/v1/admin/reputation',req=>r.queue(token(req)).then(rows=>listPage(req,rows)));
   app.get<{Params:{id:string}}>('/api/v1/reputation/entries/:id',{schema:{params}},req=>r.entry(token(req),req.params.id));
   post('reputation/entries/:id/moderate',schema({entryVersion:version,decision:{enum:['publish','reject','void','redact']},reason:text,publicText:schema({observation:text,reason:text},[]),durabilityContested:bool},['entryVersion','decision','reason','durabilityContested']),r.moderate.bind(r));
   post('reputation/entries/:id/reply',schema({entryVersion:version,text}),r.reply.bind(r));

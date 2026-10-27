@@ -103,7 +103,7 @@ export class ReputationService {
   }
   async queue(token:string) {
     return this.commands.db.transaction(async tx=>{await tx.query('SELECT pg_advisory_xact_lock(734130)');const a=await this.commands.identity.actor(token,tx);adminOnly(a);
-      const result=[];for(const e of await tx.query('SELECT id FROM reputation_entries ORDER BY created_at,id LIMIT 200'))result.push(await entryProjection(tx,a,String(e.id),false));return result;});
+      const result=[];for(const e of await tx.query('SELECT id FROM reputation_entries ORDER BY created_at,id'))result.push(await entryProjection(tx,a,String(e.id),false));return result;});
   }
   async passportFor(tx:Sql,a:Actor,id:string,org:string,now:Date) {
     await estateAuthority(tx,a,id);const rfq=await publication(tx,id),[participating]=await tx.query('SELECT id FROM quotes WHERE job_id=$1 AND organisation_id=$2 LIMIT 1',[id,org]);

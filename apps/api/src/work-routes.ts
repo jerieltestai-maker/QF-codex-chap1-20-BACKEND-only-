@@ -17,6 +17,7 @@ export async function workRoutes(app:FastifyInstance,commands:CommandService) {
     app.post<{Params:{id:string};Body:B}>('/api/v1/workspaces/:id/'+path,{schema:{params,body}},req=>handler(token(req),workspaceMeta(req),req.params.id,req.body as B));
   }
   app.get<{Params:{id:string}}>('/api/v1/workspaces/:id/work',{schema:{params}},req=>work.detail(token(req),req.params.id));
+  post('work/attachments',schema({fileId:uuid,note:text},['fileId']),(t,m,id,b:{fileId:string;note?:string})=>files.attach(t,m,id,b.fileId,true,b.note??''));
   post('work/start',schema({mode:{enum:['known','unknown']},completedBy:instant,reason:text,confirmed:bool},['mode','confirmed']),work.start.bind(work));
   post('work/estimate',schema({completedBy:instant}),work.initialEstimate.bind(work));
   post('work/estimate/extend',schema({dueAt:instant,reason:text}),work.extendEstimate.bind(work));

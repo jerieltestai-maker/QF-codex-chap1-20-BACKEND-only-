@@ -5,7 +5,7 @@ import {CommandService} from './commands.js';
 import {taskVisible,maskedWorkTask,type Task} from './task-service.js';
 import {contractorReadRfq,selectableQuotes,publication} from './quote-service.js';
 import {contractorRfq} from './rfq-service.js';
-import {packAccess,packHistory,concealPack} from './decision-pack.js';
+import {packAccess,packHistory,contractorHistory,concealPack} from './decision-pack.js';
 import {jobWaiting,type Job} from './workspace-service.js';
 
 export interface DashboardFilter {q?:string;stage?:string;category?:string;urgency?:string;from?:string;to?:string;offset?:number;limit?:number;state?:string}
@@ -65,9 +65,7 @@ export class DashboardService {
   });}
   history(token:string,id:string,f:DashboardFilter={}) {return this.read(token,async(tx,a,now)=>{
     await packAccess(tx,a,id,now);
-    // Contractors get only their own quote history; estate procurement rationale is private.
-    const history=a.context!.role==='contractor'?await tx.query(`SELECT v.quote_id,v.version,v.rfq_revision,v.scope_version,v.amount_cents,v.revision_reason,v.recorded_at,u.name AS actor_name,'contractor' AS actor_role
-      FROM quote_versions v JOIN quotes q ON q.id=v.quote_id JOIN users u ON u.id=v.actor_id WHERE q.job_id=$1 AND q.organisation_id=$2 ORDER BY v.recorded_at,v.quote_id,v.version`,[id,a.context!.organisation_id]):await packHistory(tx,a,id) as Record<string,unknown>[];
+    const history=a.context!.role==='contractor'?await contractorHistory(tx,a,id):await packHistory(tx,a,id) as Record<string,unknown>[];
     return {...page(history.filter(h=>(!f.q||JSON.stringify(h).toLowerCase().includes(f.q.toLowerCase()))&&within(h.recorded_at,f)),f),serverTime:now.toISOString()};
   });}
   analytics(token:string,id:string) {return this.read(token,async(tx,a,now)=>{

@@ -38,7 +38,7 @@ export class TaskService {
     const actor=await this.identity.actor(token);
     if(adminQueue && actor.context?.role!=='admin')throw new AppError(403,'FORBIDDEN','Admin access is required');
     const rows=await this.db.query<Task>(`SELECT * FROM tasks WHERE status='open' AND
-      (owner_role=$1 OR $1='admin') AND ($1='admin' OR estate_id=$2 OR organisation_id=$3) ORDER BY actionable_at,id LIMIT 200`,
+      (owner_role=$1 OR $1='admin') AND ($1='admin' OR estate_id=$2 OR organisation_id=$3) ORDER BY actionable_at,id`,
       [actor.context?.role??'',actor.context?.estate_id??null,actor.context?.organisation_id??null]);
     const tasks=[];
     for(const task of rows)if(await taskVisible(this.db,actor,task))tasks.push(await maskedWorkTask(this.db,actor,task,task));
@@ -49,7 +49,7 @@ export class TaskService {
     const rows=await this.db.query(`SELECT n.*,r.read_at FROM notifications n JOIN tasks t ON t.id=n.task_id
       LEFT JOIN notification_reads r ON r.notification_id=n.id AND r.user_id=$1
       WHERE (t.owner_role=$2 OR $2='admin') AND ($2='admin' OR t.estate_id=$3 OR t.organisation_id=$4)
-      ORDER BY n.issued_at DESC,n.id LIMIT 200`,[actor.id,actor.context?.role??'',actor.context?.estate_id??null,actor.context?.organisation_id??null]);
+      ORDER BY n.issued_at DESC,n.id`,[actor.id,actor.context?.role??'',actor.context?.estate_id??null,actor.context?.organisation_id??null]);
     const notifications=[];
     for(const row of rows) {
       const [task]=await this.db.query<Task>('SELECT * FROM tasks WHERE id=$1',[row.task_id]);

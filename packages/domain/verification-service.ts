@@ -72,7 +72,7 @@ export class VerificationService {
   get db(){return this.commands.db;} get identity(){return this.commands.identity;} get now(){return this.commands.now;}
   async list(token:string) {
     const actor=await this.identity.actor(token);
-    if(actor.context?.role==='admin')return this.db.query(`SELECT o.id,o.name,o.version,p.state,p.categories FROM organisations o LEFT JOIN contractor_profiles p ON p.organisation_id=o.id ORDER BY o.name LIMIT 200`);
+    if(actor.context?.role==='admin')return this.db.query(`SELECT o.id,o.name,o.version,p.state,p.categories FROM organisations o LEFT JOIN contractor_profiles p ON p.organisation_id=o.id ORDER BY o.name`);
     if(actor.context?.role==='contractor')return this.db.query('SELECT o.id,o.name,o.version,p.state,p.categories FROM organisations o LEFT JOIN contractor_profiles p ON p.organisation_id=o.id WHERE o.id=$1',[actor.context.organisation_id]);
     throw new AppError(403,'FORBIDDEN','Private contractor account access is required');
   }

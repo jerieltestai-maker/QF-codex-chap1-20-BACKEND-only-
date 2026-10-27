@@ -42,7 +42,8 @@ test('CH18 canonical dashboards, snapshots, privacy and revocation',async t=>{
     });
     await t.test('CH18-T04: contractor pack contains only own quote and never estate selection rationale',async()=>{
       const x=f.okay(await f.post('workspaces/'+id+'/exports',{format:'json'},f.contractor,await version(id)));await drain();
-      const r=await download(x.exportId,f.contractor);assert.equal(r.statusCode,200,r.body);const p=r.json();assert.equal(p.quotes.length,1);assert.deepEqual(p.selections,[]);assert.deepEqual(p.approvals,[]);assert.deepEqual(p.history,[]);
+      const r=await download(x.exportId,f.contractor);assert.equal(r.statusCode,200,r.body);const p=r.json();assert.equal(p.quotes.length,1);assert.deepEqual(p.selections,[]);assert.deepEqual(p.approvals,[]);
+      assert.ok(p.history.some((e:{action:string})=>e.action==='work.start'));assert.ok(p.history.every((e:{action:string})=>!e.action.startsWith('selection.')));
       assert.ok(!r.body.includes('Factual selection'));assert.ok(!r.body.includes('fee_entries'));
       assert.equal((await f.get('exports/'+x.exportId,f.mcst)).statusCode,404);
     });

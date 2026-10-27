@@ -135,16 +135,19 @@ export class FileService {
       return {uploadId:id,state:valid?'verifying':'rejected'};
     });
   }
-  async attach(token:string,meta:WorkspaceCommand,id:string,fileId:string) {
-    return this.commands.run(token,meta,'file.attach',{id,fileId},async(tx,actor)=>{await authorizedJob(tx,actor,id);},async(tx,actor)=>{
+  async attach(token:string,meta:WorkspaceCommand,id:string,fileId:string,work=false,note='') {
+    return this.commands.run(token,meta,work?'file.attach-work':'file.attach',{id,fileId,...(work?{note}:{})},async(tx,actor)=>{
+      if(work){contractorOnly(actor);await workAccess(tx,actor,id);}else await authorizedJob(tx,actor,id);
+    },async(tx,actor)=>{
       // Evidence is independent of decision version: it cannot edit scope/status or reject unrelated decisions.
       requireVersion(0,meta.expectedVersion);
       const [file]=await tx.query(`SELECT f.id FROM file_objects f JOIN upload_intents u ON u.id=f.upload_id
-        WHERE f.id=$1 AND u.job_id=$2 AND u.state='ready' AND u.support_id IS NULL`,[fileId,id]);
+        WHERE f.id=$1 AND u.job_id=$2 AND u.state='ready' AND u.support_id IS NULL
+        AND ($3::boolean=false OR (u.owner_id=$4 AND u.work_organisation_id=$5 AND u.purpose='evidence'))`,[fileId,id,work,actor.id,actor.context?.organisation_id??null]);
       if(!file)throw new AppError(422,'FILE_NOT_READY','Use a verified ready file belonging to this job');
       const inserted=await tx.query('INSERT INTO job_attachments VALUES($1,$2,$3,$4) ON CONFLICT DO NOTHING RETURNING file_id',[id,fileId,actor.id,this.now().toISOString()]);
       if(inserted.length) {
-        await audit(tx,actor,'file.attach',id,null,{fileId},meta.requestId,this.now());
+        await audit(tx,actor,work?'file.attach-work':'file.attach',id,null,{fileId,...(work?{note}:{})},meta.requestId,this.now());
         await enqueue(tx,'workspace.evidence',id,{fileId},this.now());
       }
       return {jobId:id,fileId};

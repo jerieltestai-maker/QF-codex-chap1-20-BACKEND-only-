@@ -84,7 +84,7 @@
     for(const i of data.inspections)content.append(node('p','Inspection ['+i.round+(i.round===2?'nd':i.round===3?'rd':'th')+'] · '+i.outcome+' · '+i.findings));
   }
   async function admin() {
-    if(role()!=='admin')return;const generation=epoch,[entries,orgs]=await Promise.all([qf.api('admin/reputation'),qf.api('contractors')]);if(generation!==epoch)return;
+    if(role()!=='admin')return;const generation=epoch,[entries,orgs]=await Promise.all([(qf.all||qf.api)('admin/reputation'),(qf.all||qf.api)('contractors')]);if(generation!==epoch)return;
     adminPanel.hidden=false;adminPanel.replaceChildren(node('h2','Reputation moderation and external references'));button(adminPanel,'Refresh moderation',admin);
     const f=node('details');f.append(node('summary','Enter an independently verified external reference'));adminPanel.append(f);
     const org=choice(f,'Contractor',orgs.map(o=>[o.id,o.name])),fields={};

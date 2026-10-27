@@ -1,8 +1,10 @@
 param(
-  [ValidateSet('setup','test','dev','status','stop','backup','drill')][string]$Action = 'setup',
-  [ValidateRange(1,4)][int]$TestConcurrency = 2
+  [ValidateSet('setup','start','test','dev','status','stop','backup','drill')][string]$Action = 'setup',
+  [ValidateRange(1,4)][int]$TestConcurrency = 2,
+  [switch]$Prototype
 )
 $ErrorActionPreference = 'Stop'
+if ($Prototype -and $Action -ne 'backup') { throw '-Prototype selects the current .env database for backup only.' }
 $qfOriginalLocation = Get-Location
 $qfOriginalPath = $env:PATH
 $qfSavedEnvironment = @{}
@@ -66,11 +68,14 @@ try {
       if ($LASTEXITCODE -ne 0) { throw 'PostgreSQL recovery drill failed; inspect retained artifacts.' }
       return
     }
-    & $qfNode.Source node_modules/tsx/dist/cli.mjs tools/postgres-backup.ts $qfDocker.Source @qfCompose
+    $qfBackupArguments = @()
+    if ($Prototype) { $qfBackupArguments += '--prototype' }
+    & $qfNode.Source node_modules/tsx/dist/cli.mjs tools/postgres-backup.ts $qfDocker.Source @qfCompose @qfBackupArguments
     if ($LASTEXITCODE -ne 0) { throw 'PostgreSQL backup/restore verification failed; inspect the retained local artifact directory.' }
     return
   }
   Invoke-QfDocker -Arguments @('up','-d','--wait','--wait-timeout','120','postgres')
+  if ($Action -eq 'start') { Write-Host 'Local PostgreSQL is healthy; no migration, fixtures or database selection changed.'; return }
   $qfTestDatabase = & $qfDocker.Source @qfCompose exec -T postgres psql -U quotefix -d postgres -Atc "SELECT datname FROM pg_database WHERE datname='quotefix_test'"
   if ($LASTEXITCODE -ne 0) { throw 'Could not inspect local test database.' }
   if ($qfTestDatabase -notcontains 'quotefix_test') {
@@ -81,10 +86,12 @@ try {
     [Environment]::SetEnvironmentVariable($qfKey,$qfEnvironment[$qfKey],'Process')
   }
   if ($Action -eq 'test') {
-    & $qfNode.Source node_modules/tsx/dist/cli.mjs --test "--test-concurrency=$TestConcurrency" 'tests/*.test.ts'
+    & $qfNode.Source tools/run-tests.mjs "--concurrency=$TestConcurrency"
     if ($LASTEXITCODE -ne 0) { throw 'PostgreSQL tests failed.' }
   } else {
-    & $qfNode.Source node_modules/tsx/dist/cli.mjs tools/database.ts fixtures
+    $qfDatabaseAction = 'migrate'
+    if ($Action -eq 'setup') { $qfDatabaseAction = 'fixtures' }
+    & $qfNode.Source node_modules/tsx/dist/cli.mjs tools/database.ts $qfDatabaseAction
     if ($LASTEXITCODE -ne 0) { throw 'PostgreSQL migration/fictional seed failed.' }
     if ($Action -eq 'dev') {
       Write-Host 'Fictional PostgreSQL development app: http://localhost:3001 (Ctrl+C to stop)'
@@ -96,7 +103,8 @@ try {
   }
 } finally {
   foreach ($qfKey in $qfSavedEnvironment.Keys) {
-    [Environment]::SetEnvironmentVariable($qfKey,$qfSavedEnvironment[$qfKey],'Process')
+    if ($null -eq $qfSavedEnvironment[$qfKey]) { Remove-Item -LiteralPath "Env:$qfKey" -ErrorAction SilentlyContinue }
+    else { [Environment]::SetEnvironmentVariable($qfKey,$qfSavedEnvironment[$qfKey],'Process') }
   }
   $env:PATH = $qfOriginalPath
   Set-Location $qfOriginalLocation

@@ -203,6 +203,7 @@
     }
     completionForms(data);
     const history=form('Dated work history and every variation version');history.append(pretty({events:data.events,terms:data.terms,proposals:data.variationVersions,decisions:data.decisions}));
+    for(const file of data.evidence||[]){const a=node('a','View attached repair evidence · '+file.variant);a.href='/api/v1/files/'+file.id;history.append(a);}
     for(const e of data.events)for(const id of e.details?.fileIds||[]){const a=node('a','View progress evidence');a.href='/api/v1/files/'+id;history.append(a);}
   }
   async function open(id) {

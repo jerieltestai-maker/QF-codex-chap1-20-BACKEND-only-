@@ -2,3 +2,8 @@ allowBuilds:
   esbuild: true
 packages:
   - apps/mobile
+overrides:
+  'node-forge@<1.4.1': 1.4.1
+  '@expo/cli>zod': 4.6.7
+minimumReleaseAgeExclude:
+  - node-forge@1.4.1

@@ -1,6 +1,7 @@
 services:
   postgres:
     image: postgres:18
+    restart: unless-stopped
     environment:
       POSTGRES_USER: quotefix
       POSTGRES_PASSWORD: local-only

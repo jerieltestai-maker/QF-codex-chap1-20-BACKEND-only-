@@ -148,7 +148,7 @@ export class RfqService {
   }
   async opportunities(token:string) {
     const actor=await this.identity.actor(token);if(actor.context?.role!=='contractor')throw new AppError(403,'FORBIDDEN','Contractor access is required');
-    const rows=await this.db.query('SELECT job_id FROM rfq_publications ORDER BY job_id LIMIT 200'),result=[];
+    const rows=await this.db.query('SELECT job_id FROM rfq_publications ORDER BY job_id'),result=[];
     for(const row of rows)try{result.push(await this.opportunity(token,String(row.job_id)));}catch(e){if(!(e instanceof AppError&&e.status===404))throw e;}
     return result;
   }

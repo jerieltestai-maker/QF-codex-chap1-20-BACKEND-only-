@@ -199,7 +199,7 @@ export async function buildApp(config: Config, db: Database, identity: IdentityS
   });
   app.get('/api/v1/admin/memberships',async req=>{
     const actor = await identity.actor(token(req)); requireCapability(actor,'membership.manage');
-    return db.query('SELECT m.id,m.user_id,m.role,m.estate_id,m.organisation_id,m.active,m.version,u.name FROM memberships m JOIN users u ON u.id=m.user_id ORDER BY m.id LIMIT 100');
+    return db.query('SELECT m.id,m.user_id,m.role,m.estate_id,m.organisation_id,m.active,m.version,u.name FROM memberships m JOIN users u ON u.id=m.user_id ORDER BY m.id');
   });
   const commands=new CommandService(db,identity,identity.now,async(tx,now,intent,body,phase)=>{
     await reconcileProcurementClocks(tx,now);await workTimers(tx,now);

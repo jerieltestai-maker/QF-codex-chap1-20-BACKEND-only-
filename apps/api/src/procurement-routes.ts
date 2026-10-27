@@ -1,3 +1,4 @@
+import {listPage} from './list-pages.js';
 import type {FastifyInstance,FastifyRequest} from 'fastify';
 import type {Database} from '../../../packages/infrastructure/database.js';
 import type {IdentityService} from '../../../packages/domain/identity-service.js';
@@ -17,7 +18,7 @@ const intake={accessEquipmentRequired:{type:'boolean'},categories:trades,urgency
 const intakeRequired=Object.keys(intake).filter(k=>!['secondaryPriority','accessEquipmentRequired'].includes(k));
 export async function procurementRoutes(app:FastifyInstance,db:Database,identity:IdentityService,commands=new CommandService(db,identity,identity.now)) {
   const verification=new VerificationService(commands),rfq=new RfqService(commands),files=new FileService(commands);
-  app.get('/api/v1/contractors',async req=>verification.list(token(req)));
+  app.get('/api/v1/contractors',async req=>verification.list(token(req)).then(rows=>listPage(req,rows)));
   app.get<{Params:{id:string}}>('/api/v1/contractors/:id',{schema:{params}},async req=>verification.detail(token(req),req.params.id));
   app.get('/api/v1/verification/rules',async req=>verification.rules(token(req)));
   app.get<{Params:{id:string;organisationId:string}}>('/api/v1/workspaces/:id/contractor-profiles/:organisationId',
@@ -50,7 +51,7 @@ export async function procurementRoutes(app:FastifyInstance,db:Database,identity
   app.post<{Params:{id:string};Body:{refinementId:string}}>('/api/v1/workspaces/:id/rfq/accept-refinement',{schema:{params,body:schema({refinementId:uuid})}},async req=>rfq.acceptRefinement(token(req),workspaceMeta(req),req.params.id,req.body.refinementId));
   app.post<{Params:{id:string};Body:{repairs:{title:string;observations:string;affectedLocation:string}[]}}>('/api/v1/workspaces/:id/rfq/separate',
     {schema:{params,body:schema({repairs:{type:'array',minItems:2,maxItems:10,items:schema({title:short,observations:{...text,minLength:1},affectedLocation:short})}})}},async req=>rfq.split(token(req),workspaceMeta(req),req.params.id,req.body));
-  app.get('/api/v1/opportunities',async req=>rfq.opportunities(token(req)));
+  app.get('/api/v1/opportunities',async req=>rfq.opportunities(token(req)).then(rows=>listPage(req,rows)));
   app.get<{Params:{id:string}}>('/api/v1/opportunities/:id',{schema:{params}},async req=>rfq.opportunity(token(req),req.params.id));
   app.post<{Params:{id:string};Body:{outcome:'attempted'|'attendance_arranged'|'unresolved';summary:string;eta?:string;nextAction:string;followUpAt:string}}>('/api/v1/admin/urgency/:id/coordinate',
     {schema:{params,body:schema({outcome:{enum:['attempted','attendance_arranged','unresolved']},summary:short,eta:short,nextAction:short,followUpAt:short},['outcome','summary','nextAction','followUpAt'])}},async req=>rfq.coordinate(token(req),workspaceMeta(req),req.params.id,req.body));

@@ -6,7 +6,7 @@ import {localMailbox} from '../../../packages/infrastructure/local-identity.js';
 import {IdentityService} from '../../../packages/domain/identity-service.js';
 import {buildApp} from './app.js';
 import {Worker} from '../../../packages/infrastructure/worker.js';
-import {localFileInspector} from '../../../packages/infrastructure/file-inspection.js';
+import {configuredFileInspector} from '../../../packages/infrastructure/file-inspection.js';
 if (existsSync('.env')) loadEnvFile('.env');
 const config = loadConfig();
 const db = await openDatabase(config);
@@ -14,7 +14,7 @@ await migrate(db,config.environment);
 const identity = new IdentityService(db,config,localMailbox(config));
 await identity.initialize();
 const app = await buildApp(config,db,identity,true);
-const worker=new Worker(db,localFileInspector());
+const worker=new Worker(db,configuredFileInspector());
 let workerRunning:Promise<void>|undefined;
 const interval=setInterval(()=>{
   if(workerRunning)return;
