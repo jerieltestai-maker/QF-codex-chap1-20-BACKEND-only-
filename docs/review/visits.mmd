@@ -1,0 +1,13 @@
+flowchart TB
+  q1["Q1: Requesting for quotes [C]"]:::c
+  q5["Q5: CM reviews visit request [C]"]:::c
+  q6["Q6: Contractor updates quote [C]"]:::c
+  q2["Q2: Comparing quotations [C]"]:::c
+  q1 -->|"Valid quote arrives"| q2
+  q1 -.->|"Visit requested"| q5
+  q5 -->|"Visit approved and held"| q6
+  q5 -->|"Visit declined"| q1
+  q6 -->|"Valid revision submitted"| q2
+  classDef c fill:#dcfce7,stroke:#166534,color:#17211b
+  classDef p fill:#fef3c7,stroke:#92400e,color:#291c0c
+  classDef o fill:#fee2e2,stroke:#991b1b,color:#2a1111

@@ -1,0 +1,15 @@
+flowchart TB
+  p1["P1: MCST records payment [C]"]:::c
+  p10["P10: Transfer and notification dates recorded [C]"]:::c
+  p2["P2: Contractor checks receipt [C]"]:::c
+  p7["P7: Internal seven-day receipt rule [C]"]:::c
+  p4["P4: Payment received [C]"]:::c
+  p1 -->|"Proof and Payment Sent; notify"| p2
+  p2 -->|"Full receipt confirmed"| p4
+  p2 -.->|"Notification + 7 calendar days; no response"| p7
+  p7 -->|"full balance covered"| p4
+  p1 -.->|"Record dates separately"| p10
+  p10 -.->|"First notification anchors T+7D"| p7
+  classDef c fill:#dcfce7,stroke:#166534,color:#17211b
+  classDef p fill:#fef3c7,stroke:#92400e,color:#291c0c
+  classDef o fill:#fee2e2,stroke:#991b1b,color:#2a1111

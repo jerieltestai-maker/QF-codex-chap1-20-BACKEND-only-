@@ -1,0 +1,19 @@
+services:
+  postgres:
+    image: postgres:18
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: quotefix
+      POSTGRES_PASSWORD: local-only
+      POSTGRES_DB: quotefix_development
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - quotefix_dev:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U quotefix -d quotefix_development"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+volumes:
+  quotefix_dev:

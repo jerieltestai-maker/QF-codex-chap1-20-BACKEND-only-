@@ -1,0 +1,15 @@
+flowchart TB
+  w1["W1: Contractor prepares to start [C]"]:::c
+  w2["W2: Contractor carries out work [C]"]:::c
+  w3["W3: Contractor submits completion package [C]"]:::c
+  r1["R1: CM reviews completion [C]"]:::c
+  e2["E2: Contractor cannot continue [C]"]:::c
+  w1 -->|"Valid estimate or reason, then Start"| w2
+  w2 -->|"Open completion form"| w3
+  w3 -->|"Invoice and declaration submitted together"| r1
+  w2 -.->|"Cannot continue"| e2
+  e2 -->|"Previously started; authorised resumption"| w2
+  e2 -->|"Not started; authorised to begin"| w1
+  classDef c fill:#dcfce7,stroke:#166534,color:#17211b
+  classDef p fill:#fef3c7,stroke:#92400e,color:#291c0c
+  classDef o fill:#fee2e2,stroke:#991b1b,color:#2a1111

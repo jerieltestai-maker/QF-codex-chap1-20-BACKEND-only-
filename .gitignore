@@ -1,0 +1,18 @@
+# Generated export bundles and local review artifacts
+exports/
+work/
+__pycache__/
+*.pyc
+
+# Future local configuration/secrets
+.env
+.env.*
+!.env.example
+node_modules/
+.DS_Store
+Thumbs.db
+dist/
+*.tsbuildinfo
+.expo/
+apps/mobile/ios/
+apps/mobile/android/

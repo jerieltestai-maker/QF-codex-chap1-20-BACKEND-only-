@@ -1,0 +1,27 @@
+flowchart TB
+  d8["D8: Reuse or obtain the required verification [C]"]:::c
+  r1["R1: CM reviews completion [C]"]:::c
+  r2["R2: Contractor addresses issues [C]"]:::c
+  r4["R4: MCST confirms invoice [C]"]:::c
+  c6["C6: MCST confirms settlement [C]"]:::c
+  p2["P2: Contractor checks receipt [C]"]:::c
+  p3["P3: Unresolved payment [C]"]:::c
+  d2["D2: Admin reviews evidence [C]"]:::c
+  c7["C7: Cancellation settled [C]"]:::c
+  p6["P6: Closed [C]"]:::c
+  f5["F5: Aftercare case resolved [C]"]:::c
+  r1 -->|"Unsatisfactory work"| r2
+  r1 -->|"Original job work accepted"| r4
+  d8 -->|"Inspect"| r1
+  d8 -->|"Settlement confirmation still needed"| c6
+  d8 -->|"Agreed balance remains"| p3
+  d8 -->|"Aftercare obligation verified"| f5
+  d8 -.->|"Cancellation obligations verified"| c7
+  d8 -->|"Ordinary job: case resolved and all closure conditions hold"| p6
+  d8 -->|"Original invoice needs confirmation"| r4
+  d8 -->|"Evidence still disputed"| d2
+  d8 -->|"Undisputed recorded transfer; verify receipt"| p2
+  r1 -->|"Aftercare pass"| d8
+  classDef c fill:#dcfce7,stroke:#166534,color:#17211b
+  classDef p fill:#fef3c7,stroke:#92400e,color:#291c0c
+  classDef o fill:#fee2e2,stroke:#991b1b,color:#2a1111

@@ -1,0 +1,54 @@
+name: Backend foundations
+on: [push, pull_request]
+permissions:
+  contents: read
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.ref_name }}
+  cancel-in-progress: true
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    services:
+      postgres:
+        image: postgres:18
+        env:
+          POSTGRES_USER: quotefix
+          POSTGRES_PASSWORD: test-only
+          POSTGRES_DB: quotefix_test
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U quotefix -d quotefix_test"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.25.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm typecheck
+      - run: pnpm build
+      - name: Native contract typecheck and SDK compatibility
+        run: |
+          pnpm --filter @quotefix/mobile typecheck
+          pnpm --filter @quotefix/mobile exec expo install --check
+      - name: Native Android and iOS JavaScript bundles
+        run: pnpm --filter @quotefix/mobile export
+      - name: PGlite regression
+        run: pnpm test
+      - name: PostgreSQL 18 regression
+        run: pnpm test
+        env:
+          TEST_DATABASE_URL: postgresql://quotefix:test-only@127.0.0.1:5432/quotefix_test
+  windows-helper:
+    runs-on: windows-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Windows PostgreSQL helper failure and isolation checks
+        shell: powershell
+        run: .\tools\test-local-postgres.ps1

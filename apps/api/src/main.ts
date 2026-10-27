@@ -1,0 +1,25 @@
+import {existsSync} from 'node:fs';
+import {loadEnvFile} from 'node:process';
+import {loadConfig} from '../../../packages/infrastructure/config.js';
+import {openDatabase,migrate} from '../../../packages/infrastructure/database.js';
+import {localMailbox} from '../../../packages/infrastructure/local-identity.js';
+import {IdentityService} from '../../../packages/domain/identity-service.js';
+import {buildApp} from './app.js';
+import {Worker} from '../../../packages/infrastructure/worker.js';
+import {configuredFileInspector} from '../../../packages/infrastructure/file-inspection.js';
+if (existsSync('.env')) loadEnvFile('.env');
+const config = loadConfig();
+const db = await openDatabase(config);
+await migrate(db,config.environment);
+const identity = new IdentityService(db,config,localMailbox(config));
+await identity.initialize();
+const app = await buildApp(config,db,identity,true);
+const worker=new Worker(db,configuredFileInspector());
+let workerRunning:Promise<void>|undefined;
+const interval=setInterval(()=>{
+  if(workerRunning)return;
+  workerRunning=worker.tick().catch(()=>{app.log.error('Background work failed; durable work will retry');}).finally(()=>{workerRunning=undefined;});
+},1000);
+app.addHook('preClose',async()=>{clearInterval(interval);await workerRunning;});
+for (const signal of ['SIGINT','SIGTERM'] as const) process.once(signal,async()=>{await app.close();process.exit(0);});
+await app.listen({host:config.host,port:config.port});

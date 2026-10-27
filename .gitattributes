@@ -1,0 +1,3 @@
+# Keep source portable, but preserve the exact bytes of checksum-protected SQL.
+* text=auto eol=lf
+database/migrations/*.sql -text

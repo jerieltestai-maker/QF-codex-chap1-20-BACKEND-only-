@@ -1,0 +1,184 @@
+<div id="qf-status-review">
+  <h2>QuoteFix · Review the flow</h2>
+  <div class="viz-row qf-legend"><span><i class="qf-swatch confirmed"></i>C · Confirmed rule</span><span><i class="qf-swatch proposed"></i>P · Proposal</span><span><i class="qf-swatch open"></i>? · Decision needed</span></div>
+  <div class="text-small">Approved wording is marked at each step. Other copy remains proposed. Dotted arrows identify side tasks.</div>
+  <div class="viz-controls">
+    <label class="form-label">Flow section<select class="form-select" id="qf-section"></select></label>
+    <label class="form-label">Step<select class="form-select" id="qf-step"></select></label>
+  </div>
+  <div id="qf-view-scope" class="text-small"></div>
+  <div id="qf-graph" aria-label="Mermaid workflow diagram"></div>
+  <div id="qf-compact"></div>
+  <div class="card" id="qf-detail" aria-live="polite">
+    <div id="qf-node-title"></div>
+    <label class="form-label" id="qf-situation-label" hidden>Situation<select class="form-select" id="qf-situation"></select></label>
+    <div id="qf-ui-note" class="text-small" hidden></div>
+    <div id="qf-inspection-heading" hidden></div>
+    <div id="qf-status-row"><span class="text-small">Ticket label: </span><strong id="qf-status"></strong></div>
+    <div id="qf-pending"></div>
+    <div id="qf-action-row"><span class="text-small">Action: </span><span id="qf-action"></span></div>
+    <div id="qf-timer" class="text-small" hidden></div>
+    <div id="qf-fields" class="text-small" hidden></div>
+    <details><summary>Trigger, checkpoint and exceptions</summary><p id="qf-trigger"></p><p id="qf-gate"></p><p id="qf-note"></p><div id="qf-questions"></div></details>
+    <div class="text-small">Diagram routes</div><div class="viz-row" id="qf-next"></div>
+  </div>
+  <label class="form-label" for="qf-comment">Comment on <span id="qf-comment-target"></span></label>
+  <textarea class="form-control" id="qf-comment" rows="3" maxlength="800" placeholder="Describe what to change at this step."></textarea>
+  <div class="viz-row"><button class="btn" type="button" id="qf-save">Keep comment</button><button class="btn btn-ghost" type="button" id="qf-remove">Remove comment</button><span class="text-small" id="qf-count"></span></div>
+  <details><summary>Review collected comments</summary><div id="qf-comments"></div></details>
+  <div class="viz-row"><button class="btn btn-primary" type="button" id="qf-send">Send comments to this conversation</button><button class="btn" type="button" id="qf-copy">Show text to copy</button></div>
+  <div id="qf-message" aria-live="polite"></div>
+  <textarea class="form-control" id="qf-copytext" aria-label="Comments to copy into your reply" rows="8" readonly hidden></textarea>
+</div>
+<style>
+#qf-status-review{display:grid;grid-template-columns:minmax(0,1fr);min-width:0;gap:12px;color:var(--foreground);container-type:inline-size;container-name:qf-review}
+#qf-status-review #qf-graph{display:none}
+#qf-status-review #qf-render-stage{position:absolute;left:0;top:0;width:736px;height:0;overflow:hidden;visibility:hidden;contain:strict;pointer-events:none}
+#qf-status-review .qf-legend{gap:16px}
+#qf-status-review .qf-swatch{display:inline-block;width:10px;height:10px;margin-right:6px}
+#qf-status-review .confirmed{background:var(--green)}
+#qf-status-review .proposed{background:var(--orange)}
+#qf-status-review .open{background:var(--red)}
+#qf-status-review #qf-graph > svg{display:block;height:auto;max-width:100%!important;margin:0 auto}
+#qf-status-review #qf-graph .node rect,#qf-status-review #qf-graph .node polygon{stroke:var(--border)!important;stroke-width:1px!important}
+#qf-status-review #qf-graph .node.c rect{fill:color-mix(in srgb,var(--green) 18%,var(--background))!important}
+#qf-status-review #qf-graph .node.p rect{fill:color-mix(in srgb,var(--orange) 18%,var(--background))!important}
+#qf-status-review #qf-graph .node.o rect{fill:color-mix(in srgb,var(--red) 18%,var(--background))!important}
+#qf-status-review #qf-graph text,#qf-status-review #qf-graph .nodeLabel,#qf-status-review #qf-graph .edgeLabel{fill:var(--foreground)!important;color:var(--foreground)!important}
+#qf-status-review #qf-graph .edgeLabel rect{fill:var(--background)!important;opacity:1!important}
+#qf-status-review #qf-graph .flowchart-link{stroke:var(--muted-foreground)!important}
+#qf-status-review #qf-graph marker path{fill:var(--muted-foreground)!important;stroke:var(--muted-foreground)!important}
+#qf-status-review #qf-detail{display:grid;gap:8px}
+#qf-status-review #qf-node-title{font-weight:500}
+#qf-status-review #qf-comments,#qf-status-review #qf-compact{display:grid;grid-template-columns:minmax(0,1fr);gap:8px}
+#qf-status-review [hidden]{display:none!important}
+#qf-status-review #qf-detail p,#qf-status-review #qf-comments p{margin:8px 0}
+#qf-status-review #qf-graph p{margin:0}
+#qf-status-review #qf-next{margin-top:8px}
+#qf-status-review #qf-compact .qf-compact-row{display:grid;grid-template-columns:minmax(0,1fr);gap:4px}
+</style>
+<style id="qf-responsive-style"></style>
+<script id="qf-flow-data" type="application/json">{}</script>
+<script type="module">
+const root=document.getElementById('qf-status-review');
+const el=id=>root.querySelector('#qf-'+id);
+const data=JSON.parse(document.getElementById('qf-flow-data').textContent);
+const proposalViews=(data.proposals||[]).map(p=>({...p,ids:p.nodes.map(n=>n.id),isProposal:true}));
+const views=[...data.chapters,...proposalViews];
+const byId=Object.fromEntries([...data.nodes,...proposalViews.flatMap(p=>p.nodes)].map(n=>[n.id,n]));
+let section='sourcing-selection',selected='q1',comments={},drafts={},situations={},commentSituations={},renderId=0,mermaid=null;
+let graphSection='',renderQueue=Promise.resolve();
+const graphCache=new Map(),emittedStates=new Set();
+const names={c:'Confirmed rule',p:'Proposed rule',o:'Decision needed'};
+const validComments=input=>Object.fromEntries(Object.entries(input||{}).filter(([id,t])=>byId[id]&&typeof t==='string').slice(0,12).map(([id,t])=>[id,t.slice(0,800)]));
+function restore(snapshot){
+  const before=JSON.stringify({section,selected,comments,drafts,situations,commentSituations});
+  const shared=snapshot?.modelContent,ui=snapshot?.privateContent;
+  if(shared?.version===data.version)comments=validComments(shared.comments);
+  if(ui?.version===data.version){if(views.some(c=>c.id===ui.section))section=ui.section;if(byId[ui.selected])selected=ui.selected;drafts=validComments(ui.drafts);situations=ui.situations||{};commentSituations=ui.commentSituations||{};}
+  return before!==JSON.stringify({section,selected,comments,drafts,situations,commentSituations});
+}
+restore(window.openai?.widgetState);
+function persist(){
+  const snapshot={modelContent:{version:data.version,comments,commentSituations},privateContent:{version:data.version,section,selected,drafts,situations,commentSituations}};
+  if(new TextEncoder().encode(JSON.stringify(snapshot)).length>15500){el('message').textContent='Please send this batch before adding more comments.';return;}
+  // A host echo is an acknowledgment, not a request to rerender or replace a newer draft.
+  emittedStates.add(JSON.stringify(snapshot));
+  if(window.openai?.setWidgetState)Promise.resolve(window.openai.setWidgetState(snapshot)).catch(()=>{el('message').textContent='Could not preserve this review. Use Show text to copy before leaving.';});
+}
+const option=(value,text)=>{const o=document.createElement('option');o.value=value;o.textContent=text;return o;};
+views.forEach(c=>el('section').append(option(c.id,c.title)));
+function chapter(){return views.find(c=>c.id===section);}
+function activeEdges(){return chapter().isProposal?chapter().edges:data.edges;}
+function setDraft(){const text=el('comment').value;if(text!==comments[selected]&&text.trim())drafts[selected]=text;else delete drafts[selected];}
+function navigate(id){setDraft();selected=id;if(!chapter().ids.includes(id))section=views.find(c=>c.ids.includes(id)).id;show();persist();}
+function button(label,fn){const b=document.createElement('button');b.type='button';b.className='btn';b.textContent=label;b.addEventListener('click',fn);return b;}
+function renderComments(){
+ el('comments').replaceChildren();
+ for(const [id,text] of Object.entries(comments)){const row=document.createElement('div');row.append(button(id.toUpperCase()+' · '+byId[id].label,()=>navigate(id)));const p=document.createElement('p');p.textContent=text;row.append(p);el('comments').append(row);}
+ el('count').textContent=Object.keys(comments).length+' / 12 comments in this batch';
+}
+function details(){
+ const n=byId[selected];
+ const approved=n.copyConfirmed||[];
+ const copyNote=approved.length?'Confirmed wording: '+approved.map(k=>({status:'ticket label',pending:'pending line',action:'action'})[k]||k).join(', '):'Other wording proposed';
+ el('node-title').textContent=n.id.toUpperCase()+' · '+n.label+' — '+names[n.kind]+'. '+copyNote;
+ for(const key of ['status','pending','action'])el(key).textContent=n[key];
+ el('ui-note').textContent=n.uiNote||'';el('ui-note').hidden=!n.uiNote;
+ el('status-row').hidden=n.surface==='internal'||n.surface==='account-billing';el('pending').hidden=n.surface==='internal';
+ el('action-row').hidden=!n.action||n.surface==='internal';
+ el('timer').hidden=!n.countdown;
+ el('timer').textContent=n.countdown?n.countdown.examples.join(' · '):'';
+ el('fields').hidden=!n.fields?.length;
+ el('fields').textContent=n.fields?.length?'Fields: '+n.fields.join(' · '):'';
+ const choices=n.pendingVariants||[];
+ el('situation-label').hidden=!choices.length;
+ el('situation').replaceChildren(...choices.map(v=>option(v.id,v.label)));
+ el('inspection-heading').hidden=true;
+ if(choices.length){const v=choices.find(v=>v.id===situations[selected])||choices[0];el('situation').value=v.id;el('pending').textContent=v.pending;if(v.inspectionHeading){el('inspection-heading').textContent=v.inspectionHeading;el('inspection-heading').hidden=false;}}
+ el('trigger').textContent='Enters when: '+n.trigger;
+ el('gate').textContent='Checkpoint: '+n.checkpoint;
+ el('note').textContent=n.note;
+ el('questions').textContent=n.questions.length?'Related decisions: '+n.questions.join(', '):'No unresolved policy question at this step.';
+ el('comment-target').textContent=n.id.toUpperCase();el('comment').value=drafts[selected]??comments[selected]??'';
+ el('next').replaceChildren();
+ activeEdges().filter(e=>e.from===selected).forEach(e=>el('next').append(button(e.label+' → '+e.to.toUpperCase(),()=>navigate(e.to))));
+ renderComments();
+}
+function compact(){
+ el('compact').replaceChildren();
+ chapter().ids.forEach(id=>{const n=byId[id],row=document.createElement('div');row.className='qf-compact-row';row.append(button(id.toUpperCase()+' · '+n.label+' · '+({c:'C',p:'P',o:'?'}[n.kind]),()=>navigate(id)));const out=activeEdges().filter(e=>e.from===id);for(const e of out){const line=document.createElement('div');line.className='text-small';line.textContent=e.label+' → '+e.to.toUpperCase();row.append(line);}el('compact').append(row);});
+}
+// CSS chooses a readable diagram or connected list from width alone. There is no
+// observer callback that changes height while the embedding host measures height.
+function installGraph(svgMarkup,ids){
+ el('graph').innerHTML=svgMarkup;
+ const svg=el('graph').querySelector('svg'),width=svg.viewBox.baseVal.width;
+ svg.style.width=width+'px';
+ document.getElementById('qf-responsive-style').textContent=`@container qf-review (min-width: ${Math.ceil(width*0.79)}px){#qf-status-review #qf-graph{display:block}#qf-status-review #qf-compact{display:none}}`;
+ el('graph').querySelectorAll('.node').forEach(g=>{const id=ids.find(id=>g.id.startsWith('flowchart-'+id+'-'));if(id){g.classList.add('cursor-interaction');g.addEventListener('click',()=>navigate(id));}});
+}
+async function graph(){
+ if(graphSection===section&&mermaid)return;
+ const token=++renderId,currentSection=section;compact();
+ document.getElementById('qf-responsive-style').textContent='';
+ el('graph').replaceChildren();
+ if(!mermaid)return;
+ graphSection=currentSection;
+ const ids=chapter().ids,labels=ids.map(id=>{const n=byId[id];return id+'["'+id.toUpperCase()+': '+n.label+' ['+({c:'C',p:'P',o:'?'}[n.kind])+']"]:::'+n.kind;});
+ const links=activeEdges().filter(e=>ids.includes(e.from)&&ids.includes(e.to)&&(!chapter().edgeSources||chapter().edgeSources.includes(e.from))).map(e=>e.from+(e.type==='side'?' -.->':' -->')+'|"'+e.label+'"| '+e.to);
+ const source='flowchart '+(chapter().direction||'TB')+'\n'+labels.join('\n')+'\n'+links.join('\n');
+ try{
+  let result=graphCache.get(currentSection);
+  if(!result){
+   // Mermaid's temporary measurement DOM must not expand the document observed
+   // by the host. Serialize renders in a clipped, layout-contained staging area.
+   const job=renderQueue.then(async()=>{
+    if(token!==renderId)return null;
+    let stage=el('render-stage');if(!stage){stage=document.createElement('div');stage.id='qf-render-stage';stage.setAttribute('aria-hidden','true');root.append(stage);}
+    try{return await mermaid.render('qfDiagram'+token,source,stage);}finally{stage.replaceChildren();}
+   });
+   renderQueue=job.catch(()=>{});result=await job;
+   if(result)graphCache.set(currentSection,result);
+  }
+  if(token!==renderId||!result)return;
+  installGraph(result.svg,ids);
+ }catch(error){if(token!==renderId)return;graphSection='';el('message').textContent='Diagram rendering unavailable; the connected step list remains usable.';}
+}
+function show(){el('section').value=section;el('view-scope').textContent=chapter().reviewStatus||(chapter().isProposal?'Proposed consolidation · not applied to the current flow':'Current blueprint · internal checkpoints and shared forms are identified in node details');const ids=chapter().ids;if(!ids.includes(selected))selected=ids[0];el('step').replaceChildren(...ids.map(id=>option(id,id.toUpperCase()+' · '+byId[id].label)));el('step').value=selected;details();graph();}
+el('section').addEventListener('change',()=>{setDraft();section=el('section').value;selected=chapter().ids[0];show();persist();});
+el('step').addEventListener('change',()=>navigate(el('step').value));
+el('situation').addEventListener('change',()=>{setDraft();situations[selected]=el('situation').value;details();persist();});
+let draftTimer;
+el('comment').addEventListener('input',()=>{setDraft();clearTimeout(draftTimer);draftTimer=setTimeout(persist,350);});
+function save(){const text=el('comment').value.trim();if(!text){el('message').textContent='Write a comment first.';return false;}if(!comments[selected]&&Object.keys(comments).length>=12){el('message').textContent='Please send this batch of 12 before adding another step.';return false;}comments[selected]=text;commentSituations[selected]=situations[selected]||'0';delete drafts[selected];persist();renderComments();el('message').textContent='Comment kept on '+selected.toUpperCase()+'. Send the batch when ready.';return true;}
+el('save').addEventListener('click',save);
+el('remove').addEventListener('click',()=>{delete comments[selected];delete drafts[selected];delete commentSituations[selected];el('comment').value='';persist();renderComments();el('message').textContent='Comment removed from '+selected.toUpperCase()+'.';});
+function reviewText(){return 'QuoteFix lifecycle review '+data.version+'. Please apply these node-specific corrections, preserve the other confirmed decisions, and update the blueprint and diagram.\n\n'+Object.entries(comments).map(([id,t])=>{const n=byId[id],choices=n.pendingVariants||[],v=choices.find(v=>v.id===commentSituations[id])||choices[0];return id.toUpperCase()+' — '+n.label+'\nCurrent proposal: '+(n.surface==='internal'?'Internal process — no ticket UI':n.status+' | '+(v?.pending||n.pending))+(v?'\nSituation: '+v.label:'')+(n.uiNote?'\nVisibility: '+n.uiNote:'')+'\nMy comment: '+t;}).join('\n\n');}
+function prepare(){if(el('comment').value.trim()&&el('comment').value.trim()!==comments[selected]&&!save())return false;if(!Object.keys(comments).length){el('message').textContent='Add a comment to a step first.';return false;}return true;}
+el('copy').addEventListener('click',()=>{if(!prepare())return;el('copytext').hidden=false;el('copytext').value=reviewText();el('copytext').focus();el('copytext').select();el('message').textContent='Copy this text into your reply. Kept comments alone do not send a message.';});
+el('send').addEventListener('click',async()=>{if(!prepare())return;const prompt=reviewText();if(!window.openai?.sendFollowUpMessage){el('copytext').hidden=false;el('copytext').value=prompt;el('message').textContent='Sending is unavailable here. Copy the text into your reply.';return;}try{await window.openai.sendFollowUpMessage({prompt,title:'Send your QuoteFix flow comments'});el('message').textContent='Follow-up requested. Complete any conversation confirmation shown.';}catch(error){el('copytext').hidden=false;el('copytext').value=prompt;el('message').textContent='The comments were not sent. Copy the text into your reply.';}});
+window.addEventListener('openai:set_globals',event=>{const state=event.detail?.globals?.widgetState;if(state&&!emittedStates.has(JSON.stringify(state))&&restore(state))show();});
+show();
+try{mermaid=(await import('https://cdn.jsdelivr.net/npm/mermaid@11.12.0/dist/mermaid.esm.min.mjs')).default;mermaid.initialize({startOnLoad:false,securityLevel:'strict',theme:'base',fontFamily:'inherit',themeVariables:{fontSize:'14px'},flowchart:{htmlLabels:false,useMaxWidth:true,nodeSpacing:16,rankSpacing:28,padding:10,wrappingWidth:150}});await graph();}catch(error){el('message').textContent='Mermaid could not load; use the connected step list.';}
+</script>

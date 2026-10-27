@@ -1,0 +1,10 @@
+{
+  "sourceCommit": "pending-verification",
+  "checks": {
+    "scope": {"status":"pending","evidence":"Owner must confirm the controlled pilot launch contract."},
+    "decisions": {"status":"blocked","evidence":"G14 retention/deletion and dependent release policies remain open."},
+    "productionIdentity": {"status":"blocked","evidence":"Local identity refuses staging/production; managed provider not selected/integrated."},
+    "productionStorage": {"status":"blocked","evidence":"Production private evidence storage/scanning and recovery certification are pending."},
+    "deploymentAuthorization": {"status":"pending","evidence":"Implementation authorization is not a cloud/store release decision."}
+  }
+}

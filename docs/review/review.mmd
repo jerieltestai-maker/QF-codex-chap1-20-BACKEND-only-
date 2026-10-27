@@ -1,0 +1,18 @@
+flowchart TB
+  r1["R1: CM reviews completion [C]"]:::c
+  r2["R2: Contractor addresses issues [C]"]:::c
+  r3["R3: Explaining price change [C]"]:::c
+  r4["R4: MCST confirms invoice [C]"]:::c
+  p1["P1: MCST records payment [C]"]:::c
+  r1 -->|"Unsatisfactory work"| r2
+  r2 -->|"Repair submitted"| r1
+  r1 -->|"Invoice mismatch"| r3
+  r3 -->|"Inspection outstanding or acceptance affected"| r1
+  r1 -->|"Original job work accepted"| r4
+  r4 -->|"Work or acceptance concern"| r1
+  r4 -->|"Nonzero invoice confirmed"| p1
+  r3 -->|"Reconciled; work acceptance still valid"| r4
+  r4 -->|"Invoice-only correction"| r3
+  classDef c fill:#dcfce7,stroke:#166534,color:#17211b
+  classDef p fill:#fef3c7,stroke:#92400e,color:#291c0c
+  classDef o fill:#fee2e2,stroke:#991b1b,color:#2a1111

@@ -1,0 +1,16 @@
+flowchart TB
+  p1["P1: MCST records payment [C]"]:::c
+  p8["P8: Admin follows up in payment case [C]"]:::c
+  p9["P9: MCST responds in payment case [C]"]:::c
+  p2["P2: Contractor checks receipt [C]"]:::c
+  d2["D2: Admin reviews evidence [C]"]:::c
+  p1 -->|"Proof and Payment Sent; notify"| p2
+  p1 -.->|"Approved follow-up; same support case"| p8
+  p8 -->|"Admin requests concrete payment update"| p9
+  p9 -->|"Not sent: MCST still owes payment"| p1
+  p9 -->|"Proof and Payment Sent; notify"| p2
+  p9 -.->|"Promised update missed"| p8
+  p9 -->|"Payment concern needs review"| d2
+  classDef c fill:#dcfce7,stroke:#166534,color:#17211b
+  classDef p fill:#fef3c7,stroke:#92400e,color:#291c0c
+  classDef o fill:#fee2e2,stroke:#991b1b,color:#2a1111

@@ -1,0 +1,1637 @@
+{
+  "version": "0.3",
+  "prepared": "2026-10-13",
+  "lifecycleVersion": "2026-10-12-v14",
+  "scope": "Planning only. Tests are specifications, not executed application tests.",
+  "chapters": [
+    {
+      "number": 1,
+      "title": "Project, backend and database foundations",
+      "file": "01_FOUNDATIONS.md",
+      "dependencies": [],
+      "outcome": "Reproducible environments, migrations, API/worker shell and isolated fixtures",
+      "gates": "",
+      "status": "planned_not_implemented",
+      "nodes": [],
+      "timers": [],
+      "tests": [
+        {
+          "id": "CH01-T01",
+          "scenario": "Fresh isolated environment runs documented setup",
+          "expected": "Migrations and startup succeed; API reaches expected database; no manual hidden step"
+        },
+        {
+          "id": "CH01-T02",
+          "scenario": "Fixture loader targets production marker/credentials",
+          "expected": "Hard refusal before any mutation; no cleanup command can erase live data"
+        },
+        {
+          "id": "CH01-T03",
+          "scenario": "Repeated fixture install in test",
+          "expected": "Deterministic IDs/scenarios or clean isolated reset; no duplicate financial/reputation rows"
+        },
+        {
+          "id": "CH01-T04",
+          "scenario": "Transaction fails after first write",
+          "expected": "Business/audit/outbox writes roll back together; no partial state"
+        },
+        {
+          "id": "CH01-T05",
+          "scenario": "Inspect built client bundle and logs",
+          "expected": "No database/service/storage signing secret or private evidence body"
+        },
+        {
+          "id": "CH01-T06",
+          "scenario": "Migration applied to representative prior schema",
+          "expected": "Data preserved; compatibility/rollback procedure demonstrated without dropping business records"
+        },
+        {
+          "id": "CH01-T07",
+          "scenario": "Date-only, timestamp and SGD examples serialized",
+          "expected": "Precision/currency preserved; no timezone-induced day shift or floating-point cent error"
+        }
+      ]
+    },
+    {
+      "number": 2,
+      "title": "Login, accounts and permissions",
+      "file": "02_LOGIN_AND_ACCESS.md",
+      "dependencies": [
+        1
+      ],
+      "outcome": "Named accounts, sessions, role/estate membership and enforced access",
+      "gates": "G01, G14",
+      "status": "planned_not_implemented",
+      "nodes": [],
+      "timers": [],
+      "tests": [
+        {
+          "id": "CH02-T01",
+          "scenario": "Valid, invalid, expired and replayed login/invite",
+          "expected": "Correct session/access outcome; no role escalation or leaked account existence"
+        },
+        {
+          "id": "CH02-T02",
+          "scenario": "CM requests MCST payment endpoint",
+          "expected": "Denied server-side even with edited payload/button/role cookie"
+        },
+        {
+          "id": "CH02-T03",
+          "scenario": "Two MCST title variants / two CM block labels",
+          "expected": "Same-role permissions equal; named actor and estate context preserved"
+        },
+        {
+          "id": "CH02-T04",
+          "scenario": "User changes URL to another estate/file",
+          "expected": "No data/count/error leakage; authorization reapplied"
+        },
+        {
+          "id": "CH02-T05",
+          "scenario": "MCST account is named subject in a report",
+          "expected": "Report excluded despite broad estate role; uninvolved authorised recipients still work"
+        },
+        {
+          "id": "CH02-T06",
+          "scenario": "Membership revoked after mobile/web cached context",
+          "expected": "Next request/reconnect denies stale access and clears inaccessible cache; no claim of erasure while offline"
+        },
+        {
+          "id": "CH02-T07",
+          "scenario": "Session expires during form / another user signs in",
+          "expected": "Draft not silently submitted or exposed to the new user; current actor validated"
+        },
+        {
+          "id": "CH02-T08",
+          "scenario": "Unverified Contractor application completes login",
+          "expected": "Onboarding available; quote action remains blocked until verified"
+        }
+      ]
+    },
+    {
+      "number": 3,
+      "title": "Workspace, records, audit and files",
+      "file": "03_WORKSPACE_RECORDS_AND_FILES.md",
+      "dependencies": [
+        1,
+        2
+      ],
+      "outcome": "Shared workspace, safe commands, version history, drafts and private uploads",
+      "gates": "G14",
+      "status": "planned_not_implemented",
+      "nodes": [],
+      "timers": [],
+      "tests": [
+        {
+          "id": "CH03-T01",
+          "scenario": "Mutation crashes between business/audit/outbox writes",
+          "expected": "All roll back or all commit; no orphan approval/history gap"
+        },
+        {
+          "id": "CH03-T02",
+          "scenario": "Response lost then same operation retried",
+          "expected": "One effect; original outcome recoverable; changed payload rejected"
+        },
+        {
+          "id": "CH03-T03",
+          "scenario": "Stale approval versus unrelated new photo",
+          "expected": "Changed decision facts block; unrelated optional attachment does not cause needless rejection"
+        },
+        {
+          "id": "CH03-T04",
+          "scenario": "Upload interrupted, app restarted, grant expires",
+          "expected": "Resume eligible bytes after reauthorization; no duplicate attachment or silent form submission"
+        },
+        {
+          "id": "CH03-T05",
+          "scenario": "Reuse upload URL after finalization",
+          "expected": "Reviewed bytes/checksum remain immutable"
+        },
+        {
+          "id": "CH03-T06",
+          "scenario": "Corrupt type, oversize file, malware/scan failure",
+          "expected": "File not ready; required submission blocked with useful recovery"
+        },
+        {
+          "id": "CH03-T07",
+          "scenario": "Contractor downloads original/identifying derivative before reveal",
+          "expected": "Denied or sanitized; name/metadata/thumbnail/export routes tested"
+        },
+        {
+          "id": "CH03-T08",
+          "scenario": "Offline two-device draft overlap and account switch",
+          "expected": "Both drafts preserved for authorised owner; no overwrite or cross-account leak"
+        },
+        {
+          "id": "CH03-T09",
+          "scenario": "Admin backtrack attempt through generic status PATCH",
+          "expected": "Denied; explicit attributed command and dependency handling required"
+        }
+      ]
+    },
+    {
+      "number": 4,
+      "title": "Tasks, notifications and clocks",
+      "file": "04_TASKS_NOTIFICATIONS_AND_CLOCKS.md",
+      "dependencies": [
+        1,
+        2,
+        3
+      ],
+      "outcome": "Waiting-on bar, durable in-app bells, timer engine and Admin follow-up",
+      "gates": "G02",
+      "status": "planned_not_implemented",
+      "nodes": [
+        "e1"
+      ],
+      "timers": [
+        "T11",
+        "T18"
+      ],
+      "tests": [
+        {
+          "id": "CH04-T01",
+          "scenario": "Friday trigger with a configured Monday holiday",
+          "expected": "BD due date skips trigger/weekend/holiday; cutoff 23:59 SGT"
+        },
+        {
+          "id": "CH04-T02",
+          "scenario": "Initial notice waits in outbox then is retried",
+          "expected": "First-issued absent until durable commit; one anchor/notice after recovery"
+        },
+        {
+          "id": "CH04-T03",
+          "scenario": "User opens bell or adds generic comment",
+          "expected": "Task not completed/acknowledged; deadline not reset"
+        },
+        {
+          "id": "CH04-T04",
+          "scenario": "Admin acknowledges unresolved item without next action/date",
+          "expected": "Refused with targeted field error; no item falling out of follow-up"
+        },
+        {
+          "id": "CH04-T05",
+          "scenario": "Worker crash after notice transaction commits",
+          "expected": "Retry does not duplicate bell/financial transition or shift anchor"
+        },
+        {
+          "id": "CH04-T06",
+          "scenario": "Several equal-role users/new member/new device",
+          "expected": "Shared obligation one deadline; per-user reads; named actual responder preserved"
+        },
+        {
+          "id": "CH04-T07",
+          "scenario": "Obsolete round timer wakes after response/cancellation",
+          "expected": "Stop guard prevents misleading notice; history retained"
+        },
+        {
+          "id": "CH04-T08",
+          "scenario": "Phone clock/timezone changed, app offline at zero",
+          "expected": "Display refresh corrects offset; no client-triggered business transition"
+        },
+        {
+          "id": "CH04-T09",
+          "scenario": "Confidential report subject/CM queries billing bell",
+          "expected": "No content, count or deep-link leak"
+        },
+        {
+          "id": "CH04-T10",
+          "scenario": "Outage spans urgent reminders; Admin already acknowledged",
+          "expected": "No stale reminder burst; unresolved dated follow-up remains"
+        }
+      ]
+    },
+    {
+      "number": 5,
+      "title": "Contractor verification",
+      "file": "05_CONTRACTOR_VERIFICATION.md",
+      "dependencies": [
+        1,
+        2,
+        3,
+        4
+      ],
+      "outcome": "Admin verification, required/optional credentials and expiry eligibility",
+      "gates": "G06",
+      "status": "planned_not_implemented",
+      "nodes": [
+        "g1",
+        "g2",
+        "g3",
+        "g4"
+      ],
+      "timers": [
+        "T12"
+      ],
+      "tests": [
+        {
+          "id": "CH05-T01",
+          "scenario": "Logged-in unverified Contractor submits quote",
+          "expected": "Denied at API; profile/verification workflow still accessible"
+        },
+        {
+          "id": "CH05-T02",
+          "scenario": "Upload evidence without Admin approval",
+          "expected": "No eligibility or verified badge granted"
+        },
+        {
+          "id": "CH05-T03",
+          "scenario": "Optional versus required credential expires",
+          "expected": "Optional grey only; required scope restricted and Admin work review; no blanket job cancellation"
+        },
+        {
+          "id": "CH05-T04",
+          "scenario": "Expiry date-only at 23:59 then next midnight",
+          "expected": "Correct Singapore boundary; explicit timestamp honored"
+        },
+        {
+          "id": "CH05-T05",
+          "scenario": "Month-end reminder / record inside one-month window",
+          "expected": "Correct clamp/immediate alert without duplicate notices"
+        },
+        {
+          "id": "CH05-T06",
+          "scenario": "Renewal races old expiry worker",
+          "expected": "Current verified version wins; no obsolete restriction"
+        },
+        {
+          "id": "CH05-T07",
+          "scenario": "Fee restriction cleared while credential still invalid",
+          "expected": "Contractor remains blocked in affected scope"
+        },
+        {
+          "id": "CH05-T08",
+          "scenario": "Masked CM/rival Contractor requests private evidence",
+          "expected": "No identity/document/contact leak through profile/file/bell/export"
+        }
+      ]
+    },
+    {
+      "number": 6,
+      "title": "RFQ intake, AI assistance and urgency",
+      "file": "06_RFQ_INTAKE_AND_URGENCY.md",
+      "dependencies": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "outcome": "Publish accurate anonymised requests; sourcing and urgent coordination",
+      "gates": "G06, G07",
+      "status": "planned_not_implemented",
+      "nodes": [
+        "i1",
+        "i2",
+        "i3",
+        "q1",
+        "u1",
+        "u2",
+        "u3",
+        "u4"
+      ],
+      "timers": [
+        "T15",
+        "T16",
+        "T19"
+      ],
+      "tests": [
+        {
+          "id": "CH06-T01",
+          "scenario": "No photo, with/without explanation",
+          "expected": "Explanation permits manual route; missing conditional explanation rejected; video not required"
+        },
+        {
+          "id": "CH06-T02",
+          "scenario": "AI invents quantity or returns after draft changed",
+          "expected": "Unsupported addition requires correction/review; no stale overwrite or auto-publication"
+        },
+        {
+          "id": "CH06-T03",
+          "scenario": "Combined multi-trade versus separate toggle",
+          "expected": "One accountable bundle or correctly linked independent tickets; no forced split"
+        },
+        {
+          "id": "CH06-T04",
+          "scenario": "No preference versus selected priority",
+          "expected": "Eligibility unchanged; weighting intent and provenance stored for later comparison"
+        },
+        {
+          "id": "CH06-T05",
+          "scenario": "Publish late on 1 December; 0/2/3 distinct current offers",
+          "expected": "Admin check 3 Dec noon; alert only below 3; revisions do not inflate count"
+        },
+        {
+          "id": "CH06-T06",
+          "scenario": "Material edit/ordinary typo",
+          "expected": "Correct scope-version/reconfirmation effects; no sourcing-anchor reset on edit"
+        },
+        {
+          "id": "CH06-T07",
+          "scenario": "Urgent unacknowledged across all checkpoints",
+          "expected": "Correct 15m/1h/3h/10h/17h sequence; no hourly loop or duplicate cases"
+        },
+        {
+          "id": "CH06-T08",
+          "scenario": "Admin reads, then explicitly acknowledges urgent item",
+          "expected": "Read does not stop; acknowledgment stops repeats and retains unresolved next date"
+        },
+        {
+          "id": "CH06-T09",
+          "scenario": "Contractor previews RFQ before approved reveal",
+          "expected": "No exact estate identity through text/media/API/bell; material safety facts preserved"
+        },
+        {
+          "id": "CH06-T10",
+          "scenario": "Duplicate publish or offline publish attempt",
+          "expected": "One round/event; offline remains draft, never an automatic later publication"
+        }
+      ]
+    },
+    {
+      "number": 7,
+      "title": "Quotes, shared Q&A and site visits",
+      "file": "07_QUOTES_QA_AND_VISITS.md",
+      "dependencies": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "outcome": "Structured current quotes, required terms, questions, visits and reconfirmation",
+      "gates": "G04, G05, G07",
+      "status": "planned_not_implemented",
+      "nodes": [
+        "q3",
+        "q4",
+        "q5",
+        "q6"
+      ],
+      "timers": [
+        "T13",
+        "T22"
+      ],
+      "tests": [
+        {
+          "id": "CH07-T01",
+          "scenario": "Each compulsory declaration/follow-up omitted or Other blank",
+          "expected": "Submission rejected at API with relevant field error; optional PDF never required"
+        },
+        {
+          "id": "CH07-T02",
+          "scenario": "GST Yes/No and exclusions",
+          "expected": "Final amount unchanged by hidden GST addition; excluded cost warnings accurate"
+        },
+        {
+          "id": "CH07-T03",
+          "scenario": "Warranty No / equipment not flagged",
+          "expected": "No fictitious duration/equipment compulsory field"
+        },
+        {
+          "id": "CH07-T04",
+          "scenario": "Pre-quote Q&A versus pre-quote visit request",
+          "expected": "Q&A allowed; visit denied until initial quote; CM decline ends response duty"
+        },
+        {
+          "id": "CH07-T05",
+          "scenario": "Shared answer contains rival price/questioner identity",
+          "expected": "Not exposed to peers; approved factual answer and versions retained"
+        },
+        {
+          "id": "CH07-T06",
+          "scenario": "Material answer makes three offers outdated",
+          "expected": "Reconfirmation required; valid count/reminder pause reflects actual current coverage"
+        },
+        {
+          "id": "CH07-T07",
+          "scenario": "Expiry worker delayed / selected hold reaches old expiry",
+          "expected": "Unselected expired offer blocked synchronously; held selection remains valid"
+        },
+        {
+          "id": "CH07-T08",
+          "scenario": "Re-quote ping plus automatic notice retried",
+          "expected": "Correct authorized recipient; no clock reset or duplicate quotation"
+        },
+        {
+          "id": "CH07-T09",
+          "scenario": "Visit-derived revision without reason / selection racing revision",
+          "expected": "Required reason; one exact valid version wins, never unseen replacement"
+        },
+        {
+          "id": "CH07-T10",
+          "scenario": "Unknown duration selected",
+          "expected": "Prominent caution/reason shown; no invented readiness restriction"
+        }
+      ]
+    },
+    {
+      "number": 8,
+      "title": "Comparison, selection and approval",
+      "file": "08_COMPARISON_SELECTION_AND_APPROVAL.md",
+      "dependencies": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "outcome": "Comparable evidence, exact-version decisions, thresholds and reselection",
+      "gates": "G09 for final reputation/AI integration",
+      "status": "planned_not_implemented",
+      "nodes": [
+        "q2",
+        "s1",
+        "s2",
+        "s3",
+        "s4",
+        "s5",
+        "m1",
+        "m2"
+      ],
+      "timers": [
+        "T07",
+        "T17"
+      ],
+      "tests": [
+        {
+          "id": "CH08-T01",
+          "scenario": "Compare expired, superseded, ineligible and unreconfirmed offers",
+          "expected": "Correct included set/count/highest/average; snapshot reproducible"
+        },
+        {
+          "id": "CH08-T02",
+          "scenario": "Select with one/two offers",
+          "expected": "Warning/rationale; selection allowed, T17 not prematurely active"
+        },
+        {
+          "id": "CH08-T03",
+          "scenario": "Three -> two -> three across holiday and repeated pauses",
+          "expected": "Correct remaining time; sourcing attention; no timer reset/duplicate reminder"
+        },
+        {
+          "id": "CH08-T04",
+          "scenario": "Threshold equality / just above",
+          "expected": "Equality authorises via CM; above requires MCST; amount includes GST"
+        },
+        {
+          "id": "CH08-T05",
+          "scenario": "Two actors select different Contractors at once",
+          "expected": "One exact version commits; other receives current-context conflict"
+        },
+        {
+          "id": "CH08-T06",
+          "scenario": "Selected quote reaches former expiry during MCST review",
+          "expected": "Terms remain held; no reopened quoting/expiry rejection"
+        },
+        {
+          "id": "CH08-T07",
+          "scenario": "MCST rejects then reselects/reopens",
+          "expected": "Same ticket and immutable prior history; only valid offers reused"
+        },
+        {
+          "id": "CH08-T08",
+          "scenario": "MCST Select and approve above threshold",
+          "expected": "Required Yes I know acknowledgement and one combined decision; Back does nothing"
+        },
+        {
+          "id": "CH08-T09",
+          "scenario": "Authorised job attempts Contractor replacement",
+          "expected": "Ordinary reselection denied; linked new ticket route"
+        },
+        {
+          "id": "CH08-T10",
+          "scenario": "Concealed CM views passport/AI/history",
+          "expected": "Aliases consistent; no identity clues or privileged evidence leaked"
+        }
+      ]
+    },
+    {
+      "number": 9,
+      "title": "Start, progress and schedules",
+      "file": "09_START_PROGRESS_AND_SCHEDULE.md",
+      "dependencies": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8
+      ],
+      "outcome": "Start prerequisites, temporary unknown estimate, lateness and interruption",
+      "gates": "G03 resolved 14 October 2026",
+      "status": "planned_not_implemented",
+      "nodes": [
+        "w1",
+        "w2",
+        "e2"
+      ],
+      "timers": [
+        "T14",
+        "T20",
+        "T21",
+        "T23"
+      ],
+      "tests": [
+        {
+          "id": "CH09-T01",
+          "scenario": "Start with only date, only time, or unknown without reason",
+          "expected": "Disabled in UI and rejected by API; valid complete alternative succeeds"
+        },
+        {
+          "id": "CH09-T02",
+          "scenario": "Unknown estimate crosses weekend",
+          "expected": "Exactly +24h, not business days; Contractor cannot self-extend/reset"
+        },
+        {
+          "id": "CH09-T03",
+          "scenario": "Admin extends after estimate deadline missed",
+          "expected": "Required reason/new due; missed event retained"
+        },
+        {
+          "id": "CH09-T04",
+          "scenario": "Scheduled Start not recorded then later recorded",
+          "expected": "Truthful Admin/+24h notifications; obsolete notice suppressed"
+        },
+        {
+          "id": "CH09-T05",
+          "scenario": "Completion before target / after target before estate reminder",
+          "expected": "No lateness in first case; retain real lateness but suppress obsolete reminder in second"
+        },
+        {
+          "id": "CH09-T06",
+          "scenario": "Revised date version changes before Okay",
+          "expected": "Stale acceptance blocked; original target remains until valid acceptance"
+        },
+        {
+          "id": "CH09-T07",
+          "scenario": "Okay lateness notice versus Okay date proposal",
+          "expected": "Acknowledgment does not extend target; proposal acceptance does"
+        },
+        {
+          "id": "CH09-T08",
+          "scenario": "CM has not supplied keys",
+          "expected": "Next actor explicitly CM; no automatic contractor fault/penalty or extension"
+        },
+        {
+          "id": "CH09-T09",
+          "scenario": "Cancel and Start concurrently",
+          "expected": "One consistent authorised outcome; no work restoration through stale command"
+        },
+        {
+          "id": "CH09-T10",
+          "scenario": "Admin review remains unresolved",
+          "expected": "E2 retains actual next actor/date; no auto-W2 or unsupported replacement"
+        }
+      ]
+    },
+    {
+      "number": 10,
+      "title": "Variations and return routing",
+      "file": "10_VARIATIONS.md",
+      "dependencies": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9
+      ],
+      "outcome": "Versioned terms, authorised approvals, permanent rejection rationale and correct return stage",
+      "gates": "",
+      "status": "planned_not_implemented",
+      "nodes": [
+        "v1",
+        "v2",
+        "v3",
+        "v4",
+        "v5"
+      ],
+      "timers": [],
+      "tests": [
+        {
+          "id": "CH10-T01",
+          "scenario": "Contractor has not confirmed price/timing",
+          "expected": "Approver cannot approve unspecified terms; next actor Contractor"
+        },
+        {
+          "id": "CH10-T02",
+          "scenario": "At threshold / increased beyond MCST authority",
+          "expected": "Correct CM/MCST path; no double approval or routine Admin gate"
+        },
+        {
+          "id": "CH10-T03",
+          "scenario": "Rejection has no reason; withdrawal has no note",
+          "expected": "Rejection refused; withdrawal permitted and audited"
+        },
+        {
+          "id": "CH10-T04",
+          "scenario": "Rejected before Start",
+          "expected": "Return W1, not W2"
+        },
+        {
+          "id": "CH10-T05",
+          "scenario": "Rejected change leaves work infeasible",
+          "expected": "E2 with real Admin task; no automatic continuation"
+        },
+        {
+          "id": "CH10-T06",
+          "scenario": "Approved change while invoice discrepancy/review pending",
+          "expected": "Correct R3/R1 routing; affected acceptance/version checked"
+        },
+        {
+          "id": "CH10-T07",
+          "scenario": "Approval races new proposal/cancellation",
+          "expected": "Stale decision cannot approve unseen terms or revive cancelled work"
+        },
+        {
+          "id": "CH10-T08",
+          "scenario": "Optional photo added during variation review",
+          "expected": "No unnecessary approval conflict when terms unchanged"
+        },
+        {
+          "id": "CH10-T09",
+          "scenario": "User dismisses outcome toast then opens history",
+          "expected": "Full decision/reason/actor/date/time retained"
+        },
+        {
+          "id": "CH10-T10",
+          "scenario": "Several small price increases",
+          "expected": "Authorised totals correct; chapter 17 warning evaluates cumulative growth, not only latest delta"
+        }
+      ]
+    },
+    {
+      "number": 11,
+      "title": "Completion, invoice and inspections",
+      "file": "11_COMPLETION_AND_INSPECTION.md",
+      "dependencies": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10
+      ],
+      "outcome": "Completion package, invoice reconciliation and repeatable physical inspections",
+      "gates": "G10 for rating questionnaire",
+      "status": "planned_not_implemented",
+      "nodes": [
+        "w3",
+        "r1",
+        "r2",
+        "r3"
+      ],
+      "timers": [
+        "T08"
+      ],
+      "tests": [
+        {
+          "id": "CH11-T01",
+          "scenario": "Completion without invoice / without photos",
+          "expected": "No invoice -> refused; invoice + declaration without photos -> permitted"
+        },
+        {
+          "id": "CH11-T02",
+          "scenario": "File upload succeeds but user never slides submit",
+          "expected": "No completion declaration/CM inspection task"
+        },
+        {
+          "id": "CH11-T03",
+          "scenario": "Unsatisfactory work with positive checkbox unchecked",
+          "expected": "Valid negative route; no forced satisfactory declaration"
+        },
+        {
+          "id": "CH11-T04",
+          "scenario": "Failed 4 Nov inspection; repaired 8 Nov",
+          "expected": "New round 2 inspection and fresh T08; old failed result cannot satisfy it"
+        },
+        {
+          "id": "CH11-T05",
+          "scenario": "Round 2 already accepted; support verification runs",
+          "expected": "Reuse exact successful acceptance, no duplicate inspection"
+        },
+        {
+          "id": "CH11-T06",
+          "scenario": "Invoice-only correction versus new physical work",
+          "expected": "Acceptance retained only for unchanged accepted work; new physical work reviewed again"
+        },
+        {
+          "id": "CH11-T07",
+          "scenario": "Invoice differs by any amount",
+          "expected": "Confirmation blocked; MCST/Admin notified; explanation view alone does not unblock"
+        },
+        {
+          "id": "CH11-T08",
+          "scenario": "Contractor double-submits completion after timeout",
+          "expected": "One declaration/package/round; original immutable"
+        },
+        {
+          "id": "CH11-T09",
+          "scenario": "New remedy arrives while CM submits old review",
+          "expected": "Stale review refused; current round and originating findings shown"
+        },
+        {
+          "id": "CH11-T10",
+          "scenario": "Review result recorded but optional rating unfinished",
+          "expected": "No invented score; operational and rating facts remain separate per gated questionnaire policy"
+        }
+      ]
+    },
+    {
+      "number": 12,
+      "title": "Payments, receipts and closure",
+      "file": "12_PAYMENTS_AND_CLOSURE.md",
+      "dependencies": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11
+      ],
+      "outcome": "MCST confirmation/payment, receipt windows, balances and automatic closure",
+      "gates": "",
+      "status": "planned_not_implemented",
+      "nodes": [
+        "r4",
+        "p0",
+        "p1",
+        "p2",
+        "p3",
+        "p4",
+        "p6",
+        "p7",
+        "p8",
+        "p9",
+        "p10"
+      ],
+      "timers": [
+        "T01",
+        "T02"
+      ],
+      "tests": [
+        {
+          "id": "CH12-T01",
+          "scenario": "CM or stale MCST confirms/records payment",
+          "expected": "CM denied; stale amount/version requires review"
+        },
+        {
+          "id": "CH12-T02",
+          "scenario": "Payment Sent without ready completed-transfer proof",
+          "expected": "Refused; upload-only/provisional bank instruction insufficient"
+        },
+        {
+          "id": "CH12-T03",
+          "scenario": "Partial payment without rationale then valid rationale",
+          "expected": "Conditional field enforced; Contractor sees reason and accurate remaining balance"
+        },
+        {
+          "id": "CH12-T04",
+          "scenario": "Transfer precedes report/notice by many days",
+          "expected": "Seven days from first issued notice; immediate actual-date confirmation allowed"
+        },
+        {
+          "id": "CH12-T05",
+          "scenario": "Reminder/read/retry/new device",
+          "expected": "No reset of first-issued receipt deadline"
+        },
+        {
+          "id": "CH12-T06",
+          "scenario": "Two instalments, one disputed and one silent",
+          "expected": "Per-transfer results; disputed one not deemed; total/remaining balance correct"
+        },
+        {
+          "id": "CH12-T07",
+          "scenario": "Assumption worker races Payment Issue/actual receipt",
+          "expected": "One consistent receipt result, no double-count; post-assumption issue can still be raised"
+        },
+        {
+          "id": "CH12-T08",
+          "scenario": "Response lost after Payment Sent",
+          "expected": "One transfer/notice/anchor via same-operation recovery"
+        },
+        {
+          "id": "CH12-T09",
+          "scenario": "Full settlement with case unresolved, then case resolved",
+          "expected": "No premature closure; closes automatically on final valid gate"
+        },
+        {
+          "id": "CH12-T10",
+          "scenario": "Zero payable / cancelled settlement / late aftercare",
+          "expected": "No fake transfer, duplicate confirmation or wrongful Closed state"
+        },
+        {
+          "id": "CH12-T11",
+          "scenario": "MCST progress reply says awaiting paperwork",
+          "expected": "No payment recorded; no erased balance/chase; dated follow-up remains"
+        },
+        {
+          "id": "CH12-T12",
+          "scenario": "Contractor opens after T+7 fallback",
+          "expected": "Popup and labelled assumed record; no separate internal-process page"
+        }
+      ]
+    },
+    {
+      "number": 13,
+      "title": "Contractor QuoteFix billing",
+      "file": "13_QUOTEFIX_BILLING.md",
+      "dependencies": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
+      "outcome": "Separate fee account, 4% + 4%, adjustments, deadlines and restrictions",
+      "gates": "G08",
+      "status": "planned_not_implemented",
+      "nodes": [
+        "b1",
+        "b2",
+        "b3",
+        "b4"
+      ],
+      "timers": [
+        "T05",
+        "T06"
+      ],
+      "tests": [
+        {
+          "id": "CH13-T01",
+          "scenario": "Invoice 1,200, MCST paid only 600",
+          "expected": "Exactly 48 + 48 at confirmation; correct +3 BD due"
+        },
+        {
+          "id": "CH13-T02",
+          "scenario": "Duplicate confirmation/event replay",
+          "expected": "One assessment each; no aftercare/backtrack duplication"
+        },
+        {
+          "id": "CH13-T03",
+          "scenario": "1,000 -> 1,200 with original paid/unpaid",
+          "expected": "Total 96; incremental 16; original deadline preserved"
+        },
+        {
+          "id": "CH13-T04",
+          "scenario": "Downward correction after payment",
+          "expected": "Correct refund obligation; no fictitious execution"
+        },
+        {
+          "id": "CH13-T05",
+          "scenario": "Overdue fees with authorised job and unselected offer",
+          "expected": "Existing job completable; new quote/unselected selection restricted"
+        },
+        {
+          "id": "CH13-T06",
+          "scenario": "Fee proof uploaded, Admin has not checked",
+          "expected": "Evidence task, not automatic paid or proven nonpayment"
+        },
+        {
+          "id": "CH13-T07",
+          "scenario": "Fee paid while credential invalid",
+          "expected": "Only fee restriction lifted"
+        },
+        {
+          "id": "CH13-T08",
+          "scenario": "CM/MCST requests account/bell/export data",
+          "expected": "No fee/balance leak"
+        },
+        {
+          "id": "CH13-T09",
+          "scenario": "Fractional-cent basis",
+          "expected": "Matches the owner's 18 October independent half-up-cent rule, including zero/small/maximum exact amounts"
+        },
+        {
+          "id": "CH13-T10",
+          "scenario": "Fee unpaid when ordinary closure gates pass",
+          "expected": "Job closure/Feedback independent"
+        }
+      ]
+    },
+    {
+      "number": 14,
+      "title": "Cancellation and Admin Support",
+      "file": "14_CANCELLATION_AND_ADMIN_SUPPORT.md",
+      "dependencies": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13
+      ],
+      "outcome": "Claims, evidence, final resolutions, execution and audited backtracking",
+      "gates": "G15 archive only",
+      "status": "planned_not_implemented",
+      "nodes": [
+        "c1",
+        "c2",
+        "c3",
+        "c4",
+        "c6",
+        "c7",
+        "c8",
+        "c9",
+        "c10",
+        "d1",
+        "d2",
+        "d3",
+        "d4",
+        "d5",
+        "d6",
+        "d7",
+        "d8",
+        "d9",
+        "e3",
+        "a1",
+        "a2"
+      ],
+      "timers": [
+        "T09",
+        "T10"
+      ],
+      "tests": [
+        {
+          "id": "CH14-T01",
+          "scenario": "Cancel before approval/after authority",
+          "expected": "Immediate with reason; no Admin prerequisite"
+        },
+        {
+          "id": "CH14-T02",
+          "scenario": "Okay without declaration",
+          "expected": "Refused; proper explicit acceptance logged; existing debts retained"
+        },
+        {
+          "id": "CH14-T03",
+          "scenario": "Delayed/failed cancellation notice",
+          "expected": "Seven days from first durable issue; reads/retries unchanged"
+        },
+        {
+          "id": "CH14-T04",
+          "scenario": "Timely claim and later proof; draft only at cutoff",
+          "expected": "Claim continues; draft not submission; no inferred waiver"
+        },
+        {
+          "id": "CH14-T05",
+          "scenario": "+5 BD falls beyond claim cutoff",
+          "expected": "Admin at earlier cutoff-minus-24h, no extension"
+        },
+        {
+          "id": "CH14-T06",
+          "scenario": "Evidence uploaded in D3",
+          "expected": "D2 Admin review only, no automatic D4"
+        },
+        {
+          "id": "CH14-T07",
+          "scenario": "Party ignores final resolution",
+          "expected": "Execution proceeds, no fabricated acknowledgment"
+        },
+        {
+          "id": "CH14-T08",
+          "scenario": "New remedy after failed inspection",
+          "expected": "Fresh R1; same successful corrected round reused only for matching obligation"
+        },
+        {
+          "id": "CH14-T09",
+          "scenario": "Reported subject has MCST access",
+          "expected": "Excluded on every surface; authorised uninvolved handling preserved"
+        },
+        {
+          "id": "CH14-T10",
+          "scenario": "Backtrack paid/completed/cancelled job",
+          "expected": "Financial clocks/history preserved; targeted task invalidation"
+        },
+        {
+          "id": "CH14-T11",
+          "scenario": "Zero/already-confirmed settlement",
+          "expected": "No duplicate confirmation/fees/transfer; Cancelled retained"
+        },
+        {
+          "id": "CH14-T12",
+          "scenario": "Admin contact does not resolve case",
+          "expected": "Concrete next actor/date; no automatic resolution/archive"
+        },
+        {
+          "id": "CH14-T13",
+          "scenario": "Admin attempts same-ticket Contractor replacement after authority",
+          "expected": "Linked new ticket required"
+        }
+      ]
+    },
+    {
+      "number": 15,
+      "title": "Durability Feedback and aftercare",
+      "file": "15_FEEDBACK_AND_AFTERCARE.md",
+      "dependencies": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14
+      ],
+      "outcome": "30-day Feedback, nonresponse follow-up and correctly inspected aftercare",
+      "gates": "G04 warranty automation only",
+      "status": "planned_not_implemented",
+      "nodes": [
+        "f1",
+        "f2",
+        "f3",
+        "f5",
+        "f6",
+        "f7",
+        "f8",
+        "f9",
+        "f10"
+      ],
+      "timers": [
+        "T03",
+        "T04"
+      ],
+      "tests": [
+        {
+          "id": "CH15-T01",
+          "scenario": "Only partial payment received",
+          "expected": "No premature full-settlement Feedback anchor"
+        },
+        {
+          "id": "CH15-T02",
+          "scenario": "Actual versus assumed full receipt",
+          "expected": "Correct different dates; invoice fee date never substituted"
+        },
+        {
+          "id": "CH15-T03",
+          "scenario": "Date-only and late-discovered due task",
+          "expected": "09:00 SGT / immediate issue with fair 2/5-BD response window"
+        },
+        {
+          "id": "CH15-T04",
+          "scenario": "Before due, at due, after ticket Closed",
+          "expected": "No early button; due action visible; closure unchanged"
+        },
+        {
+          "id": "CH15-T05",
+          "scenario": "Negative or positive stars without observation",
+          "expected": "Both rejected; guidance example not treated as real finding"
+        },
+        {
+          "id": "CH15-T06",
+          "scenario": "No response versus Unable to assess",
+          "expected": "Correct chase versus stop with no fabricated score"
+        },
+        {
+          "id": "CH15-T07",
+          "scenario": "Low rating without aftercare request",
+          "expected": "No automatic repair case/liability/second invoice"
+        },
+        {
+          "id": "CH15-T08",
+          "scenario": "Physical aftercare repair submitted",
+          "expected": "New inspection; same successful round reused; original fees not repeated"
+        },
+        {
+          "id": "CH15-T09",
+          "scenario": "No-work cancellation versus performed zero outcome",
+          "expected": "Correct exclusion/approved anchor; no fake transfer"
+        },
+        {
+          "id": "CH15-T10",
+          "scenario": "Duplicate assessment or corrected anchor",
+          "expected": "No duplicate job/assessment; history/true observation preserved"
+        }
+      ]
+    },
+    {
+      "number": 16,
+      "title": "Reputation, passport and AI comparison",
+      "file": "16_REPUTATION_PASSPORT_AND_AI.md",
+      "dependencies": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15
+      ],
+      "outcome": "Verified evidence, moderated outcomes, two-score model and explainable comparison",
+      "gates": "G09, G10, G11",
+      "status": "planned_not_implemented",
+      "nodes": [
+        "f4"
+      ],
+      "timers": [],
+      "tests": [
+        {
+          "id": "CH16-T01",
+          "scenario": "External references plus QuoteFix jobs",
+          "expected": "Source counts correct; external work never labelled QuoteFix-observed"
+        },
+        {
+          "id": "CH16-T02",
+          "scenario": "Fewer than five verified references/missing rubric",
+          "expected": "No padded data/invented number; approved missing-data policy required"
+        },
+        {
+          "id": "CH16-T03",
+          "scenario": "No preference",
+          "expected": "Pure and adjusted scores identical"
+        },
+        {
+          "id": "CH16-T04",
+          "scenario": "Priority with strong/weak corresponding component",
+          "expected": "Reproducible normalization; no global-score mutation"
+        },
+        {
+          "id": "CH16-T05",
+          "scenario": "Pending/unanswered/Unable to assess durability",
+          "expected": "No clean-repair points; correct approved denominator"
+        },
+        {
+          "id": "CH16-T06",
+          "scenario": "Several remedy reports on one job",
+          "expected": "One job-level unit; all rounds retained"
+        },
+        {
+          "id": "CH16-T07",
+          "scenario": "Contractor reply/Admin void",
+          "expected": "Correct publication gate/private reason/audit and permitted score effects"
+        },
+        {
+          "id": "CH16-T08",
+          "scenario": "Concealed CM accesses AI/passport/citations",
+          "expected": "No identity clues/private contacts/restricted allegations"
+        },
+        {
+          "id": "CH16-T09",
+          "scenario": "AI fails or returns stale result",
+          "expected": "Manual factual comparison survives; no stale overwrite"
+        },
+        {
+          "id": "CH16-T10",
+          "scenario": "Current price/availability differs from historical ratings",
+          "expected": "Verdict uses current facts, no false price/urgency inference"
+        },
+        {
+          "id": "CH16-T11",
+          "scenario": "New formula version",
+          "expected": "Inputs/results reproducible; historical selection snapshot unchanged"
+        },
+        {
+          "id": "CH16-T12",
+          "scenario": "Approved refresh/redaction and remaining deferred metrics",
+          "expected": "Evidence changes recalculate; redaction audited; no periodic job/public exclusion wording or unapproved percentages"
+        }
+      ]
+    },
+    {
+      "number": 17,
+      "title": "MCST integrity and warning system",
+      "file": "17_MCST_INTEGRITY.md",
+      "dependencies": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16
+      ],
+      "outcome": "Approved evidence-based warnings, settings history and protected reporting",
+      "gates": "G12",
+      "status": "planned_not_implemented",
+      "nodes": [],
+      "timers": [],
+      "tests": [
+        {
+          "id": "CH17-T01",
+          "scenario": "First/current quote differ within same vs different material scope",
+          "expected": "Correct baseline; scope/terms disclosed; no false like-for-like claim"
+        },
+        {
+          "id": "CH17-T02",
+          "scenario": "Price percentage threshold with small SGD difference",
+          "expected": "No extra SGD floor; exact configured rule"
+        },
+        {
+          "id": "CH17-T03",
+          "scenario": "Several small variations/current proposal",
+          "expected": "Cumulative selected-baseline growth; no double counting or authorisation of pending scope"
+        },
+        {
+          "id": "CH17-T04",
+          "scenario": "Low quote count at selection",
+          "expected": "Early nomination remains allowed with a warning; exact MCST clearance precedes work authority; no duplicate sourcing timer"
+        },
+        {
+          "id": "CH17-T05",
+          "scenario": "Estate settings changed after RFQ published",
+          "expected": "New round only; old alert/decision version intact"
+        },
+        {
+          "id": "CH17-T06",
+          "scenario": "Ticket override after bids without reason/checkbox",
+          "expected": "Refused; valid override affects later events only"
+        },
+        {
+          "id": "CH17-T07",
+          "scenario": "Notification delayed until after settings change",
+          "expected": "Event-time settings version used"
+        },
+        {
+          "id": "CH17-T08",
+          "scenario": "Below-threshold CM selection triggers warning",
+          "expected": "CM pre-caution, both MCST/Admin notice; exact MCST clearance required before work authorisation"
+        },
+        {
+          "id": "CH17-T09",
+          "scenario": "Several warnings on one decision",
+          "expected": "One grouped user card/notice as designed; distinct audit evidence"
+        },
+        {
+          "id": "CH17-T10",
+          "scenario": "Confidential subject/protected access evidence",
+          "expected": "No allegation/private-data leak; authorised view not labelled misconduct"
+        },
+        {
+          "id": "CH17-T11",
+          "scenario": "Zero/missing comparison basis",
+          "expected": "No division error/fabricated percentage; gated handling explicit"
+        },
+        {
+          "id": "CH17-T12",
+          "scenario": "Warning without evidence-backed conclusion",
+          "expected": "No automatic misconduct finding or adverse reputation; owner-approved variation hold persists until exact clearance"
+        }
+      ]
+    },
+    {
+      "number": 18,
+      "title": "Role dashboards, analytics and exports",
+      "file": "18_DASHBOARDS_AND_EXPORTS.md",
+      "dependencies": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17
+      ],
+      "outcome": "Usable role queues, source-linked metrics and permission-safe decision packs",
+      "gates": "G11/G12 where specialist details apply",
+      "status": "planned_not_implemented",
+      "nodes": [],
+      "timers": [],
+      "tests": [
+        {
+          "id": "CH18-T01",
+          "scenario": "Same ticket viewed by all four roles",
+          "expected": "Correct next actions/data; forbidden buttons and API actions both denied"
+        },
+        {
+          "id": "CH18-T02",
+          "scenario": "Multiple bells for one unresolved task",
+          "expected": "One work item remains after read; urgency/follow-up accurate"
+        },
+        {
+          "id": "CH18-T03",
+          "scenario": "Masked CM downloads decision pack",
+          "expected": "Identity hidden across text/files/metadata/AI while permitted prices retained"
+        },
+        {
+          "id": "CH18-T04",
+          "scenario": "Contractor requests full estate comparison export",
+          "expected": "Rival submissions/private rationale excluded"
+        },
+        {
+          "id": "CH18-T05",
+          "scenario": "Confidential subject searches/counts/exports",
+          "expected": "No case existence/content leakage"
+        },
+        {
+          "id": "CH18-T06",
+          "scenario": "Export queued then access revoked",
+          "expected": "Generation/download access rechecked; no stale grant"
+        },
+        {
+          "id": "CH18-T07",
+          "scenario": "Invoice/variation changes after decision snapshot",
+          "expected": "Prior pack remains reproducible; current correction linked, not silent rewrite"
+        },
+        {
+          "id": "CH18-T08",
+          "scenario": "Analytics with fictional data or unanswered Feedback",
+          "expected": "Production excludes fake records; no clean-outcome inference"
+        },
+        {
+          "id": "CH18-T09",
+          "scenario": "Narrow phone viewport, keyboard/screen reader, no data",
+          "expected": "Core actor/action usable; no overflow-only hidden action or ambiguous empty state"
+        },
+        {
+          "id": "CH18-T10",
+          "scenario": "Slow/stale aggregate projection",
+          "expected": "Fresh critical action uses canonical version; stale analytics does not authorize anything"
+        }
+      ]
+    },
+    {
+      "number": 19,
+      "title": "Web release, security and operations",
+      "file": "19_RELEASE_AND_OPERATIONS.md",
+      "dependencies": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18
+      ],
+      "outcome": "End-to-end verification, recovery, monitoring and controlled web release",
+      "gates": "All launch-dependent gates",
+      "status": "planned_not_implemented",
+      "nodes": [],
+      "timers": [],
+      "tests": [
+        {
+          "id": "CH19-T01",
+          "scenario": "All 14 complete journeys above",
+          "expected": "Expected facts/versions/next actors/balances/bells and outcomes recorded"
+        },
+        {
+          "id": "CH19-T02",
+          "scenario": "Kill worker/API at each transaction boundary",
+          "expected": "No partial approval/financial effect; durable work recovers"
+        },
+        {
+          "id": "CH19-T03",
+          "scenario": "Timer outage across receipt/claim/urgent deadlines",
+          "expected": "Correct guarded effects; no fabricated silence before first notice or stale reminder burst"
+        },
+        {
+          "id": "CH19-T04",
+          "scenario": "Restore backup with files",
+          "expected": "Records/evidence/allocations agree; no duplicated assessments or missing critical files"
+        },
+        {
+          "id": "CH19-T05",
+          "scenario": "Upgrade/rollback with older supported client",
+          "expected": "Compatible commands/reads; no data-destructive rollback"
+        },
+        {
+          "id": "CH19-T06",
+          "scenario": "Cross-estate/subject/rival/file/export attack matrix",
+          "expected": "No unauthorized data or inference leak"
+        },
+        {
+          "id": "CH19-T07",
+          "scenario": "AI/auth/storage provider unavailable",
+          "expected": "Honest recoverable UI; manual route where applicable; no false submitted/verified state"
+        },
+        {
+          "id": "CH19-T08",
+          "scenario": "Representative upload/timer/export concurrency",
+          "expected": "Meets recorded targets without correctness/privacy failure"
+        },
+        {
+          "id": "CH19-T09",
+          "scenario": "Production fixture/reset attempt",
+          "expected": "Refused before mutation; genuine external/live evidence protected"
+        },
+        {
+          "id": "CH19-T10",
+          "scenario": "Mobile-width/assistive-technology role walkthrough",
+          "expected": "All required actions discoverable and usable; slide-equivalent deliberate control works"
+        },
+        {
+          "id": "CH19-T11",
+          "scenario": "Unresolved G gate in launch dependency",
+          "expected": "Release gate fails or explicitly documented owner scope change; no silent default"
+        },
+        {
+          "id": "CH19-T12",
+          "scenario": "Operational failure lacks next actor/runbook",
+          "expected": "Gate fails until accountable monitoring/response/restore procedure exists"
+        }
+      ]
+    },
+    {
+      "number": 20,
+      "title": "Later iOS and Android clients",
+      "file": "20_NATIVE_MOBILE.md",
+      "dependencies": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19
+      ],
+      "outcome": "Native capture and offline drafts using the same API, permissions and data",
+      "gates": "G13, G14",
+      "status": "planned_not_implemented",
+      "nodes": [],
+      "timers": [],
+      "tests": [
+        {
+          "id": "CH20-T01",
+          "scenario": "Web/mobile same account/ticket",
+          "expected": "Same canonical facts, role visibility and exact commands"
+        },
+        {
+          "id": "CH20-T02",
+          "scenario": "Offline capture then publish/approve/payment attempt",
+          "expected": "Draft/bytes preserved; consequential action requires online explicit submit"
+        },
+        {
+          "id": "CH20-T03",
+          "scenario": "Browser changes invoice while phone reviews",
+          "expected": "Stale action blocked, note retained, no unseen approval/fee"
+        },
+        {
+          "id": "CH20-T04",
+          "scenario": "Submission succeeds but response lost",
+          "expected": "One business effect and recoverable original result"
+        },
+        {
+          "id": "CH20-T05",
+          "scenario": "App killed/background delayed/storage pressure during upload",
+          "expected": "Tested recoverability/accurate state; no silent completion"
+        },
+        {
+          "id": "CH20-T06",
+          "scenario": "Grant/session expires or account changes",
+          "expected": "Reauthorize and partition data; no cross-account file/token leak"
+        },
+        {
+          "id": "CH20-T07",
+          "scenario": "Bootstrap overlaps changes/deletions/out-of-order commits",
+          "expected": "No missed updates/resurrection; cursor/local transaction consistent"
+        },
+        {
+          "id": "CH20-T08",
+          "scenario": "Subject exclusion/membership changes while device offline",
+          "expected": "No stale command allowed; purge on reconnect; no false remote-erasure guarantee"
+        },
+        {
+          "id": "CH20-T09",
+          "scenario": "Old native build against new backend",
+          "expected": "Safe supported behavior; incompatible action asks update"
+        },
+        {
+          "id": "CH20-T10",
+          "scenario": "Push delayed/disabled/duplicated",
+          "expected": "Bell/current task correct; business clocks unchanged"
+        },
+        {
+          "id": "CH20-T11",
+          "scenario": "Different device timezone/clock",
+          "expected": "Singapore rules/server countdown preserved"
+        },
+        {
+          "id": "CH20-T12",
+          "scenario": "Camera permission denied, HEIC/PDF, interrupted login/deep link",
+          "expected": "Accessible recovery and accurate media/auth states"
+        },
+        {
+          "id": "CH20-T13",
+          "scenario": "Account deletion/retention/store review",
+          "expected": "Approved policy implemented and verified; no accidental loss of estate records"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,16 @@
+flowchart TB
+  c2["C2: CM or MCST confirms cancellation [C]"]:::c
+  c4["C4: Cancelled; contractor responds [C]"]:::c
+  c9["C9: Contractor accepts cancellation [C]"]:::c
+  c3["C3: Contractor explains cancellation concern [C]"]:::c
+  c8["C8: Cancellation claim opens intervention [C]"]:::c
+  c10["C10: Additional claim window ends [C]"]:::c
+  c2 -->|"CM or MCST confirms; immediate"| c4
+  c4 -->|"Okay plus no-additional-claim confirmation"| c9
+  c4 -->|"Contractor selects Admin Intervention"| c3
+  c3 -->|"Explanation submitted"| c8
+  c4 -.->|"Seven calendar days; internal cutoff"| c10
+  c10 -->|"Timely claim remains open"| c8
+  classDef c fill:#dcfce7,stroke:#166534,color:#17211b
+  classDef p fill:#fef3c7,stroke:#92400e,color:#291c0c
+  classDef o fill:#fee2e2,stroke:#991b1b,color:#2a1111

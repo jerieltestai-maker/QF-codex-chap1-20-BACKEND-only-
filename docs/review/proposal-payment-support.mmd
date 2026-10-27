@@ -1,0 +1,18 @@
+flowchart TB
+  xp1["XP1: P1: MCST sends payment [C]"]:::c
+  xp2["XP2: P2: Contractor verifies receipt [C]"]:::c
+  xp3["XP3: P3: Remaining balance [C]"]:::c
+  xpa["XPA: E3/D2: Admin Support [C]"]:::c
+  xp4["XP4: P4/P6: Settled and closed [C]"]:::c
+  xp1 -->|"Payment Sent"| xp2
+  xp2 -->|"Agreed shortfall"| xp3
+  xp3 -->|"Pay balance"| xp1
+  xp2 -->|"Fully settled"| xp4
+  xp1 -.->|"Support / follow-up"| xpa
+  xp2 -.->|"Payment Issue"| xpa
+  xp3 -.->|"Disputed balance"| xpa
+  xpa -->|"Pay / record transfer"| xp1
+  xpa -->|"Verify receipt"| xp2
+  classDef c fill:#dcfce7,stroke:#166534,color:#17211b
+  classDef p fill:#fef3c7,stroke:#92400e,color:#291c0c
+  classDef o fill:#fee2e2,stroke:#991b1b,color:#2a1111

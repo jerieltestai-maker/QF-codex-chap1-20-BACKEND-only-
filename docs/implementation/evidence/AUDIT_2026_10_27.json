@@ -1,0 +1,346 @@
+{
+  "auditDate": "2026-10-27",
+  "timezone": "Asia/Singapore",
+  "sourceCommit": "9d687bac16e88cc91e49cf4812dfb2dae8d00d77",
+  "applicationChanged": false,
+  "inventory": {
+    "chapters": 20,
+    "plannedScenarios": 206,
+    "apiSourceFiles": 12,
+    "domainFiles": 43,
+    "webAssets": 18,
+    "testFiles": 29
+  },
+  "verification": {
+    "typecheck": "passed",
+    "nativeTypecheck": "passed",
+    "build": "passed",
+    "androidIosJavaScriptExport": "passed",
+    "expoCompatibility": {
+      "status": "failed",
+      "mismatches": [
+        [
+          "expo",
+          "58.0.14",
+          "~58.0.19"
+        ],
+        [
+          "expo-constants",
+          "58.0.12",
+          "~58.0.13"
+        ],
+        [
+          "expo-file-system",
+          "58.0.9",
+          "~58.0.11"
+        ],
+        [
+          "expo-sqlite",
+          "58.0.13",
+          "~58.0.14"
+        ]
+      ]
+    },
+    "pgliteComplete": {
+      "status": "failed",
+      "records": 240,
+      "passed": 239,
+      "failed": 1,
+      "skipped": 0,
+      "cancelled": 0,
+      "durationMs": 517083.5813,
+      "failure": "Entire tests/completion.test.ts process: test failed; no assertion detail"
+    },
+    "pgliteIsolatedCompletion": {
+      "status": "passed",
+      "records": 15,
+      "passed": 15,
+      "durationMs": 63446.7666,
+      "doesNotSupersedeCompleteFailure": true
+    },
+    "postgresComplete": {
+      "status": "passed",
+      "records": 254,
+      "passed": 254,
+      "failed": 0,
+      "skipped": 0,
+      "cancelled": 0,
+      "durationMs": 860666.7203,
+      "disposableSchemasRemaining": 0,
+      "serviceRestoredToInitialStoppedState": true
+    },
+    "windowsPowerShell": {
+      "status": "passed",
+      "checks": 9
+    },
+    "powerShell765": {
+      "status": "failed",
+      "error": "Environment leaked after success: IDENTITY_ADAPTER"
+    },
+    "documentation": {
+      "status": "passed",
+      "chapters": 20,
+      "scenarios": 206,
+      "nodes": 83,
+      "edges": 202,
+      "timers": 23,
+      "diagramViews": 34,
+      "localLinks": 1015
+    },
+    "sqlMigrationBytes": {
+      "files": 15,
+      "differentFromAuditedHead": 0
+    },
+    "trackedSecretPatternScan": {
+      "trackedFiles": 313,
+      "candidateMatches": 0,
+      "exhaustive": false
+    },
+    "releaseGate": {
+      "ready": false,
+      "requiredChecks": 15,
+      "sourceEvidenceMismatch": true
+    },
+    "localApiReadiness": "unreachable at inspection; not restarted"
+  },
+  "reproductions": {
+    "nativeCapture": {
+      "state": "ready",
+      "attachmentsBefore": 0,
+      "previewBefore": 422,
+      "codeBefore": "EVIDENCE_NOT_PERMITTED",
+      "previewAfterExplicitAttachment": 200,
+      "persistedReadyRecord": true
+    },
+    "contractorHistory": {
+      "actualWorkStartEvents": 1,
+      "actualPaymentEvents": 5,
+      "chronologyItems": [
+        {
+          "action": null,
+          "quoteVersion": 1
+        }
+      ],
+      "stage": "Closed"
+    },
+    "cancellationExport": {
+      "serverResponse": "okay",
+      "packContainsDeclaration": false,
+      "packContainsResponseEvent": false,
+      "recordKeys": [
+        "authorisations",
+        "authorisedTerms",
+        "variations",
+        "variationDecisions",
+        "completion",
+        "inspections",
+        "invoices",
+        "invoiceConfirmation",
+        "financialCorrections",
+        "payments",
+        "closure",
+        "workEvents",
+        "exceptions",
+        "warnings",
+        "warningReviews"
+      ]
+    }
+  },
+  "listReproductions": {
+    "opportunities": {
+      "closedOlderPublications": 200,
+      "listedCount": 0,
+      "newEligibleTargetListed": false,
+      "directDetailStatus": 200,
+      "canonicalDashboardMatches": 1
+    },
+    "moderation": {
+      "olderEntries": 200,
+      "queueLength": 200,
+      "newPendingEntryListed": false,
+      "directEntryStatus": 200
+    }
+  },
+  "sourceEstablishedNativeFindings": {
+    "initialContextNull": true,
+    "localDraftUiRequiresOnlineContextBootstrap": true,
+    "attachmentOrWorkUpdatePathInApp": false,
+    "removeUploadCallsInApp": 0,
+    "physicalDeviceExecution": false
+  },
+  "dependencies": {
+    "counts": {
+      "info": 0,
+      "low": 5,
+      "moderate": 5,
+      "high": 2,
+      "critical": 0
+    },
+    "uniqueAdvisoryIds": 8,
+    "entries": [
+      {
+        "package": "uuid",
+        "severity": "moderate",
+        "url": "https://github.com/advisories/GHSA-w5hq-g745-h8pq",
+        "installedVersions": [
+          "7.0.3"
+        ],
+        "patchedRange": ">=11.1.1"
+      },
+      {
+        "package": "node-forge",
+        "severity": "high",
+        "url": "https://github.com/advisories/GHSA-86w9-cpqp-85rv",
+        "installedVersions": [
+          "1.4.0"
+        ],
+        "patchedRange": null
+      },
+      {
+        "package": "fastify",
+        "severity": "low",
+        "url": "https://github.com/advisories/GHSA-389g-gv7q-r4x8",
+        "installedVersions": [
+          "5.12.5"
+        ],
+        "patchedRange": ">=5.12.6"
+      },
+      {
+        "package": "zod",
+        "severity": "high",
+        "url": "https://github.com/advisories/GHSA-mrhx-c7xc-m3w5",
+        "installedVersions": [
+          "3.25.76"
+        ],
+        "patchedRange": ">=4.6.6"
+      },
+      {
+        "package": "fast-uri",
+        "severity": "moderate",
+        "url": "https://github.com/advisories/GHSA-w74x-v6f9-j3xg",
+        "installedVersions": [
+          "4.2.2"
+        ],
+        "patchedRange": ">=4.2.3"
+      },
+      {
+        "package": "fast-uri",
+        "severity": "moderate",
+        "url": "https://github.com/advisories/GHSA-w74x-v6f9-j3xg",
+        "installedVersions": [
+          "3.1.8"
+        ],
+        "patchedRange": ">=3.1.9"
+      },
+      {
+        "package": "fast-uri",
+        "severity": "low",
+        "url": "https://github.com/advisories/GHSA-xhq7-xmqj-769h",
+        "installedVersions": [
+          "4.2.2"
+        ],
+        "patchedRange": ">=4.2.3"
+      },
+      {
+        "package": "fast-uri",
+        "severity": "low",
+        "url": "https://github.com/advisories/GHSA-xhq7-xmqj-769h",
+        "installedVersions": [
+          "3.1.8"
+        ],
+        "patchedRange": ">=3.1.9"
+      },
+      {
+        "package": "fast-uri",
+        "severity": "moderate",
+        "url": "https://github.com/advisories/GHSA-wjr9-j795-jxcr",
+        "installedVersions": [
+          "4.2.2"
+        ],
+        "patchedRange": ">=4.2.3"
+      },
+      {
+        "package": "fast-uri",
+        "severity": "moderate",
+        "url": "https://github.com/advisories/GHSA-wjr9-j795-jxcr",
+        "installedVersions": [
+          "3.1.8"
+        ],
+        "patchedRange": ">=3.1.9"
+      },
+      {
+        "package": "fast-uri",
+        "severity": "low",
+        "url": "https://github.com/advisories/GHSA-333x-w4r6-6crp",
+        "installedVersions": [
+          "4.2.2"
+        ],
+        "patchedRange": ">=4.2.3"
+      },
+      {
+        "package": "fast-uri",
+        "severity": "low",
+        "url": "https://github.com/advisories/GHSA-333x-w4r6-6crp",
+        "installedVersions": [
+          "3.1.8"
+        ],
+        "patchedRange": ">=3.1.9"
+      }
+    ]
+  },
+  "maintenance": {
+    "productionUnusedExports": [
+      {
+        "file": "packages/domain/calendar.ts",
+        "name": "feedbackDue",
+        "testOnly": true
+      },
+      {
+        "file": "packages/domain/file-service.ts",
+        "name": "FILE_LIMIT",
+        "testOnly": false
+      }
+    ],
+    "operationalEntrypointsNotDead": [
+      "verifyEvidenceIntegrity",
+      "evaluateRelease"
+    ]
+  },
+  "evidenceLimits": [
+    "No physical device or native executable compilation",
+    "No new paid AI calls",
+    "No new production restore or rollout",
+    "No claim that 206 planned scenarios equal passed executable tests",
+    "No new remote CI run"
+  ],
+  "localLogHashes": [
+    {
+      "path": "work/audit-2026-10-27/pglite-tests.log",
+      "sha256": "e582c346a6b8ecf15efc1448ec9cb480a412fcebafc93eddb7491b7a354e4a19"
+    },
+    {
+      "path": "work/audit-2026-10-27/completion-isolated.log",
+      "sha256": "49a3589b5a11f0dd09393e881e93446e49fb0ab7a2823d4c69fd5ed25f6e68fb"
+    },
+    {
+      "path": "work/audit-2026-10-27/mobile-export.log",
+      "sha256": "c9d0d842e6498759620a876d647a17cd3d5987f155a3800c240bbb6b220ea1d8"
+    },
+    {
+      "path": "work/audit-2026-10-27/reproductions.log",
+      "sha256": "64ea79ef692320cb1fe2a06b2d7e5cc413a250c0f4ce2f19a769ee3057198d67"
+    },
+    {
+      "path": "work/audit-2026-10-27/pagination.log",
+      "sha256": "005617adb262925f4fc6ad2160106ae99b74b7797ef5738fe22c858d1f164609"
+    },
+    {
+      "path": "work/audit-2026-10-27/dependency-audit.json",
+      "sha256": "4d017076a9b5c35f0812d73d82b507cce1fe1851b38388f8442f5bc3349a2221"
+    },
+    {
+      "path": "work/audit-2026-10-27/postgres-tests.log",
+      "sha256": "5004efcf923f37c2ab1d495dfb741a37bf8e37beebf7c056328970d67c198234"
+    }
+  ]
+}
