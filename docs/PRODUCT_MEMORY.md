@@ -1,5 +1,17 @@
 # QuoteFix working product memory
 
+## Desktop frontend integration and design — 28 October 2026
+
+The owner authorizes the full desktop frontend rollout against the existing Chapters 01–20 backend, including required confirmations, accurate API/UI state alignment, recovery and parallel agents. This supersedes the pasted brief's initial Phase-0-only execution stop. The owner explicitly retains **UI/UX Pro Max for Phase 1, Taste for Phases 2–3, Impeccable for Phase 4**, and supplies a QuoteFix logo and blue workflow illustrations. No further artwork is needed for this scope.
+
+The existing vanilla web/Fastify/PostgreSQL stack is retained. Shared role-aware views, selected-repair context, readable evidence/history, scoped draft preservation, accessible final-action alternatives and all-role pending-operation recovery connect to existing domain commands. Additive authorised reads expose estate procurement setup without a job and public credential badges through the existing quote-keyed passport; private IDs/evidence/notes remain filtered. Technical request budgets separate public assets/reads from decisions and strict identity limits, with stable-key recovery after rate limiting.
+
+[Design authority](../DESIGN.md), [phase handoff/coverage](design/FRONTEND_HANDOFF.md), [audit](design/FRONTEND_AUDIT.md) and [verification](design/FRONTEND_VERIFICATION.md) record source, browser and regression evidence. Fictional journeys use disposable schemas; owner imagery is UI/guide material, never operational evidence. Existing records, helper keys, provider configuration and checksum-protected SQL bytes are preserved.
+
+Final local evidence: **305/305 PostgreSQL records across 38 files**, **55/55 focused browser-script checks** (overlap), **12/12 interactive browser journey checks**, four additional rendered-state checks, strict/build/docs checks and 0-failure/0-warning Taste sign-in measurements at 1440/768/390. Isolated schemas were cleaned up; all 15 SQL blobs and 29 owner PNG checksums were verified. Application checkpoint **5683552**, browser harness **18cc8db**. No remote CI or physical-device result is inferred.
+
+This remains a **local desktop prototype**. G02/G04/G14/G15, specialist strength/fault rules, the actual-Chapter-20-completion reminder, physical devices, native parity/OS transfer and production/cloud/store release remain open. The frontend rollout does not certify Chapter 20 or settle these policies.
+
 ## Owner-authorised stability repairs — 27 October 2026
 
 The owner prioritises clearing P1/P2 functional issues and authorises local desktop infrastructure and repairs. Their direct clarification is **desktop prototype only**, with **no Android or Mac/iPhone testing setup yet**. No hosted live-user deployment is implied. Existing G02/G04/G14/G15 and specialist-policy questions remain open; no permission to invent those policies is inferred.

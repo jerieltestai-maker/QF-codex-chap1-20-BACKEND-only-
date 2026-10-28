@@ -4,7 +4,7 @@ Plan 0.3 · baseline 2026-10-13 · lifecycle 2026-10-12-v14.
 
 **Documentation validation: PASSED.**
 
-These checks validate documentation only. Local construction through Chapters 01–18 is recorded in the separate chapter build records and the [Chapters 09–18 audit](CHAPTERS_09_18_AUDIT.md). Chapters 19–20 and production release remain outstanding; planned scenario IDs are not executable-test counts.
+These checks validate documentation only. Local construction through Chapters 01–18 is recorded in the separate chapter build records and the [Chapters 09–18 audit](CHAPTERS_09_18_AUDIT.md). Chapters 19–20 have partial local implementation recorded in [19–20 evidence](CHAPTERS_19_20_BUILD.md); hosted release and physical-device gates remain outstanding. Planned scenario IDs are not executable-test counts.
 
 | Check | Result |
 | --- | --- |
@@ -15,7 +15,7 @@ These checks validate documentation only. Local construction through Chapters 01
 | Valid conditional next targets | 66 |
 | Timer ownership | 23 / 23 |
 | Source diagram views | 34 |
-| Local Markdown file references | 976 |
+| Local Markdown file references | 1036 |
 | Forward/cyclic dependencies | Checked |
 | Decision-gate references and Markdown fences | Checked |
 | Retired C5/P5 and Admin-only evidence routing | Checked |

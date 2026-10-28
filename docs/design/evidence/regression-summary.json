@@ -1,0 +1,16 @@
+{
+  "database": "postgres",
+  "concurrency": 2,
+  "files": 38,
+  "counts": {
+    "tests": 305,
+    "pass": 305,
+    "fail": 0,
+    "cancelled": 0,
+    "skipped": 0,
+    "todo": 0
+  },
+  "applicationSourceCommit": "5683552",
+  "harnessCommit": "18cc8db",
+  "scope": "Final complete local PostgreSQL suite; no automatic retry."
+}

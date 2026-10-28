@@ -1,5 +1,11 @@
 # QuoteFix decisions and remaining questions
 
+## Desktop frontend scope and phase tools — 28 October 2026
+
+The owner authorizes completing the integrated desktop frontend, with parallel agents and the existing Chapter 01–20 APIs. The earlier pasted Phase-0-only stop is superseded. Phase leads remain **UI/UX Pro Max (1), Taste (2–3), Impeccable (4)**. Owner-supplied blue illustrations and QuoteFix logo are approved application artwork; they do not represent live counts, financial results or job evidence. [Handoff](design/FRONTEND_HANDOFF.md) and [verification](design/FRONTEND_VERIFICATION.md) record the desktop scope.
+
+The rollout adds no new business policy: G02 additional ordinary repeats, G04 warranty automation, G14 deletion/retention, G15 archival, specialist thresholds and fault/callback policy remain unresolved. The Chapter-20 reminder remains due at actual native completion. Physical-device/OS transfers, full native parity and hosted/cloud/store release remain separate gates. Technical request budgets, safe read projections and interface corrections do not settle those decisions.
+
 ## Owner-authorised stability repairs — 27 October 2026
 
 Direct owner answers: **desktop prototype only**, **no physical-device setup yet**. Local desktop PostgreSQL/storage and P1/P2 functional repairs are authorised; the owner asks the agent to solve available technical work independently. The [stability record](implementation/STABILITY_2026_10_27.md) covers the implementation and current local operating instructions. This resolves the uncertainty about hosted live users, not a product-policy gate. G02 additional ordinary repeats, G04 warranty automation, G14 deletion/retention, G15 archival, specialist thresholds and the actual-Chapter-20-completion fault/callback reminder remain open. No cloud deployment, store release or new retention/deletion policy is approved by these answers.

@@ -1,0 +1,62 @@
+{
+  "status": "passed",
+  "scope": "Isolated fictional PostgreSQL schema; local desktop browser only",
+  "checks": [
+    {
+      "name": "CM creates private workspace without publishing a repair",
+      "status": "passed"
+    },
+    {
+      "name": "CM reviews contractor preview and publishes with both explicit acknowledgments",
+      "status": "passed"
+    },
+    {
+      "name": "Admin explicitly configures trade matrix and approves company evidence",
+      "status": "passed"
+    },
+    {
+      "name": "Contractor submits sealed quote with scope, expiry and commitment confirmations",
+      "status": "passed"
+    },
+    {
+      "name": "CM selects the current quotation below the configured threshold",
+      "status": "passed"
+    },
+    {
+      "name": "Contractor proposes a specific agreed start without recording actual Start",
+      "status": "passed"
+    },
+    {
+      "name": "CM accepts the exact proposed schedule without auto-starting work",
+      "status": "passed"
+    },
+    {
+      "name": "Contractor records deliberate Start then combines checked invoice with irreversible completion",
+      "status": "passed"
+    },
+    {
+      "name": "CM inspects the current round and explicitly approves satisfactory works",
+      "status": "passed"
+    },
+    {
+      "name": "MCST confirms the exact reconciled invoice and records external bank payment",
+      "status": "passed"
+    },
+    {
+      "name": "Contractor confirms actual receipt and server closes fully settled work",
+      "status": "passed"
+    },
+    {
+      "name": "Role-filtered decision pack generates and populated layouts fit narrower browser widths",
+      "status": "passed"
+    }
+  ],
+  "consoleErrors": [],
+  "rateLimitedRequests": [],
+  "boundaries": [
+    "The test fixture supplies named fictional accounts, the estate threshold and a permissive explicitly test-only integrity policy.",
+    "Invoice/payment image bytes use the real upload, checksum and transformation pipeline with the test worker scanner returning clean; actual malware-scanner certification is outside this test.",
+    "Physical-device/native transfer, hosted release, open product-policy branches and paid providers are outside this desktop journey."
+  ],
+  "schemaCleaned": true
+}
