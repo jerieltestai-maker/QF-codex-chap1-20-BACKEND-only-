@@ -16,3 +16,7 @@ dist/
 .expo/
 apps/mobile/ios/
 apps/mobile/android/
+
+# Local design-skill engines and per-developer state
+.agents/skills/impeccable/scripts/bin/
+.impeccable/config.local.json
