@@ -2,17 +2,39 @@
   'use strict';
   const qf=window.qfWorkspace,node=(tag,text)=>{const n=document.createElement(tag);if(text!==undefined)n.textContent=text;return n;};
   const dashboard=node('section'),status=node('p'),queue=node('div'),tickets=node('div'),detail=node('section'),detailStatus=node('p'),packs=node('div'),secondary=node('div');
+  dashboard.id='dashboard-shell';detail.id='exports-shell';dashboard.className=detail.className='panel';queue.className='data-list';tickets.className='data-list';
   dashboard.hidden=true;detail.hidden=true;status.setAttribute('role','status');status.setAttribute('aria-live','polite');detailStatus.setAttribute('role','status');
   dashboard.append(node('h2','Your work queue'),status);document.querySelector('main').insertBefore(dashboard,document.getElementById('workspace-shell'));
   detail.append(node('h2','History, analytics and decision packs'),detailStatus,packs,secondary);document.querySelector('main').append(detail);
   let epoch=0,load=0,detailLoad=0,jobId=null,offset=0,taskOffset=0,contextKey='';
   const role=()=>qf.context?.context?.role;
   const stamp=v=>v?new Date(v).toLocaleString('en-SG',{timeZone:'Asia/Singapore'})+' SGT':'No deadline';
-  function button(p,label,action){const b=node('button',label);b.type='button';b.onclick=async()=>{const generation=epoch;b.disabled=true;try{await action();}catch(e){if(generation===epoch)status.textContent=detailStatus.textContent=e.message;}finally{b.disabled=false;}};p.append(b);return b;}
+  function button(p,label,action){const b=node('button',label),message=node('p'),born=epoch;b.type='button';message.className='action-feedback';message.setAttribute('role','status');b.onclick=async()=>{if(b.disabled||born!==epoch)return;const generation=epoch;b.disabled=true;message.textContent='Loading…';try{await action();if(generation===epoch)message.textContent='';}catch(e){if(generation===epoch){status.textContent=detailStatus.textContent=e.message;message.textContent=e.message;}}finally{b.disabled=false;}};p.append(b,message);return b;}
+  function navigate(screen){if(typeof CustomEvent!=='undefined')document.dispatchEvent(new CustomEvent('qf:navigate',{detail:{screen}}));}
+  function taskScreen(kind='') {
+    if(/(?:feedback|aftercare|reputation)/.test(kind))return 'feedback';
+    if(/(?:verification|credential|contractor\.application)/.test(kind))return 'verification';
+    if(/(?:billing|fee\.|refund)/.test(kind))return 'billing';
+    if(/integrity/.test(kind))return 'integrity';
+    if(/(?:support|cancellation)/.test(kind))return 'support';
+    if(/(?:completion|payment|work\.|variation|schedule)/.test(kind))return 'work';
+    if(/(?:rfq|quote|selection)/.test(kind))return 'quotes';
+    return 'operations';
+  }
+  function facts(value){
+    if(window.qfUI?.facts)return window.qfUI.facts(value);
+    if(value===null||value===undefined)return node('span','Not available');
+    if(typeof value!=='object')return node('span',typeof value==='boolean'?(value?'Yes':'No'):String(value));
+    if(Array.isArray(value)){const list=node('ul');list.className='data-list';if(!value.length)list.append(node('li','No records.'));for(const item of value){const row=node('li');row.append(facts(item));list.append(row);}return list;}
+    const list=node('dl');list.className='fact-list';for(const [key,item] of Object.entries(value)){const label=key.replace(/([a-z])([A-Z])/g,'$1 $2').replaceAll('_',' ');list.append(node('dt',label.charAt(0).toUpperCase()+label.slice(1)));const row=node('dd');row.append(facts(item));list.append(row);}return list;
+  }
   function input(p,label,type='input') {const l=node('label',label),i=node(type);l.append(i);p.append(l);return i;}
-  const search=input(dashboard,'Search ticket ID or issue'),stage=input(dashboard,'Filter by stage (optional)');
-  const category=input(dashboard,'Trade','select');category.append(new Option('All trades',''),...['handyman','plumbing','electrical'].map(v=>new Option(v,v)));
-  button(dashboard,'Search / refresh queue',async()=>{offset=taskOffset=0;await refresh();});dashboard.append(queue,tickets);
+  const filters=node('div');filters.className='filter-bar';dashboard.append(filters);
+  const search=input(filters,'Search ticket ID or issue'),stage=input(filters,'Filter by stage (optional)','select');
+  stage.append(new Option('All stages',''),...['Report an issue','AI is refining your draft','Approving AI input','Requesting for quotes','MCST Reviewing selected Contractor','Starting work','Carrying out work','Modifying job scope','Unable to continue work',"CM's Inspecting of work",'Addressing issues','Explaining price change','Confirming invoice','Arranging payment','Unresolved payment','Confirming payment','Admin Intervention','Cancelled','Closed'].map(v=>new Option(v,v)));
+  const category=input(filters,'Trade','select');category.append(new Option('All trades',''),...['handyman','plumbing','electrical'].map(v=>new Option(v,v)));
+  button(filters,'Search / refresh queue',async()=>{offset=taskOffset=0;await refresh();});dashboard.append(queue,tickets);
+  search.addEventListener('keydown',event=>{if(event.key==='Enter'){event.preventDefault();offset=taskOffset=0;refresh().catch(error=>status.textContent=error.message);}});
   function params(extra={}) {const p=new URLSearchParams({limit:'25',...extra});if(search.value.trim())p.set('q',search.value.trim());if(stage.value.trim())p.set('stage',stage.value.trim());if(category.value)p.set('category',category.value);return p;}
   async function refresh() {
     if(!qf.context?.context)return;const attempt=++load,generation=epoch;
@@ -20,27 +42,30 @@
     const [tasks,rows]=await Promise.all([qf.api('dashboard/tasks?'+new URLSearchParams({limit:'25',offset:String(taskOffset)})),qf.api('dashboard/tickets?'+params({offset:String(offset)}))]);
     if(attempt!==load||generation!==epoch)return;
     status.textContent=tasks.total+' outstanding actions · '+rows.total+' matching tickets';queue.replaceChildren(node('h3','Outstanding actions'));
-    if(!tasks.items.length)queue.append(node('p','No outstanding actions for this account context.'));
-    for(const t of tasks.items) {const row=node('article');row.append(node('p','Waiting on '+t.ownerRole.toUpperCase()+': '+t.action),node('p',t.state+' · '+t.nextEvent+' · '+stamp(t.eventAt)));
-      if(t.jobId)button(row,'Open ticket '+t.jobId,()=>open(t.jobId));if(t.supportId)button(row,'Open Admin Support case',()=>window.qfSupport.openCase(t.supportId));queue.append(row);}
+    if(tasks.total===0&&window.qfUI?.illustration)queue.append(window.qfUI.illustration('all-caught-up'));
+    if(!tasks.items.length)queue.append(node('p',tasks.total===0?'No outstanding actions for this account context.':'No actions on this page. Use Previous actions to return to current work.'));
+    for(const t of tasks.items) {const row=node('article');row.className='data-row';row.append(node('p','Waiting on '+t.ownerRole.toUpperCase()+': '+t.action),node('p',t.state+' · '+t.nextEvent+' · '+stamp(t.eventAt)));
+      if(t.jobId)button(row,'Open ticket '+t.jobId,async()=>{await open(t.jobId);navigate(taskScreen(t.kind));});if(t.supportId)button(row,'Open Admin Support case',async()=>{await window.qfSupport.openCase(t.supportId);navigate('support');});if(!t.jobId&&!t.supportId)button(row,'Open '+({verification:'contractor verification',billing:'fee accounts',feedback:'reputation moderation',operations:'Admin follow-ups'}[taskScreen(t.kind)]||'related workflow'),()=>navigate(taskScreen(t.kind)));queue.append(row);}
     if(taskOffset>0)button(queue,'Previous actions',async()=>{taskOffset=Math.max(0,taskOffset-25);await refresh();});
     if(taskOffset+25<tasks.total)button(queue,'Next actions',async()=>{taskOffset+=25;await refresh();});
     tickets.replaceChildren(node('h3','Tickets'));
     if(!rows.items.length)tickets.append(node('p','No permitted tickets match these filters.'));
-    for(const j of rows.items){const row=node('article');button(row,j.title+' · '+j.stage,()=>open(j.jobId));row.append(node('p','Ticket '+j.jobId));if(j.waitingOn)row.append(node('p','Waiting on '+j.waitingOn.role.toUpperCase()+': '+j.waitingOn.action));
+    for(const j of rows.items){const row=node('article');row.className='data-row';button(row,j.title+' · '+j.stage,()=>open(j.jobId));button(row,'History and decision packs',async()=>{await show(j.jobId);navigate('exports');});row.append(node('p','Ticket '+j.jobId));if(j.waitingOn)row.append(node('p','Waiting on '+j.waitingOn.role.toUpperCase()+': '+j.waitingOn.action));
       if(j.pendingActions.length)for(const a of j.pendingActions)row.append(node('p','Pending: '+a.ownerRole.toUpperCase()+' '+a.action));else row.append(node('p',j.kind==='eligible_opportunity'?'Eligible opportunity: review the RFQ and submit a quote.':'No action assigned to your role. Open the ticket for its current workflow.'));tickets.append(row);}
     if(offset>0)button(tickets,'Previous tickets',async()=>{offset=Math.max(0,offset-25);await refresh();});
     if(offset+25<rows.total)button(tickets,'Next tickets',async()=>{offset+=25;await refresh();});
   }
   async function open(id) {
-    jobId=id;
+    const generation=epoch;jobId=id;
     if(role()!=='contractor')await qf.loadJob(id);else {
       await window.qfQuotes.open(id);
+      if(generation!==epoch||jobId!==id)return;navigate('quotes');
       const jobs=await qf.api('contractor/jobs'),own=jobs.find(j=>j.jobId===id);
-      if(own?.selection?.status==='authorised')await window.qfWork.open(id);
-      else if(own)await window.qfSupport.openJob(id);
+      if(generation!==epoch||jobId!==id)return;
+      if(own?.selection?.status==='authorised'){await window.qfWork.open(id);navigate('work');}
+      else if(own&&own.stage==='Cancelled'){await window.qfSupport.openJob(id);navigate('support');}
     }
-    await show(id);detail.scrollIntoView({block:'start',behavior:'smooth'});
+    if(generation===epoch&&jobId===id)await show(id);
   }
   async function show(id) {
     const generation=epoch,attempt=++detailLoad;jobId=id;detail.hidden=false;detailStatus.textContent='Ticket '+id;packs.replaceChildren();secondary.replaceChildren();
@@ -57,13 +82,15 @@
       if(e.status==='ready') {button(row,'Download this snapshot',async()=>{const g=await qf.api('exports/'+e.exportId+'/grant',{});if(generation!==epoch||jobId!==id)return;const link=node('a','Download '+e.format.toUpperCase()+' (expires '+stamp(g.expiresAt)+')');link.href=g.url;link.download='decision-pack-'+e.exportId+'.'+e.format;row.append(link);link.click();});
         button(row,'Revoke existing download links',async()=>{await qf.api('exports/'+e.exportId+'/revoke',{});row.querySelectorAll('a').forEach(a=>a.remove());detailStatus.textContent='Existing download links revoked.';});}
       if(e.status==='failed')row.append(node('p','Generation failed. Admin can inspect the persistent processing failure queue.'));packs.append(row);}
-    button(secondary,'Load named history',async()=>{const h=await qf.all('workspaces/'+id+'/chronology','items');if(generation===epoch&&jobId===id){const box=node('div');for(const e of h.items)box.append(node('p',(e.actor_name||e.actor_role||'System')+' · '+(e.action||'Quote version '+e.version)+' · '+stamp(e.recorded_at)+(e.reason?' · '+e.reason:'')));if(!h.items.length)box.append(node('p','No permitted history recorded.'));secondary.append(box);}});
-    button(secondary,'Load price and recorded-outcome analytics',async()=>{const a=await qf.api('workspaces/'+id+'/analytics');if(generation===epoch&&jobId===id)secondary.append(node('pre',JSON.stringify(a,null,2)));});
+    const history=node('div'),analytics=node('div');history.className=analytics.className='evidence-detail';
+    button(secondary,'Load named history',async()=>{const h=await qf.all('workspaces/'+id+'/chronology','items');if(generation===epoch&&jobId===id){history.replaceChildren(node('h3','Named history'));for(const e of h.items){const row=node('article');row.className='data-row';row.append(node('p',(e.actor_name||e.actor_role||'System')+' · '+(e.action||'Quote version '+e.version)+' · '+stamp(e.recorded_at)+(e.reason?' · '+e.reason:'')));history.append(row);}if(!h.items.length)history.append(node('p','No permitted history recorded.'));}});
+    button(secondary,'Load price and recorded-outcome analytics',async()=>{const a=await qf.api('workspaces/'+id+'/analytics');if(generation===epoch&&jobId===id){analytics.replaceChildren(node('h3','Price and recorded outcomes'));if(a.excluded){analytics.append(node('p',a.reason));return;}analytics.append(node('p','Recorded from '+stamp(a.dateRange?.from)+' to '+stamp(a.dateRange?.to)),node('p',a.metrics?.definition||'Recorded outcomes only.'),facts(a.metrics));}});secondary.append(history,analytics);
   }
   document.addEventListener('qf:context',()=>{const next=qf.context?.context?[qf.context.user.id,qf.context.context.id,role(),qf.context.accessVersion??0].join(':'):'';
     if(next===contextKey){if(next)refresh().catch(e=>status.textContent=e.message);return;}contextKey=next;
-    epoch++;load++;detailLoad++;jobId=null;offset=taskOffset=0;search.value=stage.value=category.value='';queue.replaceChildren();tickets.replaceChildren();packs.replaceChildren();secondary.replaceChildren();detail.hidden=true;dashboard.hidden=!qf.context?.context;status.textContent='';if(!dashboard.hidden)refresh().catch(e=>status.textContent=e.message);});
+    epoch++;load++;detailLoad++;jobId=null;offset=taskOffset=0;search.value=stage.value=category.value='';queue.replaceChildren();tickets.replaceChildren();packs.replaceChildren();secondary.replaceChildren();detail.hidden=!qf.context?.context;detailStatus.textContent='Choose a ticket from your work queue to view its history, analytics and decision packs.';dashboard.hidden=!qf.context?.context;status.textContent='';if(!dashboard.hidden)refresh().catch(e=>status.textContent=e.message);});
   document.addEventListener('qf:job',e=>{show(e.detail.job.id).catch(e=>detailStatus.textContent=e.message);refresh().catch(e=>status.textContent=e.message);});
   document.addEventListener('qf:work-loaded',e=>{if(role()==='contractor'){show(e.detail.jobId).catch(e=>detailStatus.textContent=e.message);refresh().catch(e=>status.textContent=e.message);}});
   document.addEventListener('qf:lists-refreshed',()=>{if(qf.context?.context)refresh().catch(e=>status.textContent=e.message);});
+  document.addEventListener('qf:refresh',()=>{if(qf.context?.context)refresh().catch(error=>status.textContent=error.message);if(jobId)show(jobId).catch(error=>detailStatus.textContent=error.message);});
 })();

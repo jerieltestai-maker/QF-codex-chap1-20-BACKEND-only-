@@ -1,0 +1,147 @@
+[
+  {
+    "file": "quotefix-logo.png",
+    "sha256": "48548dc72d9ec2b9cccaf9da7e75db0cacd050ba01f29ffed86a3832b7d01d27",
+    "source": "Owner-supplied artwork, 28 October 2026"
+  },
+  {
+    "file": "all-caught-up.png",
+    "sha256": "6498fae5fa8caede2e85eeac6b4691c2539efdb988416eb0a661553359bd9341",
+    "source": "Owner-supplied artwork, 28 October 2026"
+  },
+  {
+    "file": "admin-support.png",
+    "sha256": "1da1f924bdf337208cae4007e5c2cd94575cdeea7137e7b484f9028a2274cf09",
+    "source": "Owner-supplied artwork, 28 October 2026"
+  },
+  {
+    "file": "platform-fees.png",
+    "sha256": "b4b6a2d9191e9a976567955f21548942c6922c4fba0ddb1b10d5695a9e1bf6e7",
+    "source": "Owner-supplied artwork, 28 October 2026"
+  },
+  {
+    "file": "report-issue.png",
+    "sha256": "b13b1404739a46168a8c1795b41b0f10ebdf7c4d7e8f6ccf786e07b04a367c1a",
+    "source": "Owner-supplied artwork, 28 October 2026"
+  },
+  {
+    "file": "request-quotes.png",
+    "sha256": "703268b28290f0b9a596f32be460ab54f0fb19e7a655897d69e9a49537ce7b26",
+    "source": "Owner-supplied artwork, 28 October 2026"
+  },
+  {
+    "file": "compare-quotations.png",
+    "sha256": "cd340cc945f6ee166d0f3b6c4e5945cd728d785135e24362b086a95571cf7077",
+    "source": "Owner-supplied artwork, 28 October 2026"
+  },
+  {
+    "file": "mcst-approval.png",
+    "sha256": "a7971673336cee62e14a7b659e17ea052528704f1de6d935b31e2f04f4c59d18",
+    "source": "Owner-supplied artwork, 28 October 2026"
+  },
+  {
+    "file": "schedule-work.png",
+    "sha256": "572d16eba0941383719908febb1fac84d97fe3826e6925666ecb85bb88a2995f",
+    "source": "Owner-supplied artwork, 28 October 2026"
+  },
+  {
+    "file": "work-in-progress.png",
+    "sha256": "8ac658740113c75ae30c86f8d41e11a797b032d8763ef0c89bcba43c769df2c0",
+    "source": "Owner-supplied artwork, 28 October 2026"
+  },
+  {
+    "file": "variation-request.png",
+    "sha256": "e200691e3914b5854b8e3cffe4c35146c07a2c29535ac6fda9c532038ad723d1",
+    "source": "Owner-supplied artwork, 28 October 2026"
+  },
+  {
+    "file": "inspection-round.png",
+    "sha256": "38041f44743f1540280dffa88de0c6e855a59ba9cf5d9aee06dc88bfe025d96a",
+    "source": "Owner-supplied artwork, 28 October 2026"
+  },
+  {
+    "file": "invoice-review.png",
+    "sha256": "b571f1b12b9f3f3c8ff825cde8f6b6870c1f81787e506e94e01295bb058f2c92",
+    "source": "Owner-supplied artwork, 28 October 2026"
+  },
+  {
+    "file": "payment.png",
+    "sha256": "b461456783c8fa0af72ea5f4e36e201a7ff8be1836a43ebebe37dc1814ca0317",
+    "source": "Owner-supplied artwork, 28 October 2026"
+  },
+  {
+    "file": "aftercare-feedback.png",
+    "sha256": "f229457a6dcbffe56d9672c9b468102051455c82f9194a962652c6b028ccd49c",
+    "source": "Owner-supplied artwork, 28 October 2026"
+  },
+  {
+    "file": "decision-pack-export.png",
+    "sha256": "654b52f85f202fa890743b49b4884cec416fbcbdc87e03729711548749e330a3",
+    "source": "Owner-supplied artwork, 28 October 2026"
+  },
+  {
+    "file": "contractor-verification.png",
+    "sha256": "89e9b4a67f85bb9012276d3f388270521fcf916544bdd2171389586790efa0aa",
+    "source": "Owner-supplied artwork, 28 October 2026"
+  },
+  {
+    "file": "council-oversight.png",
+    "sha256": "e0fc9d7e51e65414d80b9d74e46219c07cfc0285e0181d77826ee7cd68e9895f",
+    "source": "Owner-supplied artwork, 28 October 2026"
+  },
+  {
+    "file": "audit-record.png",
+    "sha256": "ffc2350ed9132e5cd8930b8b58cb873f925482ffc588603a539c752210a3ca9c",
+    "source": "Owner-supplied artwork, 28 October 2026"
+  },
+  {
+    "file": "admin.png",
+    "sha256": "fdd400cfdeba61911c273914667c3f190af1c0adb772b0127bd53fd738ccdd60",
+    "source": "Owner-supplied artwork, 28 October 2026"
+  },
+  {
+    "file": "mcst.png",
+    "sha256": "d9da345c4e075050b1b797e2dd240219e42763a19eba8e6aace72e3c1d6dab22",
+    "source": "Owner-supplied artwork, 28 October 2026"
+  },
+  {
+    "file": "contractor.png",
+    "sha256": "de6c7224ba032776d71b85553500828788d140346edf825d60a4b17b601311df",
+    "source": "Owner-supplied artwork, 28 October 2026"
+  },
+  {
+    "file": "building.png",
+    "sha256": "69fb62e372559450bff28daf58d8e7212e8f47c33ef4da385ef65c2962b996b6",
+    "source": "Owner-supplied artwork, 28 October 2026"
+  },
+  {
+    "file": "confidential-report.png",
+    "sha256": "17479edb17987ae87716ac6b73f72a489e9cfdf22f1f04fa8c3479dfbf741b44",
+    "source": "Owner-supplied artwork, 28 October 2026"
+  },
+  {
+    "file": "upload.png",
+    "sha256": "34497a793c45d0d79035fcbf051c4cefe7d8464051aa71914acc3415b3ff75c5",
+    "source": "Owner-supplied artwork, 28 October 2026"
+  },
+  {
+    "file": "shield.png",
+    "sha256": "bc0f75d71aa3e057188b73fdebbf77255faff75899030e1f98c9e10171f66372",
+    "source": "Owner-supplied artwork, 28 October 2026"
+  },
+  {
+    "file": "cancelled.png",
+    "sha256": "0139f2b410e483baa79bf3891953755e9d10b97e315819d69f988b1b021c462a",
+    "source": "Owner-supplied artwork, 28 October 2026"
+  },
+  {
+    "file": "reselection.png",
+    "sha256": "77ce3c47f28301ec196b1e7ccb53d2ffb88489a5ad5965b9c5a51e60ea071f13",
+    "source": "Owner-supplied artwork, 28 October 2026"
+  },
+  {
+    "file": "ai-refining.png",
+    "sha256": "d655ff2f24d0685dd8ec4e0353d5c317bc232f02c19557fd1b5da99a3e3c97f1",
+    "source": "Owner-supplied artwork, 28 October 2026"
+  }
+]

@@ -67,6 +67,13 @@ export async function eligibility(sql:Sql,organisationId:string,requested:string
   }
   return {eligible:reasons.length===0,categories:requested,reasons};
 }
+// Public evidence only. Callers must establish workspace/role access before using
+// this projector; pending renewals and private verification records stay private.
+export async function publicCredentialBadges(sql:Sql,organisationId:string,now:Date) {
+  const badges=await sql.query(`SELECT t.name,v.expiry_value,v.expires_at FROM credentials c JOIN credential_types t ON t.id=c.type_id
+    JOIN credential_versions v ON v.credential_id=c.id AND v.submission=c.approved_submission WHERE c.organisation_id=$1 ORDER BY t.name,c.id`,[organisationId]);
+  return badges.map(b=>({name:String(b.name),expiry:b.expiry_value,expired:!!b.expires_at&&new Date(b.expires_at as string)<=now}));
+}
 export class VerificationService {
   constructor(readonly commands:CommandService) {}
   get db(){return this.commands.db;} get identity(){return this.commands.identity;} get now(){return this.commands.now;}
@@ -104,10 +111,8 @@ export class VerificationService {
     const [estate]=await this.db.query('SELECT contractor_identities_visible FROM estates WHERE id=$1',[job.estate_id]);
     const masked=actor.context?.role==='cm'&&!estate?.contractor_identities_visible;
     const [org]=await this.db.query('SELECT name FROM organisations WHERE id=$1',[id]);
-    const badges=await this.db.query(`SELECT t.name,v.expiry_value,v.expires_at FROM credentials c JOIN credential_types t ON t.id=c.type_id
-      JOIN credential_versions v ON v.credential_id=c.id AND v.submission=c.approved_submission WHERE c.organisation_id=$1 ORDER BY t.name`,[id]);
     return {name:masked?'Contractor '+createHash('sha256').update(jobId+':'+id).digest('hex').slice(0,8):String(org!.name),masked,
-      badges:badges.map(b=>({name:String(b.name),expiry:b.expiry_value,expired:!!b.expires_at&&new Date(b.expires_at as string)<=this.now()}))};
+      badges:await publicCredentialBadges(this.db,id,this.now())};
   }
   async saveProfile(token:string,meta:WorkspaceCommand,id:string,body:{name:string;contact:string;categories:string[];description:string}) {
     return this.commands.run(token,meta,'verification.profile',{id,...body},async(tx,actor)=>{await authorizedOrganisation(tx,actor,id);},async(tx,actor)=>{

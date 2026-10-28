@@ -53,6 +53,14 @@ test('An uncommitted timeout retries the same operation/version and recovery lea
   assert.equal((await commands.submit('workspaces/job/edit',{observations:'Private',title:'Saved'},99)).version,8);
   assert.equal(keys[0]!.key,keys[1]!.key);assert.equal(keys[1]!.version,7);assert.equal(storage.length,0);
 });
+test('A rate-limited retry cannot discard the identity of an earlier uncertain decision',async()=>{
+  const storage=store(),keys:WebCommand[]=[];
+  const api:Api=async(_route,_body,command)=>{assert.ok(command);keys.push(command);if(keys.length===1)throw new Error('Response lost');if(keys.length===2)throw Object.assign(new Error('Try again shortly'),{status:429});return {version:8};};
+  const commands=factory.create({api,partition:()=> 'user:estate',generation:()=>0,storage,online:()=>true,digest});
+  await assert.rejects(commands.submit('approve',{confirmed:true},7),/Result uncertain/);
+  await assert.rejects(commands.submit('approve',{confirmed:true},7),/same submission identity/);assert.equal(storage.length,1);
+  assert.equal((await commands.submit('approve',{confirmed:true},7)).version,8);assert.equal(storage.length,0);assert.ok(keys.every(key=>key.key===keys[0]!.key));
+});
 
 test('Offline decisions, context switches during hashing and other accounts cannot submit or recover a pending operation',async()=>{
   const storage=store();let scope='user:estate',generation=0,online=false,calls=0,release:(value:string)=>void=()=>{};

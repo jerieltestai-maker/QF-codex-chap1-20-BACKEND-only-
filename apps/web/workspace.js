@@ -1,7 +1,7 @@
 (() => {
   'use strict';
-  const el=id=>document.getElementById(id),status=text=>{el('workspace-status').textContent=text;};
-  let context=null,job=null,draft=null,epoch=0,serverOffset=0,jobLoad=0;
+  const el=id=>document.getElementById(id),status=text=>{el('workspace-status').textContent=text;if(text)el('status').textContent=text;};
+  let context=null,job=null,draft=null,epoch=0,serverOffset=0,jobLoad=0,listLoad=0,uploadBusy=false;
   const partition=()=>context.user.id+':'+context.context.id;
   const storageKey=()=> 'quotefix:web-drafts:'+partition();
   const empty=()=>({id:crypto.randomUUID(),revision:0,baseVersion:0,fields:{title:'',observations:'',affectedLocation:''}});
@@ -19,10 +19,10 @@
     if(!active)throw new Error('Sign in to continue');
     const headers={'Content-Type':'application/json','X-CSRF-Token':active.csrfToken};
     if(command)Object.assign(headers,{'Idempotency-Key':command.key,'X-Access-Version':String(command.accessVersion??active.accessVersion),'If-Match':'"record-'+command.version+'"'});
-    const response=await fetch('/api/v1/'+route,{method:body===undefined?'GET':'POST',credentials:'same-origin',signal:AbortSignal.timeout(15000),headers,...(body===undefined?{}:{body:JSON.stringify(body)})});
+    const response=await (window.qfUI?.fetch||fetch)('/api/v1/'+route,{method:body===undefined?'GET':'POST',credentials:'same-origin',signal:AbortSignal.timeout(15000),headers,...(body===undefined?{}:{body:JSON.stringify(body)})});
     const result=await response.json();
     if(generation!==epoch)throw new Error('Account or context changed. Refresh this view.');
-    if(!response.ok){const error=new Error(result.error?.message||'Request failed');error.status=response.status;throw error;}
+    if(!response.ok){const error=new Error(result.error?.message||'Request failed');error.status=response.status;if(response.status===429){const wait=Number(response.headers.get('retry-after'));error.message=Number.isFinite(wait)&&wait>0?'Too many requests. Try again in '+Math.ceil(wait)+' seconds. Your draft is preserved.':'Too many requests. Wait briefly, then retry. Your draft is preserved.';}if(response.status===401)document.dispatchEvent(new Event('qf:session-expired'));if(response.status===403)document.dispatchEvent(new Event('qf:access-changed'));if(response.status===412)error.message+=' Your draft is preserved. Refresh the view and review the current version before submitting again.';throw error;}
     if(result.serverTime)serverOffset=Date.parse(result.serverTime)-Date.now();
     return result;
   }
@@ -43,7 +43,7 @@
   const submit=commandClient.submit;
   function button(label,action) {
     const node=document.createElement('button');node.textContent=label;
-    node.addEventListener('click',async()=>{node.disabled=true;try{await action();}catch(error){status(error.message);}finally{node.disabled=false;}});return node;
+    node.type='button';node.addEventListener('click',async()=>{node.disabled=true;try{await action();}catch(error){status(error.message);}finally{node.disabled=false;}});return node;
   }
   function line(value) {const p=document.createElement('p');p.textContent=value;return p;}
   async function refreshDrafts() {
@@ -63,23 +63,34 @@
     el('workspace-facts').textContent=job.observations+'\nAffected location: '+job.affected_location;
     if(loadFields){draft={...empty(),jobId:id,baseVersion:job.version,fields:{title:job.title,observations:job.observations,affectedLocation:job.affected_location}};fill(draft.fields);}
     el('workspace-submit').textContent='Save workspace changes';
-    el('workspace-history').textContent=JSON.stringify(history,null,2);
+    const chronology=document.createElement('ol');chronology.className='chronology';
+    for(const event of history){const item=document.createElement('li'),when=document.createElement('time');item.append(line((event.actor_name||event.actor_role?.toUpperCase()||'System')+' · '+(window.qfUI?.label(event.action)||event.action)+(event.reason?' · '+event.reason:'')));when.textContent=new Date(event.recorded_at).toLocaleString('en-SG',{timeZone:'Asia/Singapore'})+' SGT';item.append(when);chronology.append(item);}
+    el('workspace-history').replaceChildren(history.length?chronology:line('No workspace history has been recorded.'));
     el('attachment-list').replaceChildren(...result.attachments.map(file=>{const link=document.createElement('a');link.href='/api/v1/files/'+file.id;link.textContent='Download '+file.variant+' '+file.media_type;const p=line('');p.append(link);return p;}));
-    el('support-list').replaceChildren(...supports.map(s=>line(s.privacy+' support: '+s.description)));
-    el('workspace-waiting').textContent=[result.waitingOn,...result.secondaryActions].map(t=>'Waiting on '+t.role.toUpperCase()+"'s action: "+t.action).join(' · ');
+    if(!result.attachments.length)el('attachment-list').append(line('No evidence attached. Uploads and job submissions are separate actions.'));
+    el('support-list').replaceChildren(...supports.map(s=>{const row=line(s.privacy+' support: '+s.description);if(window.qfSupport?.openCase)row.append(button('Open support case',()=>window.qfSupport.openCase(s.id)));return row;}));
+    if(!supports.length)el('support-list').append(line('No support requests visible for this repair.'));
+    el('workspace-waiting').textContent=[result.waitingOn,...result.secondaryActions].filter(Boolean).map(t=>t.role==='none'?t.action:'Waiting on '+t.role.toUpperCase()+': '+t.action).join(' · ');
     await renderUploads();
     if(load!==jobLoad||generation!==epoch)return;
     document.dispatchEvent(new CustomEvent('qf:job',{detail:result}));
+    if(loadFields){el('workspace-compose').open=false;document.dispatchEvent(new CustomEvent('qf:navigate',{detail:{screen:'workspace'}}));}
   }
   async function refreshLists() {
     if(!context?.context||!navigator.onLine)return;
-    const jobs=await all('workspaces');el('workspace-list').replaceChildren(...jobs.map(item=>button(item.title+' · '+item.stage,()=>loadJob(item.id))));
-    const bells=await all('notifications','notifications');el('bell-count').textContent='('+bells.unreadCount+' unread)';
+    const load=++listLoad,generation=epoch;
+    const jobs=await all('workspaces');if(load!==listLoad||generation!==epoch)return;
+    el('workspace-list').replaceChildren(...jobs.map(item=>{const b=button('',()=>loadJob(item.id)),title=document.createElement('strong'),stage=document.createElement('span');b.className='repair-row';title.textContent=item.title;stage.textContent=item.stage;b.append(title,stage);return b;}));
+    if(!jobs.length){const empty=line(context.context.role==='contractor'?'Your eligible RFQs and assigned work appear in their respective views.':'No private repairs yet. Choose New repair to record an observation.');empty.className='empty-state';el('workspace-list').append(empty);}
+    const bells=await all('notifications','notifications');if(load!==listLoad||generation!==epoch)return;el('bell-count').textContent='('+bells.unreadCount+' unread)';
     el('bell-list').replaceChildren(...bells.notifications.map(n=>{const p=line(n.message+' · '+new Date(n.issued_at).toLocaleString('en-SG',{timeZone:'Asia/Singapore'})+' SGT');
       if(!n.read_at)p.append(button('Mark read',async()=>{await api('notifications/'+n.id+'/read',{});await refreshLists();}));return p;}));
-    const result=await all('tasks','tasks');el('task-list').replaceChildren(...result.tasks.map(t=>line(t.owner_role.toUpperCase()+': '+t.action)));
+    if(!bells.notifications.length)el('bell-list').append(line('No notifications for this account context.'));
+    const result=await all('tasks','tasks');if(load!==listLoad||generation!==epoch)return;
+    el('task-list').replaceChildren(...result.tasks.map(t=>{const row=line(t.owner_role.toUpperCase()+': '+t.action);if(t.job_id&&context.context.role!=='contractor')row.append(button('Open repair',()=>loadJob(t.job_id)));else if(t.job_id)row.append(button('Open assigned work',()=>window.qfWork.open(t.job_id)));if(t.support_id&&window.qfSupport?.openCase)row.append(button('Open support case',()=>window.qfSupport.openCase(t.support_id)));return row;}));
+    if(!result.tasks.length)el('task-list').append(line('No outstanding actions for this account context.'));
     if(context.context.role==='admin') {
-      const attention=await all('admin/attention','tasks');el('attention-list').replaceChildren(...attention.tasks.filter(t=>t.owner_role==='admin').map(t=>{
+      const attention=await all('admin/attention','tasks');if(load!==listLoad||generation!==epoch)return;el('attention-list').replaceChildren(...attention.tasks.filter(t=>t.owner_role==='admin').map(t=>{
         const p=line(t.action+(t.acknowledged_at?' · Acknowledged; follow-up remains open.':' · Unacknowledged.'));
         const action=document.createElement('input');action.placeholder='Next action';action.setAttribute('aria-label','Next action');action.value=t.next_action||'';
         const at=document.createElement('input');at.type='datetime-local';at.setAttribute('aria-label','Next follow-up in Singapore time');
@@ -97,22 +108,29 @@
         }));
         if(t.follow_up_at){const countdown=line('');countdown.dataset.due=t.follow_up_at;p.append(countdown);}return p;
       }));
-      const failures=await all('admin/failed-work');el('failed-list').replaceChildren(...failures.map(w=>{const p=line(w.kind+' · '+w.last_error_code+' · '+w.attempts+' attempts');p.append(button('Retry after fixing cause',async()=>{await api('admin/failed-work/'+w.id+'/retry',{});await refreshLists();}));return p;}));
+      if(!el('attention-list').children.length)el('attention-list').append(line('No Admin follow-ups are outstanding.'));
+      const failures=await all('admin/failed-work');if(load!==listLoad||generation!==epoch)return;el('failed-list').replaceChildren(...failures.map(w=>{const p=line(w.kind+' · '+w.last_error_code+' · '+w.attempts+' attempts');p.append(button('Retry after fixing cause',async()=>{await api('admin/failed-work/'+w.id+'/retry',{});await refreshLists();}));return p;}));
+      if(!failures.length)el('failed-list').append(line('No persistent processing failures.'));
     }
     document.dispatchEvent(new CustomEvent('qf:lists-refreshed'));
   }
-  const database=new Promise((resolve,reject)=>{const opening=indexedDB.open('quotefix-web-uploads',1);opening.onupgradeneeded=()=>opening.result.createObjectStore('queue',{keyPath:'id'});opening.onsuccess=()=>resolve(opening.result);opening.onerror=()=>reject(opening.error);});
+  let database;
+  function uploadDatabase(){return database??=new Promise((resolve,reject)=>{const opening=indexedDB.open('quotefix-web-uploads',1);opening.onupgradeneeded=()=>opening.result.createObjectStore('queue',{keyPath:'id'});opening.onsuccess=()=>resolve(opening.result);opening.onerror=()=>{database=null;reject(new Error('Device storage is unavailable. Enable local storage to queue evidence.'));};opening.onblocked=()=>{database=null;reject(new Error('Device storage is blocked by another tab. Close older QuoteFix tabs and try again.'));};});}
   async function queueStore(mode,action) {
-    const db=await database;return new Promise((resolve,reject)=>{const transaction=db.transaction('queue',mode),request=action(transaction.objectStore('queue'));let value;
+    const db=await uploadDatabase();return new Promise((resolve,reject)=>{const transaction=db.transaction('queue',mode),request=action(transaction.objectStore('queue'));let value;
       request.onsuccess=()=>{value=request.result;};transaction.oncomplete=()=>resolve(value);transaction.onerror=()=>reject(transaction.error);transaction.onabort=()=>reject(transaction.error);});
   }
   async function queueItems() {return (await queueStore('readonly',s=>s.getAll())).filter(row=>row.partition===partition()&&row.jobId===job?.id);}
   async function renderUploads() {
     if(!context?.context||!job)return;
-    const items=await queueItems();el('upload-list').replaceChildren(...items.map(row=>line(row.name+' · '+row.state)));
+    const generation=epoch,id=job.id,items=await queueItems();if(generation!==epoch||id!==job?.id)return;
+    el('upload-list').replaceChildren(...items.map(row=>{const p=line(row.name+' · '+row.state);if(row.state==='attached'||row.state.startsWith('rejected'))p.append(button('Remove this device copy',async()=>{await queueStore('readwrite',s=>s.delete(row.id));await renderUploads();}));return p;}));
+    if(!items.length)el('upload-list').append(line('No files queued on this device for this repair.'));
   }
   async function resumeUploads() {
-    if(!navigator.onLine||!job)return;
+    if(!navigator.onLine||!job||uploadBusy)return;
+    uploadBusy=true;
+    try{
     const activePartition=partition(),generation=epoch,id=job.id;
     for(const row of await queueItems()) {
       if(generation!==epoch||activePartition!==partition())return;
@@ -143,6 +161,7 @@
       await queueStore('readwrite',s=>s.put(row));await renderUploads();
     }
     if(generation===epoch&&job?.id===id)await loadJob(id,false);
+    }finally{uploadBusy=false;}
   }
   const bind=(id,action)=>el(id).addEventListener('click',async()=>{const node=el(id);node.disabled=true;try{await action();}catch(error){status(error.message);}finally{node.disabled=false;}});
   bind('draft-local',async()=>{saveLocal();await refreshDrafts();});
@@ -154,6 +173,9 @@
     await refreshDrafts();
   });
   bind('workspace-submit',async()=>{
+    if(!fields().title.trim()){el('draft-title').focus();throw new Error('Add a title before creating the private workspace. Your unfinished draft can still be saved.');}
+    if(!fields().observations.trim()){el('draft-observations').focus();throw new Error('Describe the observed problem before creating the private workspace.');}
+    if(!fields().affectedLocation.trim()){el('draft-location').focus();throw new Error('Add the affected location before creating the private workspace.');}
     saveLocal();const route=draft.jobId?'workspaces/'+draft.jobId+'/edit':'workspaces';
     const body=draft.jobId?draft.fields:{...draft.fields,estateId:context.context.estate_id||el('workspace-estate').value};
     const result=await submit(route,body,draft.baseVersion);await loadJob(result.jobId);await refreshLists();status('Private workspace saved.');
@@ -167,35 +189,37 @@
   });
   bind('upload-resume',resumeUploads);
   bind('support-send',async()=>{
+    if(!el('support-description').value.trim())throw new Error('Describe the help you need before sending the support request.');
     const result=await submit('workspaces/'+job.id+'/support',{description:el('support-description').value,privacy:el('support-privacy').value,
       subjectUserIds:el('support-subjects').value.split(',').map(s=>s.trim()).filter(Boolean),subjectOrganisationIds:[]},job.version);
-    el('support-description').value='';el('support-subjects').value='';status(result.message);await loadJob(job.id,false);await refreshLists();
+    el('support-description').value='';el('support-subjects').value='';status(result.message||'Support request sent to Admin.');await loadJob(job.id,false);await refreshLists();
   });
-  el('workspace-shell').prepend(button('Check pending submissions',async()=>{
+  const recover=async()=>{
     const generation=epoch,results=await commandClient.recover();if(generation!==epoch)return;
     if(job)await loadJob(job.id,false);await refreshLists();
     status(results.length?results.map(r=>r.route+': '+(r.result?'submission confirmed; no new decision was sent':'no outcome recorded yet; retry the original unchanged input')).join(' · '):'No pending submissions for this account and context.');
-  }));
+  };
   document.addEventListener('qf:context',async event=>{
-    const next=event.detail,changed=context?.user.id!==next?.user.id||context?.context?.id!==next?.context?.id;
+    const next=event.detail,changed=context?.user.id!==next?.user.id||context?.context?.id!==next?.context?.id||context?.accessVersion!==next?.accessVersion||context?.context?.role!==next?.context?.role;
     if(changed){
-      epoch++;jobLoad++;job=null;draft=empty();fill(draft.fields);status('');
+      epoch++;jobLoad++;listLoad++;job=null;draft=empty();fill(draft.fields);status('');
       for(const id of ['workspace-list','workspace-facts','workspace-history','attachment-list','upload-list','support-list','bell-list','task-list','attention-list','failed-list'])el(id).replaceChildren();
       el('support-description').value='';el('support-subjects').value='';el('evidence-file').value='';el('workspace-detail').hidden=true;
       el('saved-drafts').replaceChildren(new Option('Choose a draft',''));el('bell-count').textContent='';el('workspace-submit').textContent='Create private workspace';
     }
-    context=next;el('workspace-shell').hidden=!next?.context;
+    context=next;el('workspace-shell').hidden=!next?.context;el('notifications-panel').hidden=!next?.context;
     if(!next?.context)return;
     el('workspace-editor').hidden=!next.capabilities['rfq.manage'];el('attention-panel').hidden=next.context.role!=='admin';el('workspace-estate-label').hidden=next.context.role!=='admin';
     try{
       if(next.context.role==='admin')el('workspace-estate').replaceChildren(...(await api('admin/estates')).map(e=>new Option(e.name,e.id)));
-      if(!el('workspace-editor').hidden)await refreshDrafts();await refreshLists();
+      if(!el('workspace-editor').hidden&&(changed||!el('workspace-editor').contains(document.activeElement)))await refreshDrafts();await refreshLists();
     }catch(error){status(error.message);}
   });
+  document.addEventListener('qf:refresh',()=>{if(context?.context){refreshLists().catch(error=>status(error.message));if(job)loadJob(job.id,false).catch(error=>status(error.message));}});
   setInterval(()=>{document.querySelectorAll('[data-due]').forEach(node=>{
     const milliseconds=Date.parse(node.dataset.due)-(Date.now()+serverOffset),hours=Math.max(0,Math.floor(milliseconds/3600000));
     node.textContent=(milliseconds<=0?(node.dataset.overdueLabel||'Follow-up is due'):(node.dataset.followupPrefix||'Follow up in')+' '+Math.floor(hours/24)+'d '+hours%24+'h')+' — '+new Date(node.dataset.due).toLocaleString('en-SG',{timeZone:'Asia/Singapore'})+' SGT';
   });},1000);
   window.addEventListener('online',()=>{if(context?.context&&job)resumeUploads().catch(error=>status(error.message));});
-  window.qfWorkspace={api,all,submit,loadJob,refreshLists,get context(){return context;},get job(){return job;}};
+  window.qfWorkspace={api,all,submit,recover,loadJob,refreshLists,get context(){return context;},get job(){return job;}};
 })();

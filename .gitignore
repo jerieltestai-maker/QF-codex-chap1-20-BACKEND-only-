@@ -20,3 +20,6 @@ apps/mobile/android/
 # Local design-skill engines and per-developer state
 .agents/skills/impeccable/scripts/bin/
 .impeccable/config.local.json
+
+# Generated design measurements and local direction state (decisions live in DESIGN.md)
+.taste-skill/

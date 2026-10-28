@@ -69,6 +69,15 @@ async function authorise(tx:Sql,actor:Actor,selection:Record<string,unknown>,now
 export class SelectionService {
   constructor(readonly commands:CommandService) {}
   get db(){return this.commands.db;}get identity(){return this.commands.identity;}get now(){return this.commands.now;}
+  async procurementSettings(token:string,id:string) {
+    return this.db.transaction(async tx=>{
+      const actor=await this.identity.actor(token,tx);
+      if(!['mcst','admin'].includes(actor.context?.role??'')||!canRead(actor,{estateId:id}))throw notFound();
+      const [estate]=await tx.query('SELECT id,name,version,approval_threshold_cents,contractor_identities_visible,private_address FROM estates WHERE id=$1',[id]);
+      if(!estate)throw notFound();
+      return {estateId:estate.id,name:estate.name,version:Number(estate.version),thresholdCents:estate.approval_threshold_cents===null?null:Number(estate.approval_threshold_cents),identitiesVisible:Boolean(estate.contractor_identities_visible),...(actor.context?.role==='admin'?{address:String(estate.private_address??'')}:{})};
+    });
+  }
   async compare(token:string,id:string) {
     return this.db.transaction(async tx=>{
     await tx.query('SELECT pg_advisory_xact_lock(734130)');

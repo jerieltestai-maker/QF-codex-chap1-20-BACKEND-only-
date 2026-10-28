@@ -41,6 +41,7 @@ export async function quotingRoutes(app:FastifyInstance,commands:CommandService)
   post<{reason:string}>('workspaces/:id/selection/reopen',schema({reason:{...short,minLength:1}}),(t,m,id,b)=>selection.reopen(t,m,id,b.reason));
   post<{at:string}>('workspaces/:id/selection/schedule',schema({at:{type:'string',minLength:20,maxLength:40}}),(t,m,id,b)=>selection.schedule(t,m,id,b.at));
   post('workspaces/:id/selection/replacement',schema({title:{...short,minLength:1},observations:{...text,minLength:1},affectedLocation:{...short,minLength:1},reason:{...short,minLength:1}}),selection.replacement.bind(selection));
+  app.get<{Params:{id:string}}>('/api/v1/estates/:id/procurement-settings',{schema:{params}},req=>selection.procurementSettings(token(req),req.params.id));
   post('estates/:id/procurement-settings',schema({thresholdSgd:{type:'string',pattern:'^(0|[1-9][0-9]*)(\\.[0-9]{1,2})?$'},identitiesVisible:bool,address:text,reason:{...short,minLength:1}},['reason']),selection.settings.bind(selection));
   post('contractors/:id/quote-uploads',schema({mediaType:{const:'application/pdf'},byteSize:{type:'integer',minimum:1,maximum:10485760},checksum:{type:'string',pattern:'^[a-f0-9]{64}$'}}),files.quoteIntent.bind(files));
 }

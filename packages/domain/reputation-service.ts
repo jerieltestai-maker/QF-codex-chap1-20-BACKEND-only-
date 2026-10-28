@@ -5,7 +5,7 @@ import type {Actor} from './access.js';
 import {CommandService,audit,requireVersion,type WorkspaceCommand} from './commands.js';
 import {workAccess} from './work-core.js';
 import {reviewer,completion} from './completion-core.js';
-import {adminOnly,authorizedOrganisation,finishAttention,createAttention} from './verification-service.js';
+import {adminOnly,authorizedOrganisation,finishAttention,createAttention,publicCredentialBadges} from './verification-service.js';
 import {estateAuthority} from './selection-service.js';
 import {maskedName,publication} from './quote-service.js';
 import {singaporeDate} from './calendar.js';
@@ -113,7 +113,7 @@ export class ReputationService {
       const projection=await entryProjection(tx,a,String(e.id),true,identity.masked);if(projection)entries.push(projection);
     }
     const [organisation]=await tx.query('SELECT verified FROM organisations WHERE id=$1',[org]);
-    return {...identity,verified:organisation!.verified,snapshotId:snapshot.snapshotId,scores:score(snapshot.inputs.units,priorities.primaryPriority,priorities.secondaryPriority),
+    return {...identity,verified:organisation!.verified,badges:await publicCredentialBadges(tx,org,now),snapshotId:snapshot.snapshotId,scores:score(snapshot.inputs.units,priorities.primaryPriority,priorities.secondaryPriority),
       sourceCounts:{verifiedExternal:snapshot.inputs.verifiedExternalCount,scoredExternal:snapshot.result.externalCount,quoteFixJobs:snapshot.result.quoteFixCount},durability:snapshot.inputs.durabilityStates,
       limitations:[...(snapshot.inputs.verifiedExternalCount<5?['Fewer than five verified external references; external references contribute no score.']:[]),...(snapshot.result.quoteFixCount===0?['No scored QuoteFix jobs.']:[]),'External references are Contractor-selected and independently checked.','Unanswered, pending, unassessable or contested durability is not evidence of a clean repair.','Current availability and price are evaluated from the current quote.'],
       entries};

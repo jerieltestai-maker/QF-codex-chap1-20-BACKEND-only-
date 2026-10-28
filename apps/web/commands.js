@@ -20,7 +20,7 @@
         const command=prior||{key:crypto.randomUUID(),signature,version};
         storage.setItem(key,JSON.stringify(command));
         try {const result=await api(route,body,command);storage.removeItem(key);return result;}
-        catch(error){if(error.status&&error.status<500)storage.removeItem(key);else error.message+=' Result uncertain; retry unchanged or check pending submissions.';throw error;}
+        catch(error){if(error.status&&error.status<500&&error.status!==429)storage.removeItem(key);else if(error.status===429)error.message+=' Retry unchanged to preserve the same submission identity.';else error.message+=' Result uncertain; retry unchanged or check pending submissions.';throw error;}
       },
       async recover() {
         if(!online())throw new Error('Connect to check pending submissions.');

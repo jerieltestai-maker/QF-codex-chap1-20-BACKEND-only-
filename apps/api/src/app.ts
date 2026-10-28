@@ -47,7 +47,12 @@ export async function buildApp(config: Config, db: Database, identity: IdentityS
     ajv:{customOptions:{removeAdditional:false,coerceTypes:false}}});
   await app.register(cookie);
   await app.register(helmet,{contentSecurityPolicy:{directives:{upgradeInsecureRequests:null,defaultSrc:["'self'"],scriptSrc:["'self'"],styleSrc:["'self'"],objectSrc:["'none'"],frameAncestors:["'none'"]}}});
-  await app.register(rateLimit,{max:120,timeWindow:'1 minute'});
+  await app.register(rateLimit,{
+    // Loading the interface must not consume a decision or sign-in budget.
+    max:req=>req.method==='GET'?600:120,timeWindow:'1 minute',
+    keyGenerator:req=>req.ip+':'+(req.url.startsWith('/api/v1/auth/')&&!req.url.startsWith('/api/v1/auth/logout')?'identity':req.method==='GET'?'read':'command'),
+    allowList:req=>{const path=req.routeOptions.url??'';return req.method==='GET'&&!path.startsWith('/api/')&&(path==='/'||/\.(?:js|css|woff2|png|jpg)$/.test(path));}
+  });
   // Commit protected-access evidence before releasing the response, including with server PostgreSQL latency.
   app.addHook('onSend',async(req,reply,payload)=>{
     try {
@@ -111,6 +116,12 @@ export async function buildApp(config: Config, db: Database, identity: IdentityS
   app.get('/local-accounts.js',async(_req,reply)=>reply.type('application/javascript').send(await readFile('apps/web/local-accounts.js','utf8')));
   app.get('/app.js',async(_req,reply)=>reply.type('application/javascript').send(await readFile('apps/web/app.js','utf8')));
   app.get('/style.css',async(_req,reply)=>reply.type('text/css').send(await readFile('apps/web/style.css','utf8')));
+  app.get('/ui.js',async(_req,reply)=>reply.type('application/javascript').send(await readFile('apps/web/ui.js','utf8')));
+  app.get('/shell.js',async(_req,reply)=>reply.type('application/javascript').send(await readFile('apps/web/shell.js','utf8')));
+  // Public interface assets are explicitly listed. Private job files retain their authorised routes.
+  const interfaceAssets:Record<string,string>={'geist.woff2':'font/woff2','corridor-overview.jpg':'image/jpeg','ceiling-detail.jpg':'image/jpeg','corridor-repaired.jpg':'image/jpeg'};
+  for(const name of ['quotefix-logo','all-caught-up','admin-support','platform-fees','report-issue','request-quotes','compare-quotations','mcst-approval','schedule-work','work-in-progress','variation-request','inspection-round','invoice-review','payment','aftercare-feedback','decision-pack-export','contractor-verification','council-oversight','audit-record','admin','mcst','contractor','building','confidential-report','upload','shield','cancelled','reselection','ai-refining'])interfaceAssets[name+'.png']='image/png';
+  for(const [name,type] of Object.entries(interfaceAssets))app.get('/assets/'+name,async(_req,reply)=>reply.type(type).send(await readFile('apps/web/assets/'+name)));
   app.get('/workspace.js',async(_req,reply)=>reply.type('application/javascript').send(await readFile('apps/web/workspace.js','utf8')));
   app.get('/commands.js',async(_req,reply)=>reply.type('application/javascript').send(await readFile('apps/web/commands.js','utf8')));
   app.get('/procurement.js',async(_req,reply)=>reply.type('application/javascript').send(await readFile('apps/web/procurement.js','utf8')));
