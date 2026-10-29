@@ -4,13 +4,14 @@ import {readFile} from 'node:fs/promises';
 import {runInNewContext} from 'node:vm';
 type Data=Record<string,any>;
 class Element {
-  children:Element[]=[];type='';value='';checked=false;hidden=false;disabled=false;dataset:Data={};files:File[]=[];onclick?:()=>Promise<void>;onchange?:()=>Promise<void>;
+  parentElement:Element|null=null;children:Element[]=[];type='';value='';checked=false;hidden=false;disabled=false;dataset:Data={};files:File[]=[];onclick?:()=>Promise<void>;onchange?:()=>Promise<void>;
   constructor(readonly tag:string,private text=''){}
   get textContent():string{return this.text+this.children.map(c=>c.textContent).join('');}
   set textContent(v:string){this.text=v;this.children=[];}
-  append(...nodes:Element[]){for(const node of nodes){this.children.push(node);if(this.tag==='select'&&this.children.length===1)this.value=node.value;}}
+  append(...nodes:Element[]){for(const node of nodes){node.parentElement=this;this.children.push(node);if(this.tag==='select'&&this.children.length===1)this.value=node.value;}}
   replaceChildren(...nodes:Element[]){this.children=[];this.append(...nodes);}
-  setAttribute(){}
+  attributes:Record<string,string>={};
+  setAttribute(name:string,value:string){this.attributes[name]=value;}
   listeners=new Map<string,()=>Promise<void>>();
   addEventListener(name:string,fn:()=>Promise<void>){this.listeners.set(name,fn);}
 }
@@ -34,12 +35,23 @@ async function forms(role:string,cancelled=false,finance?:Data,caseDetail?:Data)
   const all=():Element[]=>{const visit=(e:Element):Element[]=>[e,...e.children.flatMap(visit)];return visit(main);};
   const field=(label:string)=>{const parent=all().find(e=>e.tag==='label'&&e.textContent===label);assert.ok(parent,'Missing '+label);return parent.children.find(e=>['input','textarea','select'].includes(e.tag))!;};
   const click=async(label:string)=>{const e=all().find(e=>e.tag==='button'&&e.textContent===label);assert.ok(e,'Missing '+label);await e.onclick!();await flush();};
-  const event=async(name:string,detail:Data={})=>{await events.get(name)?.({detail});await flush();};
+  const event=async(name:string,detail:Data={})=>{await events.get(name)?.({detail});await flush();assert.equal(all().filter(e=>e.attributes.role==='status').some(e=>/is not defined|is not a function|Cannot (?:read|set)/.test(e.textContent)),false,'Rendering errors caught by the UI must fail the harness');};
   const slide=async(label:string)=>{const input=field(label+' — slide to confirm');input.value='100';await input.listeners.get('change')!();await flush();};
   await event('qf:context');await event('qf:job',{job:{id:'job'}});return {all,field,click,event,slide,requests,reads,declaration,context};
 }
 
 const settlementFinance=(extra:Data={})=>({version:7,completion:null,financialConfirmation:{version:1,amount_cents:'2500'},transfers:[],balanceIssues:[],balances:{payableCents:'2500',sentCents:'0',receivedCents:'0',disputedCents:'0',unsentCents:'2500',outstandingCents:'2500'},...extra});
+
+test('Support renders without caught errors and reveals confidentiality guidance only for confidential reports',async()=>{
+  const f=await forms('mcst');
+  const notice=f.all().find(e=>e.tag==='p'&&e.textContent==='Confidential reports are hidden from the person or organisation reported.');
+  assert.ok(notice);assert.equal(notice.hidden,true);
+  const confidential=f.field('Confidential conduct report');confidential.checked=true;await confidential.listeners.get('change')!();
+  assert.equal(notice.hidden,false);assert.equal(f.all().find(e=>e.tag==='select'&&e.parentElement?.textContent.startsWith('Reported person or organisation'))?.disabled,false);
+  confidential.checked=false;await confidential.listeners.get('change')!();assert.equal(notice.hidden,true);
+  const category=f.all().find(e=>e.tag==='select'&&e.parentElement?.textContent.startsWith('Concern category'))!;category.value='confidential_conduct';await category.listeners.get('change')!();assert.equal(notice.hidden,false);
+  assert.equal(f.requests.length,0,'Changing privacy never submits a report');
+});
 
 test('Cancelled settlement without an invoice exposes the Contractor balance issue and deliberately confirmed actual receipt',async()=>{
   let f=await forms('contractor',true,settlementFinance());

@@ -1,5 +1,15 @@
 # QuoteFix working product memory
 
+## Guided frontend redesign — 29 October 2026
+
+The owner rejected the earlier desktop visual design and requests a full frontend based on `QuoteFix-Design-System.zip`, with lower cognitive load, shorter copy, sequential setup/task subpages, accordions and dropdowns. The owner explicitly confirms **http://127.0.0.1:3000 is the live target**; this task does not require a new cloud deployment. Existing API permissions, consequential confirmations, SQL migrations and operational data remain authoritative.
+
+The ZIP at `C:/Users/jerie/Downloads/QuoteFix-Design-System.zip` has SHA-256 `ec176f66e89857c49757a96770fafa949fa8ac8670fc573586309dbbb8656fd4`. Its Manrope/JetBrains Mono, navy/blue/cool-gray tokens and role UI kits supersede the earlier achromatic visual authority. Its example records, local-only preview interactions, inert links and older product-policy reference snapshots are reference material, not current behavior or operational data. Current repository product decisions take precedence.
+
+Phase 1 uses UI/UX Pro Max for flow structure; Phases 2–3 use Taste with the supplied visual system taking precedence; Phase 4 uses Impeccable for verification. Existing G02/G04/G14/G15 and specialist/fault policy gates are unchanged. [Redesign record](design/GUIDED_FRONTEND_REDESIGN.md) tracks implementation and current verification; earlier frontend results do not certify this replacement.
+
+The owner additionally requests upstream Impeccable installation and its Clarify/Distill playbooks, with ASTRA leading and reviewing GPT-6.1 SOL implementation agents. This was applied directly. Final local checks: 58/58 affected frontend tests, 17/17 real-browser controller checks, 12/12 connected journey checks, and strict/build/docs checks. The earlier full PostgreSQL checkpoint passed 307/307 across 38 files; that full count predates the final copy pass. [Copy decisions and ASTRA review](design/COPY_REFACTOR_2026_10_29.md) preserve the implementation and evidence boundaries.
+
 ## Desktop frontend integration and design — 28 October 2026
 
 The owner authorizes the full desktop frontend rollout against the existing Chapters 01–20 backend, including required confirmations, accurate API/UI state alignment, recovery and parallel agents. This supersedes the pasted brief's initial Phase-0-only execution stop. The owner explicitly retains **UI/UX Pro Max for Phase 1, Taste for Phases 2–3, Impeccable for Phase 4**, and supplies a QuoteFix logo and blue workflow illustrations. No further artwork is needed for this scope.

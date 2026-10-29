@@ -1,5 +1,15 @@
 # QuoteFix decisions and remaining questions
 
+## Guided frontend redesign — 29 October 2026
+
+The owner explicitly authorizes an ASTRA-led refactor, GPT-6.1 SOL implementation agents, upstream Impeccable installation, and direct application of Clarify/Distill. This resolves the requested review/execution method; it changes no open domain-policy decision. See [copy review](design/COPY_REFACTOR_2026_10_29.md).
+
+The owner rejected the earlier desktop visual design and requests a full frontend based on `QuoteFix-Design-System.zip`, with lower cognitive load, shorter copy, sequential setup/task subpages, accordions and dropdowns. The owner explicitly confirms **http://127.0.0.1:3000 is the live target**; this task does not require a new cloud deployment. Existing API permissions, consequential confirmations, SQL migrations and operational data remain authoritative.
+
+The ZIP at `C:/Users/jerie/Downloads/QuoteFix-Design-System.zip` has SHA-256 `ec176f66e89857c49757a96770fafa949fa8ac8670fc573586309dbbb8656fd4`. Its Manrope/JetBrains Mono, navy/blue/cool-gray tokens and role UI kits supersede the earlier achromatic visual authority. Its example records, local-only preview interactions, inert links and older product-policy reference snapshots are reference material, not current behavior or operational data. Current repository product decisions take precedence.
+
+Phase 1 uses UI/UX Pro Max for flow structure; Phases 2–3 use Taste with the supplied visual system taking precedence; Phase 4 uses Impeccable for verification. Existing G02/G04/G14/G15 and specialist/fault policy gates are unchanged. [Redesign record](design/GUIDED_FRONTEND_REDESIGN.md) tracks implementation and current verification; earlier frontend results do not certify this replacement.
+
 ## Desktop frontend scope and phase tools — 28 October 2026
 
 The owner authorizes completing the integrated desktop frontend, with parallel agents and the existing Chapter 01–20 APIs. The earlier pasted Phase-0-only stop is superseded. Phase leads remain **UI/UX Pro Max (1), Taste (2–3), Impeccable (4)**. Owner-supplied blue illustrations and QuoteFix logo are approved application artwork; they do not represent live counts, financial results or job evidence. [Handoff](design/FRONTEND_HANDOFF.md) and [verification](design/FRONTEND_VERIFICATION.md) record the desktop scope.

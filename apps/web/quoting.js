@@ -8,18 +8,18 @@
 
   const panel=node('section');panel.id='quotes-shell';panel.hidden=true;document.querySelector('main').append(panel);
 
-  const comparisonPanel=node('section');comparisonPanel.id='comparison-shell';comparisonPanel.hidden=true;comparisonPanel.append(node('h2','Quotes and contractor selection'));document.querySelector('main').append(comparisonPanel);
+  const comparisonPanel=node('section');comparisonPanel.id='comparison-shell';comparisonPanel.hidden=true;comparisonPanel.append(node('h2','Compare quotations'));document.querySelector('main').append(comparisonPanel);
 
   const message=node('p');message.setAttribute('role','status');message.setAttribute('aria-live','polite');
 
-  const quoteContent=node('div');panel.append(node('h2','Your quotes and job questions'),message,quoteContent);
+  const quoteContent=node('div');panel.append(node('h2','My quotation'),message,quoteContent);
 
   const comparisonContent=node('div');comparisonPanel.append(comparisonContent);
-  const settingsPanel=node('section'),settingsStatus=node('p'),settingsBody=node('div');settingsPanel.id='procurement-settings-shell';settingsPanel.className='panel';settingsPanel.hidden=true;settingsStatus.setAttribute('role','status');settingsStatus.setAttribute('aria-live','polite');settingsPanel.append(node('h2','Estate procurement settings'),node('p','Configure estate approval and contractor identity visibility before the first RFQ selection.'),settingsStatus,settingsBody);document.querySelector('main').append(settingsPanel);
+  const settingsPanel=node('section'),settingsStatus=node('p'),settingsBody=node('div');settingsPanel.id='procurement-settings-shell';settingsPanel.className='panel';settingsPanel.hidden=true;settingsStatus.setAttribute('role','status');settingsStatus.setAttribute('aria-live','polite');settingsPanel.append(node('h2','Procurement settings'),settingsStatus,settingsBody);document.querySelector('main').append(settingsPanel);
 
   const field=(parent,label,type='text',value='')=>{const wrapper=node('label',label),input=node(type==='textarea'?'textarea':'input');if(type!=='textarea')input.type=type;input.value=value;input.maxLength=10000;wrapper.append(input);parent.append(wrapper);return input;};
 
-  const choice=(parent,label,options,value='')=>{const wrapper=node('label',label),select=node('select');select.append(new Option('Choose explicitly',''),...options.map(([key,text])=>new Option(text,key)));select.value=value;wrapper.append(select);parent.append(wrapper);return select;};
+  const choice=(parent,label,options,value='')=>{const wrapper=node('label',label),select=node('select');select.append(new Option('Choose an option',''),...options.map(([key,text])=>new Option(text,key)));select.value=value;wrapper.append(select);parent.append(wrapper);return select;};
 
   const check=(parent,label)=>{const wrapper=node('label'),input=node('input');wrapper.className='confirmation';input.type='checkbox';wrapper.append(input,document.createTextNode(label));parent.append(wrapper);return input;};
 
@@ -27,7 +27,7 @@
 
   const label=value=>String(value).replaceAll('_',' ').replace(/([a-z])([A-Z])/g,'$1 $2').replace(/^./,s=>s.toUpperCase());
   function pretty(value) {if(value===null||value===undefined)return node('p','Not recorded');if(Array.isArray(value)){const list=node('ul');for(const entry of value){const item=node('li');item.append(typeof entry==='object'?pretty(entry):node('span',String(entry)));list.append(item);}return list;}if(typeof value==='object'){const list=node('dl');list.className='fact-list';for(const [key,item] of Object.entries(value)){const description=node('dd');description.append(item&&typeof item==='object'?pretty(item):node('span',item===true?'Yes':item===false?'No':item??'Not recorded'));list.append(node('dt',label(key)),description);}return list;}return node('p',String(value));}
-  const required=(control,name)=>{if(!control.value.trim()){control.focus();throw new Error(name+' is required.');}return control.value.trim();};
+  const required=(control,name)=>{if(!control.value.trim()){window.qfFlow?.reveal(control);control.focus();throw new Error(name+' is required.');}return control.value.trim();};
   function adviceView(result) {const box=node('div');box.className='state-note';box.append(node('p',result.preferenceFit||'No current comparison advice is available.'));if(result.status==='unavailable')box.append(node('p','Advice is unavailable. You can continue using the factual quotation comparison.'));const list=node('ul');for(const text of result.limitations??[])list.append(node('li',text));box.append(list);return box;}
   function confirmThreshold(amount,threshold) {
     return new Promise(resolve=>{
@@ -53,7 +53,7 @@
 
     const box=node('div');if(!records.length)box.append(node('p','No submitted quote yet.'));
 
-    for(const record of records)for(const v of record.versions){const item=node('article');item.append(node('h4','Quote version '+v.version+' · RFQ revision '+v.rfq_revision),termView(v.terms),node('p','Recorded '+new Date(v.recorded_at).toLocaleString('en-SG',{timeZone:'Asia/Singapore'})+' SGT'+(v.revision_reason?' · '+v.revision_reason:'')));if(v.pdf_id){const link=node('a','View your quotation PDF');link.href='/api/v1/files/'+v.pdf_id;item.append(link);}box.append(item);}return box;
+    for(const record of records)for(const v of record.versions){const item=node('article');item.append(node('h4','Quote version '+v.version+' · RFQ revision '+v.rfq_revision),termView(v.terms),node('p','Recorded '+new Date(v.recorded_at).toLocaleString('en-SG',{timeZone:'Asia/Singapore',hourCycle:'h23'})+' SGT'+(v.revision_reason?' · '+v.revision_reason:'')));if(v.pdf_id){const link=node('a','View your quotation PDF');link.href='/api/v1/files/'+v.pdf_id;item.append(link);}box.append(item);}return box;
 
   }
 
@@ -61,7 +61,7 @@
 
     const box=node('div');if(!records.length)box.append(node('p','No recorded selection yet.'));
 
-    for(const record of records){const item=node('article');item.append(node('h4',record.name+' · selected quote version '+record.quoteVersion+' · '+money(record.amountCents)),node('p','Threshold at selection: '+money(record.thresholdCents)+' · '+record.comparison.count+' received offers in the frozen comparison.'),node('p',record.rationale),termView(record.terms,record.narrativeWithheld));for(const d of record.decisions)item.append(node('p',d.outcome.replaceAll('_',' ')+' · '+d.reason+' · '+new Date(d.recorded_at).toLocaleString('en-SG',{timeZone:'Asia/Singapore'})+' SGT'));const frozen=node('details');frozen.append(node('summary','Frozen comparison offers'));for(const q of record.frozenQuotes)frozen.append(node('h4',q.name+' · quote version '+q.quoteVersion+' · '+money(q.amountCents)),termView(q.terms,q.narrativeWithheld));item.append(frozen);if(record.reputation){const reputation=node('details');reputation.append(node('summary','Reputation and advice saved at selection'),pretty(record.reputation));item.append(reputation);}box.append(item);}return box;
+    for(const record of records){const item=node('article');item.append(node('h4',record.name+' · selected quote version '+record.quoteVersion+' · '+money(record.amountCents)),node('p','Threshold at selection: '+money(record.thresholdCents)+' · '+record.comparison.count+' received offers in the frozen comparison.'),node('p',record.rationale),termView(record.terms,record.narrativeWithheld));for(const d of record.decisions)item.append(node('p',d.outcome.replaceAll('_',' ')+' · '+d.reason+' · '+new Date(d.recorded_at).toLocaleString('en-SG',{timeZone:'Asia/Singapore',hourCycle:'h23'})+' SGT'));const frozen=node('details');frozen.append(node('summary','Frozen comparison offers'));for(const q of record.frozenQuotes)frozen.append(node('h4',q.name+' · quote version '+q.quoteVersion+' · '+money(q.amountCents)),termView(q.terms,q.narrativeWithheld));item.append(frozen);if(record.reputation){const reputation=node('details');reputation.append(node('summary','Reputation and advice saved at selection'),pretty(record.reputation));item.append(reputation);}box.append(item);}return box;
 
   }
 
@@ -88,8 +88,13 @@
       if(!visibility.value)throw new Error('Choose whether CM can see contractor identities.');if((visibility.value==='yes')!==data.identitiesVisible)body.identitiesVisible=visibility.value==='yes';
       if(Object.keys(body).length===1)throw new Error('Change at least one procurement setting before saving.');
       await qf.submit('estates/'+id+'/procurement-settings',body,data.version);if(generation!==epoch)return;window.qfUI?.clearDirty?.(parent);await loadProcurementEditor(parent,id);settingsStatus.textContent='Procurement settings saved. Earlier decisions and work authority retain their recorded terms. Review any current comparison again before a new selection.';await qf.refreshLists();
-    });save.disabled=true;ack.addEventListener('change',()=>{save.disabled=!ack.checked;});
+    });save.classList.add('primary');save.disabled=true;ack.addEventListener('change',()=>{save.disabled=!ack.checked;});
     for(const control of [threshold,address,visibility,reason].filter(Boolean))control.addEventListener('input',()=>{ack.checked=false;save.disabled=true;});
+    reason.required=true;visibility.required=true;
+    window.qfFlow?.wizard(parent,{id:'procurement-'+id,title:'Estate setup',steps:[
+      {title:'Configure',fields:[threshold?.parentElement,address?.parentElement,visibility.parentElement].filter(Boolean)},
+      {title:'Review & save',fields:[reason.parentElement,ack.parentElement,save]}
+    ]});
     button(parent,'Refresh estate procurement settings',()=>loadProcurementEditor(parent,id));
     if(unsent.length){window.qfUI?.restoreInputs?.(parent,unsent);settingsStatus.textContent='Current saved values refreshed above. Your unsent changes remain in the fields. Review them and acknowledge the changes again before saving.';}
   }
@@ -107,7 +112,7 @@
 
     const generation=epoch,jobs=await qf.api('contractor/jobs');if(generation!==epoch)return;
 
-    let list=document.getElementById('own-quote-jobs');if(!list){list=node('div');list.id='own-quote-jobs';document.getElementById('opportunities-shell').append(list);}list.replaceChildren(node('h3','Your submitted jobs'));
+    let list=document.getElementById('own-quote-jobs');if(!list){list=node('div');list.id='own-quote-jobs';document.getElementById('opportunities-shell').append(list);}list.replaceChildren(node('h3','Your submitted quotations'));
 
     if(!jobs.length)list.append(node('p','Your submitted quotations will appear here, including held terms and authorised jobs.'));
     for(const job of jobs)button(list,job.rfq.publicDescription+' · '+(job.workCancelled?'Works cancelled':label(job.selection?.status??job.roundStatus)),()=>openOpportunity({jobId:job.jobId,revision:job.rfqRevision,roundId:job.roundId,description:job.rfq.publicDescription,accessEquipmentRequired:job.rfq.accessEquipmentRequired??false},job));
@@ -137,11 +142,11 @@
 
     else quoteContent.append(node('p','This job currently accepts no quote changes. Your submitted records remain available below.'));
 
-    const history=node('details');history.append(node('summary','Your immutable quote versions'),ownHistory(own.quotes));quoteContent.append(history);
+    const history=node('details');history.append(node('summary','Your submitted quote versions'),ownHistory(own.quotes));quoteContent.append(history);
 
     renderConversation(quoteContent,r,conversation,true,open,own.quotes.some(record=>record.quote.round_id===r.roundId),own.quotes.length>0);
 
-    message.textContent='Only your company’s quotations are shown here. Submission requires a connection and a fresh review.';
+    message.textContent='Quotes are sealed. Only your company’s quotes appear here.';
     if(unsent.length){window.qfUI?.restoreInputs?.(quoteContent,unsent);for(const select of quoteContent.querySelectorAll('select'))select.dispatchEvent(new Event('change'));message.textContent+=' Your unsent text is preserved. Review current scope and confirm the expiry and commitment again.';}
 
   }
@@ -151,6 +156,7 @@
     const editor=node('div');editor.className='panel quote-editor';quoteContent.append(editor);let saved=null;try{saved=JSON.parse(localStorage.getItem(draftKey(r.jobId)));}catch{}
 
     const old=saved?.terms??current?.terms??{},controls={};
+    const stepFields={};let stepStart=editor.children.length;
 
     if(saved)editor.append(node('p','Restored your device draft. Confirm current scope and expiry again before submitting.'));
 
@@ -171,6 +177,7 @@
     const warranty=node('div');editor.append(warranty);controls.warrantyDuration=choice(warranty,'Warranty duration',options.warranty,old.warrantyDuration??'');controls.warrantyOther=field(warranty,'Other warranty duration','text',old.warrantyOther??'');
 
     const syncWarranty=()=>{warranty.hidden=controls.warranty.value!=='yes';controls.warrantyOther.parentElement.hidden=controls.warrantyDuration.value!=='other';};controls.warranty.onchange=syncWarranty;controls.warrantyDuration.onchange=syncWarranty;syncWarranty();
+    stepFields.price=Array.from(editor.children).slice(stepStart);stepStart=editor.children.length;
 
     editor.append(node('p','Earliest availability starts after work authorisation AND available site access.'));
 
@@ -180,11 +187,13 @@
 
     const sync=()=>{controls.availabilityOther.parentElement.hidden=controls.availability.value!=='other';controls.durationReason.parentElement.hidden=!['other','unknown'].includes(controls.duration.value);};controls.availability.onchange=sync;controls.duration.onchange=sync;sync();
 
-    const inherited=node('p');editor.append(inherited);const showExcluded=()=>{const excluded=Object.entries(explanations).filter(([key])=>!['gstCharged','warranty'].includes(key)&&controls[key]?.value==='no').map(([,v])=>v[0].replace(' included',''));inherited.textContent=(controls.warranty.value==='no'?'No warranty is offered. ':'')+(excluded.length?'Carried-forward service exclusions: '+excluded.join(', ')+'. Excluded third-party service costs are unknown.':'No service exclusions declared above. Answer additional exclusions separately.');};for(const key of ['wasteDisposal','warranty','makingGood','accessEquipment'])controls[key]?.addEventListener('change',showExcluded);showExcluded();
+    const inherited=node('p');editor.append(inherited);const showExcluded=()=>{const excluded=Object.entries(explanations).filter(([key])=>!['gstCharged','warranty'].includes(key)&&controls[key]?.value==='no').map(([,v])=>v[0].replace(' included',''));inherited.textContent=(controls.warranty.value==='no'?'No warranty is offered. ':'')+(excluded.length?'Excluded services: '+excluded.join(', ')+'. Excluded third-party service costs are unknown.':'No service exclusions declared above. Answer additional exclusions separately.');};for(const key of ['wasteDisposal','warranty','makingGood','accessEquipment'])controls[key]?.addEventListener('change',showExcluded);showExcluded();
 
     controls.exclusions=choice(editor,'Additional exclusions',[['none','No additional exclusions'],['other','Other — specify']],old.exclusions?.[0]??'');controls.exclusionsOther=field(editor,'Other exclusions','textarea',old.exclusionsOther??'');const syncExclusions=()=>controls.exclusionsOther.parentElement.hidden=controls.exclusions.value!=='other';controls.exclusions.onchange=syncExclusions;syncExclusions();
+    stepFields.schedule=Array.from(editor.children).slice(stepStart);stepStart=editor.children.length;
 
-    controls.narrative=field(editor,'Additional narrative — optional','textarea',old.narrative??'');controls.expiry=field(editor,'Expiry — YYYY-MM-DD or date/time with timezone; date-only valid through that Singapore date','text',old.expiry??own.suggestedExpiry);
+    controls.narrative=field(editor,'Additional details — optional','textarea',old.narrative??'');controls.expiry=field(editor,'Quote expiry','text',old.expiry??own.suggestedExpiry);
+    const expiryHelp=node('p','Use YYYY-MM-DD or a date/time with timezone. A date alone remains valid through that date in Singapore.');expiryHelp.id='quote-expiry-help-'+r.jobId;expiryHelp.className='field-hint';controls.expiry.setAttribute('aria-describedby',expiryHelp.id);controls.expiry.parentElement.append(expiryHelp);
 
     const expiryConfirmed=check(editor,'I confirm this expiry date or date/time.'),commitment=check(editor,own.commitmentCopy),scopeConfirmed=check(editor,'I reviewed RFQ revision '+r.revision+' and the current scope.');
     controls.expiry.addEventListener('input',()=>{expiryConfirmed.checked=false;});
@@ -245,9 +254,9 @@
 
     }
 
-    button(editor,'Save device draft',()=>{localStorage.setItem(draftKey(r.jobId),JSON.stringify({terms:collect(false),rfqRevision:r.revision}));message.textContent='Saved on this device. No quote was submitted.';});
+    const saveDraft=button(editor,'Save device draft',()=>{localStorage.setItem(draftKey(r.jobId),JSON.stringify({terms:collect(false),rfqRevision:r.revision}));message.textContent='Saved on this device. No quote was submitted.';});
 
-    button(editor,current?'Submit revised quote':'Submit initial quote',async()=>{
+    const submitQuote=button(editor,current?'Submit revised quote':'Submit initial quote',async()=>{
 
       if(!scopeConfirmed.checked)throw new Error('Review and confirm the current RFQ scope.');if(file.files.length&&!uploadedId)throw new Error('Wait for the quotation PDF to become ready.');
       const terms=collect(true);
@@ -261,13 +270,28 @@
 
     });
 
+    submitQuote.classList.add('primary');
+    stepFields.confirm=[controls.expiry.parentElement,expiryConfirmed.parentElement,scopeConfirmed.parentElement,commitment.parentElement,submitQuote];
+    stepFields.files=Array.from(editor.children).slice(stepStart).filter(element=>!stepFields.confirm.includes(element)&&element!==saveDraft);
+    for(const key of ['amountSgd','availability','duration','exclusions','expiry',...Object.keys(explanations)])if(controls[key])controls[key].required=true;
+    controls.amountSgd.pattern='(?=.*[1-9])(?:0|[1-9][0-9]*)(?:\\.[0-9]{1,2})?';
+    for(const key of ['warrantyDuration','warrantyOther','availabilityOther','durationReason','exclusionsOther'])controls[key].required=true;
+    if(current&&afterVisit)controls.revisionReason.required=true;
+    window.qfFlow?.wizard(editor,{id:'quote-'+r.jobId,title:current?'Revise quotation':'Prepare quotation',steps:[
+      {title:'Price & inclusions',fields:stepFields.price},
+      {title:'Timing & exclusions',fields:stepFields.schedule},
+      {title:'Supporting details',fields:stepFields.files},
+      {title:'Review & submit',fields:stepFields.confirm}
+    ]});
+
     if(current?.status==='active') {
 
-      const reconfirm=check(editor,'Reconfirm my existing exact terms against this RFQ revision; expiry remains unchanged.');
+      const changes=node('details');changes.append(node('summary','Existing quote actions'));editor.append(changes);
+      const reconfirm=check(changes,'Reconfirm my existing exact terms against this RFQ revision; expiry remains unchanged.');
 
-      button(editor,'Reconfirm existing quote',async()=>{if(!reconfirm.checked)throw new Error('Confirm the existing exact terms against this RFQ revision.');await qf.submit('quotes/'+current.id+'/reconfirm',{rfqRevision:r.revision,confirmed:reconfirm.checked},current.version);await openOpportunity(r);await qf.refreshLists();});
+      button(changes,'Reconfirm existing quote',async()=>{if(!reconfirm.checked)throw new Error('Confirm the existing exact terms against this RFQ revision.');await qf.submit('quotes/'+current.id+'/reconfirm',{rfqRevision:r.revision,confirmed:reconfirm.checked},current.version);await openOpportunity(r);await qf.refreshLists();});
 
-      const reason=field(editor,'Withdrawal reason','text'),withdraw=check(editor,'I confirm withdrawal of this current offer.');button(editor,'Withdraw my current offer',async()=>{required(reason,'Withdrawal reason');if(!withdraw.checked)throw new Error('Confirm withdrawal of your current offer.');await qf.submit('quotes/'+current.id+'/withdraw',{reason:reason.value},current.version);await openOpportunity(r);await refreshJobs();await qf.refreshLists();});
+      const reason=field(changes,'Withdrawal reason','text'),withdraw=check(changes,'I confirm withdrawal of this current offer.');button(changes,'Withdraw my current offer',async()=>{required(reason,'Withdrawal reason');if(!withdraw.checked)throw new Error('Confirm withdrawal of your current offer.');await qf.submit('quotes/'+current.id+'/withdraw',{reason:reason.value},current.version);await openOpportunity(r);await refreshJobs();await qf.refreshLists();});
 
     }
 
@@ -308,9 +332,9 @@
 
     const frozenComparison=c.history.find(h=>h.selectionId===c.selection?.selection_id)?.comparison;
     const displayedComparison=open?c.comparison:(frozenComparison??c.comparison);
-    comparisonContent.append(node('p',(open?displayedComparison.count+' current selectable offers.':'Quoting '+c.roundStatus+'. '+displayedComparison.count+' offers captured at selection.')+' Current approval threshold: '+(c.thresholdCents===null?'Admin configuration required':money(c.thresholdCents))+'.'));
+    comparisonContent.append(node('p',(open?displayedComparison.count+(displayedComparison.count===1?' current selectable offer.':' current selectable offers.'):'Quoting '+c.roundStatus+'. '+displayedComparison.count+(displayedComparison.count===1?' offer captured at selection.':' offers captured at selection.'))+' Current approval threshold: '+(c.thresholdCents===null?'Admin configuration required':money(c.thresholdCents))+'.'));
     if(displayedComparison.average)comparisonContent.append(node('p','Highest received quote: '+money(displayedComparison.highestCents)+' | Average received quote: '+money(displayedComparison.average.numeratorCents,displayedComparison.average.denominator)+' (rounded for display).'));
-    if(c.clock)comparisonContent.append(node('p','Selection follow-up: '+c.clock.status+(c.clock.scheduled_review_at?' · Scheduled review '+new Date(c.clock.scheduled_review_at).toLocaleString('en-SG',{timeZone:'Asia/Singapore'})+' SGT':'')));
+    if(c.clock)comparisonContent.append(node('p','Selection follow-up: '+c.clock.status+(c.clock.scheduled_review_at?' · Scheduled review '+new Date(c.clock.scheduled_review_at).toLocaleString('en-SG',{timeZone:'Asia/Singapore',hourCycle:'h23'})+' SGT':'')));
     if(!c.quotes.length){const empty=node('p','No quotations received yet. Eligible contractors can submit offers. Admin sourcing follows the published RFQ checkpoint.');empty.className='empty-state';comparisonContent.append(empty);}
     if(open&&c.thresholdCents===null)comparisonContent.append(node('p','Selection needs an explicitly configured estate approval threshold. Ask Admin to configure it before reviewing a final selection.'));
     if(open){const advice=node('details');advice.append(node('summary','Evidence-based comparison advice'));comparisonContent.append(advice);
@@ -321,9 +345,9 @@
 
     for(const quote of c.quotes) {
 
-      const item=node('article');item.className='panel quote-card';item.append(node('h3',quote.name+' · '+money(quote.amountCents)),node('p',quote.selectable?'Selectable':quote.held?(c.selection?.status==='authorised'?'Authorised quote terms':'Held selected terms'):quote.expired?'Expired':quote.status==='withdrawn'?'Withdrawn':quote.requiresReconfirmation?'Scope reconfirmation required':'Currently unselectable'),termView(quote.terms,quote.narrativeWithheld));comparisonContent.append(item);
+      const item=node('article');item.className='panel quote-card';item.append(node('h3',quote.name+' · '+money(quote.amountCents)),node('p',quote.selectable?'Selectable':quote.held?(c.selection?.status==='authorised'?'Authorised quote terms':'Held selected terms'):quote.expired?'Expired':quote.status==='withdrawn'?'Withdrawn':quote.requiresReconfirmation?'Scope reconfirmation required':'Currently unselectable'));const terms=node('details');terms.append(node('summary','Quote terms · v'+quote.quoteVersion),termView(quote.terms,quote.narrativeWithheld));item.append(terms);comparisonContent.append(item);
       const reputation=quote.reputation;item.append(node('p','Pure reputation score: '+(reputation.pure===null?'Not enough approved evidence':reputation.pure.toFixed(1))+' · Reputation score with CM priorities: '+(reputation.adjusted===null?'Not enough approved evidence':reputation.adjusted.toFixed(1))+' · '+reputation.quoteFixCount+' QuoteFix jobs / '+reputation.externalCount+' external references.'));
-      const passport=node('details'),passportContent=node('div');passport.append(node('summary','Expanded contractor passport'),passportContent);item.append(passport);
+      const passport=node('details'),passportContent=node('div');passport.append(node('summary','Contractor passport'),passportContent);item.append(passport);
       button(passport,'Load current passport',()=>{if(!window.qfReputation?.passport)throw new Error('Passport is unavailable. Refresh the page and try again.');return window.qfReputation.passport(id,quote.quoteId,passportContent);});
 
       if(quote.pdfId){const a=node('a','View quotation PDF');a.href='/api/v1/files/'+quote.pdfId;item.append(a);}if(quote.pdfWithheld)item.append(node('p','Quotation PDF withheld while contractor identities are concealed. MCST can review it.'));
@@ -335,6 +359,8 @@
       if(!quote.selectable)continue;
       if(c.thresholdCents===null)continue;
 
+      const selection=node('details');selection.append(node('summary','Review selection'));item.append(selection);
+      const selectionStart=Array.from(item.children);
       const warning=c.integrityPreviews?.[quote.quoteId],flagged=warning?.triggers.some(t=>!t.previouslyCleared),above=c.thresholdCents!==null&&quote.amountCents>c.thresholdCents,thresholdAck=above&&role!=='cm';
       let clearWarning,warningExplanation;
       if(warning?.triggers.length){item.append(node('p','Procurement warnings: review the exact amounts, terms and configured thresholds.'),pretty(warning.triggers));
@@ -346,8 +372,9 @@
 
       if(above&&role==='cm')item.append(node('p','This nomination will require MCST approval. Work remains unauthorised until approved.'));
 
-      button(item,role==='cm'?'Select this exact quote':'Select and approve this exact quote',async()=>{required(rationale,'Written selection rationale');if(!confirmed.checked||acks.some(a=>!a.input.checked))throw new Error('Confirm the exact selection and acknowledge every caution.');if(clearWarning){required(warningExplanation,'Warning clearance explanation');if(!clearWarning.checked)throw new Error('Explicitly clear the recorded warnings before authorising this work.');}const confirmationEpoch=epoch,thresholdAcknowledged=thresholdAck?await confirmThreshold(quote.amountCents,c.thresholdCents):false;if(confirmationEpoch!==epoch)throw new Error('Account or access changed. Review the current selection again.');if(thresholdAck&&!thresholdAcknowledged)return;await qf.submit('workspaces/'+id+'/select',{quoteId:quote.quoteId,quoteVersion:quote.quoteVersion,settingsVersion:c.settingsVersion,rfqRevision:c.rfqRevision,rationale:rationale.value,confirmed:confirmed.checked,reputationFingerprint:c.reputationFingerprint,acknowledgedCautions:acks.filter(a=>a.input.checked).map(a=>a.code),thresholdAcknowledged,...(clearWarning?{clearWarning:clearWarning.checked,warningExplanation:warningExplanation.value}:{})},c.version);await qf.loadJob(id,false);await qf.refreshLists();});
+      button(item,role==='cm'?'Select this exact quote':'Select and approve this exact quote',async()=>{required(rationale,'Written selection rationale');if(!confirmed.checked||acks.some(a=>!a.input.checked))throw new Error('Confirm the exact selection and acknowledge every caution.');if(clearWarning){required(warningExplanation,'Warning clearance explanation');if(!clearWarning.checked)throw new Error('Explicitly clear the recorded warnings before authorising this work.');}const confirmationEpoch=epoch,thresholdAcknowledged=thresholdAck?await confirmThreshold(quote.amountCents,c.thresholdCents):false;if(confirmationEpoch!==epoch)throw new Error('Account or access changed. Review the current selection again.');if(thresholdAck&&!thresholdAcknowledged)return;await qf.submit('workspaces/'+id+'/select',{quoteId:quote.quoteId,quoteVersion:quote.quoteVersion,settingsVersion:c.settingsVersion,rfqRevision:c.rfqRevision,rationale:rationale.value,confirmed:confirmed.checked,reputationFingerprint:c.reputationFingerprint,acknowledgedCautions:acks.filter(a=>a.input.checked).map(a=>a.code),thresholdAcknowledged,...(clearWarning?{clearWarning:clearWarning.checked,warningExplanation:warningExplanation.value}:{})},c.version);await qf.loadJob(id,false);await qf.refreshLists();}).classList.add('primary');
 
+      for(const child of Array.from(item.children))if(!selectionStart.includes(child))selection.append(child);
     }
 
     if(c.selection?.status==='pending') {
@@ -366,7 +393,7 @@
       }
     }
 
-    if(c.selection?.status==='rejected'){const reason=field(comparisonContent,'Reason to open a new quotation round','text');button(comparisonContent,'Explicitly reopen quotations',async()=>{required(reason,'Reason to reopen quotations');await qf.submit('workspaces/'+id+'/selection/reopen',{reason:reason.value},c.version);await qf.loadJob(id,false);await qf.refreshLists();});}
+    if(c.selection?.status==='rejected'){const reason=field(comparisonContent,'Reason to open a new quotation round','text');button(comparisonContent,'Reopen quotations',async()=>{required(reason,'Reason to reopen quotations');await qf.submit('workspaces/'+id+'/selection/reopen',{reason:reason.value},c.version);await qf.loadJob(id,false);await qf.refreshLists();});}
 
     if(open&&c.clock&&c.clock.status!=='stopped'){const at=field(comparisonContent,'Schedule the next selection review — Singapore local time','datetime-local');button(comparisonContent,'Save scheduled review',async()=>{if(!at.value)throw new Error('Choose a future review time.');await qf.submit('workspaces/'+id+'/selection/schedule',{at:new Date(at.value+':00+08:00').toISOString()},c.version);await qf.loadJob(id,false);});}
 
@@ -377,11 +404,11 @@
     const history=node('details');history.append(node('summary','Recorded selections and frozen comparisons'),selectionHistory(c.history));comparisonContent.append(history);
 
     if(['admin','mcst'].includes(role)){const settings=node('details');settings.append(node('summary','Estate procurement settings'),node('p','Configure approval thresholds and CM identity visibility in the estate settings screen. Recorded selections retain their saved thresholds.'));comparisonContent.append(settings);button(settings,'Open estate procurement settings',async()=>{const estateId=qf.job.estate_id;document.dispatchEvent(new CustomEvent('qf:navigate',{detail:{screen:'procurement-settings'}}));await loadProcurementSettings(estateId);});}
-    if(unsent.length){window.qfUI?.restoreInputs?.(comparisonContent,unsent);status.textContent='Current quotations refreshed. Your unsent text is preserved. Review the exact quote versions and acknowledge the current cautions again.';}
+    if(unsent.length){window.qfUI?.restoreInputs?.(comparisonContent,unsent);status.textContent='Quotations refreshed; unsent text kept. Review current versions and confirm the cautions again.';}
 
   }
 
-  document.addEventListener('qf:opportunities',e=>{for(const r of e.detail){const article=document.querySelector('[data-opportunity="'+r.jobId+'"]');if(article)button(article,'Open my quote / questions',()=>openOpportunity(r));}refreshJobs().catch(e=>message.textContent=e.message);});
+  document.addEventListener('qf:opportunities',e=>{for(const r of e.detail){const article=document.querySelector('[data-opportunity="'+r.jobId+'"]');if(article)button(article,'Open quote and questions',()=>openOpportunity(r));}refreshJobs().catch(e=>message.textContent=e.message);});
 
   document.addEventListener('qf:job',e=>{comparisonPanel.hidden=true;if(e.detail.job.stage!=='Report an issue'&&e.detail.job.stage!=='AI is refining your draft'&&e.detail.job.stage!=='Approving AI input'){comparisonPanel.hidden=false;loadComparison(e.detail.job.id).catch(error=>comparisonContent.append(node('p',error.message)));}else{comparisonContent.replaceChildren();comparisonJobId=null;}});
 

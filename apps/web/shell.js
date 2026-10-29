@@ -19,7 +19,9 @@
     account:{title:'Account and access',description:'Named memberships, invitations, and authorised estate access.',ids:['account']},
     guide:{title:'Evidence guide',description:'Useful photographs show the location, the fault, and the result.',ids:['evidence-guide']}
   };
-  let context=null,active='dashboard',scope='',selectedJob=null;
+  let context=null,active='dashboard',scope='',selectedJob=null,jobState=null;
+  const currentRoute=()=>location.hash.slice(1).split('?')[0];
+  const navLabels={dashboard:'Home',workspace:'Repairs',quotes:'Quotations',work:'Work & payments',support:'Admin Support',feedback:'Feedback',exports:'Records & exports',notifications:'Notifications',verification:'Verification',integrity:'Safeguards',attention:'Attention',billing:'Platform fees','procurement-settings':'Procurement',operations:'Processing health',guide:'Evidence guide',account:'Account & access'};
   const illustrations={workspace:'report-issue',quotes:'compare-quotations',work:'schedule-work',support:'admin-support',billing:'platform-fees',feedback:'aftercare-feedback',verification:'contractor-verification',integrity:'council-oversight',exports:'decision-pack-export',notifications:'audit-record',attention:'admin-support',operations:'shield','procurement-settings':'council-oversight',account:'building'};
   const headingArt=window.qfUI.illustration('audit-record');headingArt.classList.add('heading-illustration');$('page-heading').prepend(headingArt);
   for(const brand of document.querySelectorAll('.brand')){const logo=window.qfUI.node('img');logo.src='/assets/quotefix-logo.png';logo.alt='QuoteFix';logo.width=180;logo.height=60;logo.className='brand-logo';brand.replaceChildren(logo);}
@@ -39,6 +41,7 @@
     if(previous!==active&&/^(Submitted\. Current access|Access checked\.)/.test($('status').textContent))$('status').textContent='';
     if(history&&context&&location.hash!=='#'+active)location.hash=active;
     sync();$('navigation').classList.remove('is-open');$('menu-toggle').setAttribute('aria-expanded','false');main.inert=false;
+    for(const group of $('primary-nav').querySelectorAll('details.nav-group'))if(group.querySelector('[aria-current="page"]'))group.open=true;
     if(focus&&context){$('view-title').focus({preventScroll:true});window.scrollTo({top:0,behavior:'instant'});}
   }
   function sync(){
@@ -47,37 +50,40 @@
     if(signed&&$('page-heading').parentElement!==main)main.insertBefore($('page-heading'),$('status'));
     if(!signed&&$('page-heading').parentElement!==$('guest'))$('guest').prepend($('page-heading'));
     $('page-heading').querySelector('.heading-actions').hidden=!signed;$('connection-state').hidden=!signed;
-    headingArt.hidden=!signed||!illustrations[active];if(illustrations[active])headingArt.src='/assets/'+illustrations[active]+'.png';
+    headingArt.hidden=true;
     $('evidence-guide').hidden=!signed;
-    $('view-title').textContent=signed?config.title:'Sign in to QuoteFix';$('view-description').textContent=signed?config.description:'Use your named account to open your authorised workspace.';
+    $('view-title').textContent=signed?navLabels[active]:'Sign in';$('view-description').textContent=signed?'':'Use your QuoteFix account.';
     $('scope-name').textContent=context?.context?.role==='admin'?'Platform workspace':context?.context?.role==='contractor'?'Contractor workspace':context?.context?.estate_id?'Estate workspace':'Access pending';
     $('new-repair').hidden=!context?.capabilities?.['rfq.manage'];
-    $('connection-state').textContent=navigator.onLine?'Connected · Singapore time':'Offline · submissions unavailable';
+    $('connection-state').textContent=navigator.onLine?'Singapore · SGT':'Offline · submissions unavailable';
     for(const [name,screen] of Object.entries(screens))for(const id of screen.ids){const root=$(id);if(root){root.dataset.screen=name;root.classList.toggle('view-inactive',!signed||name!==active);if(!watched.has(root)){watched.add(root);visibility.observe(root,{attributes:true,attributeFilter:['hidden'],attributeOldValue:true});}}}
+    if(signed&&active==='quotes'&&context.context?.role==='contractor'&&!$('quotes-shell').hidden)$('opportunities-shell').classList.add('view-inactive');
     for(const link of $('primary-nav').querySelectorAll('a')){link.hidden=!permitted(link.dataset.view);if(link.dataset.view===active)link.setAttribute('aria-current','page');else link.removeAttribute('aria-current');}
     for(const link of $('utility-nav').querySelectorAll('a')){link.hidden=!permitted(link.dataset.view);if(link.dataset.view===active)link.setAttribute('aria-current','page');else link.removeAttribute('aria-current');}
     const roots=config.ids.map($).filter(Boolean);$('view-empty').hidden=!signed||roots.some(n=>!n.hidden);
-    if(!$('view-empty').hidden){$('view-empty-message').textContent=['quotes','work','exports','feedback','support','integrity'].includes(active)?'Choose a repair from your work queue to open its '+config.title.toLowerCase()+'.':'This view has no available actions in your current account context.';}
+    if(!$('view-empty').hidden){$('view-empty-message').textContent=['quotes','work','exports','feedback','support','integrity'].includes(active)?'Choose a repair from your work queue to open its '+config.title.toLowerCase()+'.':'No actions are available for your current account and role.';}
     for(const group of $('primary-nav').querySelectorAll('.nav-group'))group.hidden=!Array.from(group.querySelectorAll('a')).some(link=>!link.hidden);
     $('ticket-context').hidden=!signed||!selectedJob||!['workspace','quotes','work','support','feedback','exports','integrity'].includes(active);
+    for(const button of $('ticket-actions').children){button.setAttribute('aria-current',button.dataset.view===active?'page':'false');button.hidden=!permitted(button.dataset.view);}
+    if(jobState){const pending=jobState.waitingOn;$('ticket-pending').textContent=pending?(pending.role==='none'?pending.action:'Pending: '+pending.role.toUpperCase()+' '+pending.action):'';$('ticket-context').dataset.turn=String(!!pending&&pending.role===context?.context?.role);}
   }
   for(const id of ['identity','context-summary','context-label','logout'])$('account-profile').append($(id));
   $('account').prepend(window.qfUI.node('h2','Account and access'));
   const watched=new WeakSet(),visibility=new MutationObserver(changes=>{if(changes.some(change=>change.oldValue!==change.target.getAttribute('hidden')))sync();});
-  for(const [label,names] of [['Repair workflow',['dashboard','workspace','quotes','work','support']],['Records',['feedback','exports','notifications']],['Oversight',['verification','integrity','attention']],['Account and setup',['billing','procurement-settings','operations']]]){
-    const group=window.qfUI.node('div'),heading=window.qfUI.node('p',label);group.className='nav-group';heading.className='nav-group-label';group.append(heading);
-    for(const name of names){const link=document.createElement('a');link.href='#'+name;link.dataset.view=name;link.textContent=screens[name].title;group.append(link);}$('primary-nav').append(group);
+  for(const [label,names,fold] of [['Workspace',['dashboard','workspace','quotes','work','support'],false],['Records',['feedback','exports','notifications'],false],['Oversight & setup',['verification','integrity','attention','billing','procurement-settings','operations'],true]]){
+    const group=window.qfUI.node(fold?'details':'div'),heading=window.qfUI.node(fold?'summary':'p',label);group.className='nav-group';heading.className='nav-group-label';group.append(heading);
+    for(const name of names){const link=document.createElement('a');link.href='#'+name;link.dataset.view=name;link.textContent=navLabels[name];group.append(link);}$('primary-nav').append(group);
   }
   for(const name of ['guide','account']){const link=document.createElement('a');link.href='#'+name;link.dataset.view=name;link.textContent=screens[name].title;$('utility-nav').append(link);}
   document.addEventListener('qf:context',event=>{
     const next=event.detail,key=next?[next.user.id,next.context?.id,next.accessVersion].join(':'):'';
-    if(key!==scope){selectedJob=null;$('ticket-title').textContent='';scope=key;}
+    if(key!==scope){selectedJob=null;jobState=null;$('ticket-title').textContent='';scope=key;}
     context=next;
-    const requested=location.hash.slice(1);setScreen(requested in screens?requested:'dashboard',{history:false,focus:false});
+    const requested=currentRoute();setScreen(requested in screens?requested:'dashboard',{history:false,focus:false});
   });
   document.addEventListener('qf:navigate',event=>setScreen(event.detail?.screen));
-  document.addEventListener('qf:job',event=>{selectedJob=event.detail.job.id;$('ticket-title').textContent=event.detail.job.title;$('ticket-stage').textContent=window.qfUI.label(event.detail.job.stage);sync();});
-  window.addEventListener('hashchange',()=>{if(context)setScreen(location.hash.slice(1),{history:false});});
+  document.addEventListener('qf:job',event=>{jobState=event.detail;selectedJob=event.detail.job.id;$('ticket-title').textContent=event.detail.job.title;$('ticket-stage').textContent=window.qfUI.label(event.detail.job.stage);sync();});
+  window.addEventListener('hashchange',()=>{if(context)setScreen(currentRoute(),{history:false});});
   $('new-repair').onclick=()=>{selectedJob=null;setScreen('workspace');$('workspace-compose').open=true;$('workspace-new').click();$('draft-title').focus();};
   $('queue-return').onclick=()=>setScreen('dashboard');
   $('retry-view').onclick=()=>document.dispatchEvent(new Event('qf:refresh'));
@@ -88,7 +94,22 @@
   $('workspace-new').addEventListener('click',()=>{selectedJob=null;sync();});
   window.addEventListener('online',sync);window.addEventListener('offline',sync);
   new MutationObserver(sync).observe(main,{childList:true});
-  for(const name of ['workspace','quotes','work','support','feedback','exports']){const button=window.qfUI.node('button',screens[name].title);button.type='button';button.onclick=()=>setScreen(name);$('ticket-actions').append(button);}
+  const pendingLine=window.qfUI.node('p');pendingLine.id='ticket-pending';$('ticket-actions').before(pendingLine);
+  const opportunityBack=window.qfUI.node('button','Back to quotations');opportunityBack.type='button';opportunityBack.className='text-action';opportunityBack.onclick=()=>{$('quotes-shell').hidden=true;sync();};$('quotes-shell').prepend(opportunityBack);
+  const companyBack=window.qfUI.node('button','All companies');companyBack.type='button';companyBack.className='text-action';companyBack.onclick=()=>{$('verification-detail').hidden=true;};$('verification-detail').prepend(companyBack);
+  document.addEventListener('qf:context',()=>{companyBack.hidden=context?.context?.role!=='admin';});
+  for(const name of ['workspace','quotes','work','support','feedback','exports']){const button=window.qfUI.node('button',navLabels[name]);button.dataset.view=name;button.type='button';button.onclick=()=>setScreen(name);$('ticket-actions').append(button);}
   for(const form of document.querySelectorAll('form')){const feedback=window.qfUI.node('p');feedback.dataset.formStatus='';feedback.className='form-feedback';feedback.setAttribute('role','status');form.append(feedback);}
+  const application=document.querySelector('form[data-route="contractor/applications"]');
+  if(application){const fields=Array.from(application.querySelectorAll(':scope > label')),send=application.querySelector('button');window.qfFlow.wizard(application,{id:'contractor-application',title:'Contractor setup',steps:[{title:'Company',fields:fields.slice(0,2)},{title:'Trades & submit',fields:[...fields.slice(2),send]}]});}
+  const pendingAccess=$('pending'),invitation=window.qfUI.node('section'),applicationPage=window.qfUI.node('section');
+  invitation.append(document.querySelector('form[data-route="invitations/preview"]'),$('invitation-summary'),$('accept-invite'));applicationPage.append(application);pendingAccess.append(invitation,applicationPage);
+  window.qfFlow.tabs(pendingAccess,{id:'join-workspace',items:[{title:'Accept invitation',element:invitation},{title:'Contractor application',element:applicationPage}]});
+  const admin=$('admin'),invitePage=window.qfUI.node('section'),accessPage=window.qfUI.node('section');
+  invitePage.append(document.querySelector('form[data-route="admin/invitations"]'));accessPage.append($('revoke'),$('member-list'));admin.append(invitePage,accessPage);
+  for(const heading of admin.querySelectorAll(':scope > h3,:scope > p'))heading.remove();
+  window.qfFlow.tabs(admin,{id:'access-management',items:[{title:'Invite a member',element:invitePage},{title:'Manage access',element:accessPage}]});
+  const revoke=$('revoke'),revokeFields=Array.from(revoke.querySelectorAll(':scope > label'));
+  window.qfFlow.wizard(revoke,{id:'revoke-membership',title:'Revoke access',steps:[{title:'Member',fields:revokeFields.slice(0,2)},{title:'Reason & confirm',fields:[...revokeFields.slice(2),revoke.querySelector('button')]}]});
   sync();
 })();

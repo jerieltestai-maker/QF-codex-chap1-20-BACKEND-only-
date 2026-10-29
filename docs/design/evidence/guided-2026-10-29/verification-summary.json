@@ -1,0 +1,20 @@
+{
+  "scope": "Full PostgreSQL checkpoint before subsequent Clarify/Distill edits; latest frontend checks are separate.",
+  "database": "postgres",
+  "files": 38,
+  "totals": {
+    "tests": 307,
+    "pass": 307,
+    "fail": 0,
+    "cancelled": 0,
+    "skipped": 0
+  },
+  "finalFrontend": {
+    "tests": 58,
+    "pass": 58,
+    "fail": 0,
+    "skipped": 0
+  },
+  "controllerChecks": 17,
+  "browserJourney": 12
+}

@@ -1,0 +1,208 @@
+/* QuoteFix owner-supplied design system, 27 October 2026. */
+:root {
+  /* Navy ink scale */
+  --qf-navy-950: #06122F;
+  --qf-navy-900: #0A1A4A;
+  --qf-navy-800: #24346A;
+  --qf-navy-700: #2A3A6E;
+  --qf-navy-650: #22304F;  /* note text on tiles */
+  --qf-navy-600: #33416A;
+  --qf-slate-500: #56658A;
+  --qf-slate-450: #5F6E96;
+  --qf-slate-400: #8A97B5;
+  --qf-slate-300: #A5B1D1;
+  --qf-slate-200: #D4DCF0;
+
+  /* Brand blue scale */
+  --qf-blue-700: #1F55BF;
+  --qf-blue-600: #2463D9;
+  --qf-blue-500: #4C8DFF;
+  --qf-blue-300: #8AB8FF;
+  --qf-blue-200: #BFD9FF;
+  --qf-blue-150: #DCEAFF;
+  --qf-blue-100: #DCE8FA;
+  --qf-blue-50:  #EAF3FF;
+  --qf-blue-25:  #F3F8FF;
+
+  /* Cool neutrals */
+  --qf-white: #FFFFFF;
+  --qf-gray-25: #F8FAFD;
+  --qf-gray-50: #F7F9FC;
+  --qf-gray-75: #F3F6FB;
+  --qf-gray-100: #F0F4FA;
+  --qf-gray-150: #EEF3FA;
+  --qf-gray-200: #EDF1F7;
+  --qf-gray-250: #E6ECF5;
+  --qf-gray-300: #E4ECF7;
+  --qf-gray-350: #DFE7F2;  /* large segmented track */
+  --qf-gray-375: #D5E0F0;  /* pipeline rail */
+  --qf-gray-400: #CFDBEC;
+
+  /* Coral (your turn, alerts, contractor role) */
+  --qf-coral-50: #FFF1EF;
+  --qf-coral-500: #FF7F73;
+  --qf-coral-550: #EF5A4C;
+  --qf-coral-600: #C2392E;  /* alert numerals */
+  --qf-coral-100: #FFE3E0;
+  --qf-coral-700: #A12C22;
+  --qf-coral-900: #5A1C16;
+  --qf-coral-950: #3A0D08;
+
+  /* Amber (caution) */
+  --qf-amber-100: #FFF0C7;
+  --qf-amber-800: #6E4C00;
+
+  /* Green (success / paid) */
+  --qf-green-100: #DBF2E6;
+  --qf-green-800: #17663E;
+
+  /* ---- Semantic aliases ---- */
+  --text-strong: var(--qf-navy-900);
+  --text-body: var(--qf-navy-900);
+  --text-secondary: var(--qf-navy-600);
+  --text-muted: var(--qf-slate-500);
+  --text-faint: var(--qf-slate-400);
+  --text-separator: var(--qf-slate-300);
+  --text-link: var(--qf-blue-600);
+  --text-link-hover: var(--qf-navy-900);
+  --text-on-dark: var(--qf-white);
+  --text-on-dark-muted: var(--qf-slate-300);
+  --text-on-dark-accent: var(--qf-blue-300);
+  --text-danger: var(--qf-coral-700);
+
+  --surface-page: var(--qf-gray-150);       /* main content well */
+  --surface-chrome: var(--qf-white);        /* sidebar, feed rail */
+  --surface-card: var(--qf-white);
+  --surface-tile: var(--qf-blue-25);        /* fact tiles, notes */
+  --surface-table-head: var(--qf-gray-50);
+  --surface-table-gutter: var(--qf-gray-200);/* 1px gaps between rows */
+  --surface-inverse: var(--qf-navy-900);    /* "your turn" status bar */
+  --surface-info: var(--qf-blue-50);        /* "waiting on others" status bar */
+  --surface-segment: var(--qf-gray-75);
+  --surface-canvas: var(--qf-gray-250);     /* presentation backdrop */
+
+  --border-hairline: var(--qf-gray-300);
+  --border-row: var(--qf-gray-100);
+  --border-control: var(--qf-blue-100);
+  --border-info: var(--qf-blue-200);
+  --border-on-dark: var(--qf-navy-700);
+
+  --action-primary: var(--qf-navy-900);
+  --action-primary-fg: var(--qf-white);
+  --action-accent: var(--qf-blue-500);      /* primary CTA on navy */
+  --action-accent-fg: var(--qf-navy-950);
+  --progress-done: var(--qf-blue-500);
+  --progress-todo: var(--qf-blue-100);
+  --progress-todo-on-dark: var(--qf-navy-800);
+
+  /* Pill tones: bg / fg */
+  --pill-info-bg: var(--qf-blue-150);   --pill-info-fg: var(--qf-blue-700);
+  --pill-turn-bg: var(--qf-coral-100);  --pill-turn-fg: var(--qf-coral-700);
+  --pill-caution-bg: var(--qf-amber-100); --pill-caution-fg: var(--qf-amber-800);
+  --pill-success-bg: var(--qf-green-100); --pill-success-fg: var(--qf-green-800);
+  --pill-neutral-bg: var(--qf-gray-150); --pill-neutral-fg: var(--qf-navy-600);
+  --pill-inverse-bg: var(--qf-navy-900); --pill-inverse-fg: var(--qf-blue-300);
+  --badge-count-bg: var(--qf-coral-500); --badge-count-fg: var(--qf-coral-950);
+
+  /* Role colours (activity avatars) */
+  --role-cm-bg: var(--qf-blue-150);     --role-cm-fg: var(--qf-blue-700);
+  --role-mcst-bg: var(--qf-navy-900);   --role-mcst-fg: var(--qf-white);
+  --role-con-bg: var(--qf-coral-100);   --role-con-fg: var(--qf-coral-700);
+  --role-admin-bg: var(--qf-amber-100); --role-admin-fg: var(--qf-amber-800);
+  --role-ai-bg: var(--qf-blue-50);      --role-ai-fg: var(--qf-blue-600);
+  --role-sys-bg: #F0F3F8;               --role-sys-fg: var(--qf-slate-500);
+}
+
+:root {
+  --font-sans: 'Manrope', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, Menlo, monospace;
+
+  --weight-regular: 400;
+  --weight-medium: 500;
+  --weight-semibold: 600;
+  --weight-bold: 700;
+  --weight-heavy: 800;
+
+  /* Scale, exact values used in product screens */
+  --fs-display: 28px;   /* money hero: "SGD 1,460.00" */
+  --fs-h1: 26px;        /* page title (dashboards) */
+  --fs-h1-ticket: 24px; /* ticket title */
+  --fs-h2: 17px;        /* status bar "Pending: …" */
+  --fs-h3: 16px;        /* banner headline */
+  --fs-card-title: 15px;
+  --fs-body-lg: 13.5px; /* issue text, nav, buttons */
+  --fs-body: 13px;      /* table rows */
+  --fs-body-sm: 12.5px; /* secondary rows, small buttons */
+  --fs-label: 12px;     /* section labels, meta */
+  --fs-meta: 11.5px;    /* pills, table heads, sub-lines */
+  --fs-caption: 11px;
+  --fs-micro: 10.5px;   /* step labels, timestamps */
+  --fs-tiny: 10px;
+
+  --lh-tight: 1.2;
+  --lh-body: 1.5;
+  --lh-relaxed: 1.6;
+
+  --tracking-title: -.02em;
+  --tracking-eyebrow: .06em;
+  --tracking-overline: .07em;
+  --tracking-banner: .04em;
+  --tracking-num: .01em;
+
+  /* Semantic */
+  --type-page-title: var(--weight-heavy) var(--fs-h1)/var(--lh-tight) var(--font-sans);
+  --type-card-title: var(--weight-heavy) var(--fs-card-title)/var(--lh-tight) var(--font-sans);
+  --type-body: var(--weight-medium) var(--fs-body-lg)/var(--lh-relaxed) var(--font-sans);
+  --type-meta: var(--weight-semibold) var(--fs-meta)/1.4 var(--font-sans);
+  --type-id: var(--weight-regular) var(--fs-meta)/1.4 var(--font-mono);
+}
+
+:root {
+  --space-1: 2px;
+  --space-2: 4px;
+  --space-3: 6px;
+  --space-4: 8px;
+  --space-5: 10px;
+  --space-6: 12px;
+  --space-7: 14px;
+  --space-8: 16px;
+  --space-9: 18px;
+  --space-10: 22px;
+  --space-11: 24px;
+  --space-12: 28px;
+  --space-13: 32px;
+
+  /* Layout */
+  --sidebar-width: 220px;
+  --rail-width: 360px;        /* audit trail / activity feed */
+  --main-pad-y: 22px;
+  --main-pad-x: 28px;
+  --main-gap: 14px;
+  --card-pad: 16px 18px;
+  --row-pad: 12px;
+  --app-width: 1440px;
+}
+
+:root {
+  --radius-xs: 3px;    /* progress segments */
+  --radius-sm: 6px;    /* chips, media labels */
+  --radius-md: 8px;    /* thumbnails */
+  --radius-tile: 12px; /* fact tiles, media */
+  --radius-row: 14px;  /* expanded rows, callouts, org card */
+  --radius-card: 16px;
+  --radius-bar: 18px;  /* status bar */
+  --radius-frame: 20px;
+  --radius-pill: 999px;
+
+  --shadow-card: 0 1px 2px rgba(10,26,74,.06), 0 8px 24px -12px rgba(10,26,74,.2);
+  --shadow-segment: 0 1px 2px rgba(10,26,74,.12);
+  --shadow-frame: 0 1px 3px rgba(0,0,0,.06);
+  --ring-avatar: 0 0 0 3px #fff;
+
+  --border-w: 1px;
+  --border-w-strong: 1.5px;
+
+  --media-scrim: rgba(10,26,74,.78);
+  --media-play: rgba(10,26,74,.72);
+  --placeholder-stripes: repeating-linear-gradient(135deg, #E4EDFB 0 6px, #EEF4FD 6px 12px);
+}

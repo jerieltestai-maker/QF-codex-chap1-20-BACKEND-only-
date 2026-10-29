@@ -51,7 +51,7 @@
     if(navigator.onLine)for(const server of await all('drafts'))if(!copies.some(d=>d.id===server.id&&d.revision===server.revision&&window.qfCommands.sameInput(d.fields,server.fields)))copies.push({id:server.id,revision:server.revision,baseVersion:server.base_version,jobId:server.job_id,fields:server.fields,serverOnly:true});
     const choice=item=>(item.serverOnly?'server:':'device:')+item.id;
     el('saved-drafts').replaceChildren(new Option('Choose a draft',''),...copies.map(item=>new Option((item.fields.title||'Untitled draft')+' · '+(item.serverOnly?'server':'device'),choice(item))));
-    el('saved-drafts').onchange=()=>{const chosen=copies.find(d=>choice(d)===el('saved-drafts').value);if(chosen){jobLoad++;job=null;el('workspace-detail').hidden=true;draft={...chosen};fill(draft.fields);el('workspace-submit').textContent=draft.jobId?'Save workspace changes':'Create private workspace';status(chosen.serverOnly?'Loaded server draft.':'Loaded device draft.');}};
+    el('saved-drafts').onchange=()=>{const chosen=copies.find(d=>choice(d)===el('saved-drafts').value);if(chosen){jobLoad++;job=null;el('workspace-detail').hidden=true;draft={...chosen};fill(draft.fields);el('workspace-submit').textContent=draft.jobId?'Save repair changes':'Create private repair';status(chosen.serverOnly?'Loaded server draft.':'Loaded device draft.');}};
   }
   async function loadJob(id,loadFields=true) {
     const load=++jobLoad,generation=epoch,result=await api('workspaces/'+id);
@@ -62,12 +62,12 @@
     el('workspace-detail').hidden=false;el('workspace-title').textContent=job.title;el('workspace-stage').textContent=job.stage;
     el('workspace-facts').textContent=job.observations+'\nAffected location: '+job.affected_location;
     if(loadFields){draft={...empty(),jobId:id,baseVersion:job.version,fields:{title:job.title,observations:job.observations,affectedLocation:job.affected_location}};fill(draft.fields);}
-    el('workspace-submit').textContent='Save workspace changes';
+    el('workspace-submit').textContent='Save repair changes';
     const chronology=document.createElement('ol');chronology.className='chronology';
-    for(const event of history){const item=document.createElement('li'),when=document.createElement('time');item.append(line((event.actor_name||event.actor_role?.toUpperCase()||'System')+' · '+(window.qfUI?.label(event.action)||event.action)+(event.reason?' · '+event.reason:'')));when.textContent=new Date(event.recorded_at).toLocaleString('en-SG',{timeZone:'Asia/Singapore'})+' SGT';item.append(when);chronology.append(item);}
-    el('workspace-history').replaceChildren(history.length?chronology:line('No workspace history has been recorded.'));
+    for(const event of history){const item=document.createElement('li'),when=document.createElement('time');item.append(line((event.actor_name||event.actor_role?.toUpperCase()||'System')+' · '+(window.qfUI?.label(event.action)||event.action)+(event.reason?' · '+event.reason:'')));when.textContent=new Date(event.recorded_at).toLocaleString('en-SG',{timeZone:'Asia/Singapore',hourCycle:'h23'})+' SGT';item.append(when);chronology.append(item);}
+    el('workspace-history').replaceChildren(history.length?chronology:line('No repair history recorded yet.'));
     el('attachment-list').replaceChildren(...result.attachments.map(file=>{const link=document.createElement('a');link.href='/api/v1/files/'+file.id;link.textContent='Download '+file.variant+' '+file.media_type;const p=line('');p.append(link);return p;}));
-    if(!result.attachments.length)el('attachment-list').append(line('No evidence attached. Uploads and job submissions are separate actions.'));
+    if(!result.attachments.length)el('attachment-list').append(line('No evidence attached. Choose a file to add it to this repair.'));
     el('support-list').replaceChildren(...supports.map(s=>{const row=line(s.privacy+' support: '+s.description);if(window.qfSupport?.openCase)row.append(button('Open support case',()=>window.qfSupport.openCase(s.id)));return row;}));
     if(!supports.length)el('support-list').append(line('No support requests visible for this repair.'));
     el('workspace-waiting').textContent=[result.waitingOn,...result.secondaryActions].filter(Boolean).map(t=>t.role==='none'?t.action:'Waiting on '+t.role.toUpperCase()+': '+t.action).join(' · ');
@@ -83,12 +83,12 @@
     el('workspace-list').replaceChildren(...jobs.map(item=>{const b=button('',()=>loadJob(item.id)),title=document.createElement('strong'),stage=document.createElement('span');b.className='repair-row';title.textContent=item.title;stage.textContent=item.stage;b.append(title,stage);return b;}));
     if(!jobs.length){const empty=line(context.context.role==='contractor'?'Your eligible RFQs and assigned work appear in their respective views.':'No private repairs yet. Choose New repair to record an observation.');empty.className='empty-state';el('workspace-list').append(empty);}
     const bells=await all('notifications','notifications');if(load!==listLoad||generation!==epoch)return;el('bell-count').textContent='('+bells.unreadCount+' unread)';
-    el('bell-list').replaceChildren(...bells.notifications.map(n=>{const p=line(n.message+' · '+new Date(n.issued_at).toLocaleString('en-SG',{timeZone:'Asia/Singapore'})+' SGT');
+    el('bell-list').replaceChildren(...bells.notifications.map(n=>{const p=line(n.message+' · '+new Date(n.issued_at).toLocaleString('en-SG',{timeZone:'Asia/Singapore',hourCycle:'h23'})+' SGT');
       if(!n.read_at)p.append(button('Mark read',async()=>{await api('notifications/'+n.id+'/read',{});await refreshLists();}));return p;}));
-    if(!bells.notifications.length)el('bell-list').append(line('No notifications for this account context.'));
+    if(!bells.notifications.length)el('bell-list').append(line('No notifications for this account and role.'));
     const result=await all('tasks','tasks');if(load!==listLoad||generation!==epoch)return;
     el('task-list').replaceChildren(...result.tasks.map(t=>{const row=line(t.owner_role.toUpperCase()+': '+t.action);if(t.job_id&&context.context.role!=='contractor')row.append(button('Open repair',()=>loadJob(t.job_id)));else if(t.job_id)row.append(button('Open assigned work',()=>window.qfWork.open(t.job_id)));if(t.support_id&&window.qfSupport?.openCase)row.append(button('Open support case',()=>window.qfSupport.openCase(t.support_id)));return row;}));
-    if(!result.tasks.length)el('task-list').append(line('No outstanding actions for this account context.'));
+    if(!result.tasks.length)el('task-list').append(line('No actions waiting for you in this role.'));
     if(context.context.role==='admin') {
       const attention=await all('admin/attention','tasks');if(load!==listLoad||generation!==epoch)return;el('attention-list').replaceChildren(...attention.tasks.filter(t=>t.owner_role==='admin').map(t=>{
         const p=line(t.action+(t.acknowledged_at?' · Acknowledged; follow-up remains open.':' · Unacknowledged.'));
@@ -98,11 +98,11 @@
           const outcome=document.createElement('select');for(const value of ['attempted','attendance_arranged','unresolved'])outcome.append(new Option(value.replaceAll('_',' '),value));
           const summary=document.createElement('input');summary.placeholder='Actual contact attempt / outcome';summary.setAttribute('aria-label','Actual contact attempt or outcome');
           const eta=document.createElement('input');eta.type='datetime-local';eta.setAttribute('aria-label','Confirmed ETA in Singapore time, optional');
-          p.append(outcome,summary,eta,action,at,button('Take coordination / save outcome',async()=>{
-            if(!at.value)throw new Error('Supply a next follow-up.');
+          p.append(outcome,summary,eta,action,at,button('Save coordination outcome',async()=>{
+            if(!at.value)throw new Error('Choose the next follow-up date and time.');
             await submit('admin/urgency/'+t.id+'/coordinate',{outcome:outcome.value,summary:summary.value,nextAction:action.value,followUpAt:new Date(at.value+':00+08:00').toISOString(),...(eta.value?{eta:new Date(eta.value+':00+08:00').toISOString()}:{})},t.version);await refreshLists();
           }));
-        } else p.append(action,at,button('Acknowledge / save follow-up',async()=>{
+        } else p.append(action,at,button('Acknowledge and save follow-up',async()=>{
           if(!at.value)throw new Error('Supply a follow-up date and time.');
           await submit('admin/attention/'+t.id+'/acknowledge',{nextAction:action.value,followUpAt:new Date(at.value+':00+08:00').toISOString()},t.version);await refreshLists();
         }));
@@ -173,19 +173,19 @@
     await refreshDrafts();
   });
   bind('workspace-submit',async()=>{
-    if(!fields().title.trim()){el('draft-title').focus();throw new Error('Add a title before creating the private workspace. Your unfinished draft can still be saved.');}
-    if(!fields().observations.trim()){el('draft-observations').focus();throw new Error('Describe the observed problem before creating the private workspace.');}
-    if(!fields().affectedLocation.trim()){el('draft-location').focus();throw new Error('Add the affected location before creating the private workspace.');}
+    if(!fields().title.trim()){el('draft-title').focus();throw new Error('Add a repair title. You can save an unfinished draft at any time.');}
+    if(!fields().observations.trim()){el('draft-observations').focus();throw new Error('Describe the observed problem before creating the repair.');}
+    if(!fields().affectedLocation.trim()){el('draft-location').focus();throw new Error('Add the affected location before creating the repair.');}
     saveLocal();const route=draft.jobId?'workspaces/'+draft.jobId+'/edit':'workspaces';
     const body=draft.jobId?draft.fields:{...draft.fields,estateId:context.context.estate_id||el('workspace-estate').value};
-    const result=await submit(route,body,draft.baseVersion);await loadJob(result.jobId);await refreshLists();status('Private workspace saved.');
+    const result=await submit(route,body,draft.baseVersion);await loadJob(result.jobId);await refreshLists();status('Private repair saved.');
   });
-  bind('workspace-new',async()=>{jobLoad++;draft=empty();fill(draft.fields);job=null;el('workspace-detail').hidden=true;el('workspace-submit').textContent='Create private workspace';});
+  bind('workspace-new',async()=>{jobLoad++;draft=empty();fill(draft.fields);job=null;el('workspace-detail').hidden=true;el('workspace-submit').textContent='Create private repair';});
   bind('upload-queue',async()=>{
-    const file=el('evidence-file').files[0];if(!file||!job)throw new Error('Choose a file and workspace.');
+    const file=el('evidence-file').files[0];if(!file||!job)throw new Error('Open a repair and choose an evidence file.');
     if(file.size<1||file.size>10485760||!['image/png','image/jpeg','application/pdf'].includes(file.type))throw new Error('Use PNG, JPEG or PDF up to 10 MiB.');
     await queueStore('readwrite',s=>s.put({id:crypto.randomUUID(),partition:partition(),jobId:job.id,name:file.name,file,state:'Device only; upload not submitted'}));
-    el('evidence-file').value='';await renderUploads();status('Queued on this device. This does not submit a business action.');
+    el('evidence-file').value='';await renderUploads();status('File queued on this device. Resume queued uploads to attach it to the repair.');
   });
   bind('upload-resume',resumeUploads);
   bind('support-send',async()=>{
@@ -197,7 +197,7 @@
   const recover=async()=>{
     const generation=epoch,results=await commandClient.recover();if(generation!==epoch)return;
     if(job)await loadJob(job.id,false);await refreshLists();
-    status(results.length?results.map(r=>r.route+': '+(r.result?'submission confirmed; no new decision was sent':'no outcome recorded yet; retry the original unchanged input')).join(' · '):'No pending submissions for this account and context.');
+    status(results.length?results.map(r=>r.route+': '+(r.result?'submission confirmed; no new decision was sent':'no outcome recorded yet; retry the original unchanged input')).join(' · '):'No pending submissions for this account and role.');
   };
   document.addEventListener('qf:context',async event=>{
     const next=event.detail,changed=context?.user.id!==next?.user.id||context?.context?.id!==next?.context?.id||context?.accessVersion!==next?.accessVersion||context?.context?.role!==next?.context?.role;
@@ -205,7 +205,7 @@
       epoch++;jobLoad++;listLoad++;job=null;draft=empty();fill(draft.fields);status('');
       for(const id of ['workspace-list','workspace-facts','workspace-history','attachment-list','upload-list','support-list','bell-list','task-list','attention-list','failed-list'])el(id).replaceChildren();
       el('support-description').value='';el('support-subjects').value='';el('evidence-file').value='';el('workspace-detail').hidden=true;
-      el('saved-drafts').replaceChildren(new Option('Choose a draft',''));el('bell-count').textContent='';el('workspace-submit').textContent='Create private workspace';
+      el('saved-drafts').replaceChildren(new Option('Choose a draft',''));el('bell-count').textContent='';el('workspace-submit').textContent='Create private repair';
     }
     context=next;el('workspace-shell').hidden=!next?.context;el('notifications-panel').hidden=!next?.context;
     if(!next?.context)return;
@@ -218,8 +218,34 @@
   document.addEventListener('qf:refresh',()=>{if(context?.context){refreshLists().catch(error=>status(error.message));if(job)loadJob(job.id,false).catch(error=>status(error.message));}});
   setInterval(()=>{document.querySelectorAll('[data-due]').forEach(node=>{
     const milliseconds=Date.parse(node.dataset.due)-(Date.now()+serverOffset),hours=Math.max(0,Math.floor(milliseconds/3600000));
-    node.textContent=(milliseconds<=0?(node.dataset.overdueLabel||'Follow-up is due'):(node.dataset.followupPrefix||'Follow up in')+' '+Math.floor(hours/24)+'d '+hours%24+'h')+' — '+new Date(node.dataset.due).toLocaleString('en-SG',{timeZone:'Asia/Singapore'})+' SGT';
+    node.textContent=(milliseconds<=0?(node.dataset.overdueLabel||'Follow-up is due'):(node.dataset.followupPrefix||'Follow up in')+' '+Math.floor(hours/24)+'d '+hours%24+'h')+' — '+new Date(node.dataset.due).toLocaleString('en-SG',{timeZone:'Asia/Singapore',hourCycle:'h23'})+' SGT';
   });},1000);
   window.addEventListener('online',()=>{if(context?.context&&job)resumeUploads().catch(error=>status(error.message));});
+  if(window.qfFlow){
+    const ui=window.qfUI,compose=el('workspace-compose'),field=id=>el(id).closest('label'),review=ui.node('div');
+    compose.querySelector('summary').textContent='Report an issue';
+    compose.querySelector(':scope > p').remove();
+    const draftHelp=ui.node('details');draftHelp.append(ui.node('summary','Drafts & privacy'),el('repair-draft-note'),field('saved-drafts'));compose.append(draftHelp);
+    const utilities=ui.node('div');utilities.className='draft-utilities';utilities.append(el('draft-local'),el('draft-server'),el('workspace-new'));compose.append(utilities);
+    el('draft-local').textContent='Save on device';el('draft-server').textContent='Save to account';
+    ['draft-title','draft-location','draft-observations'].forEach(id=>el(id).required=true);
+    review.className='draft-review';
+    const updateReview=()=>review.replaceChildren(ui.facts({title:el('draft-title').value||'Not entered',location:el('draft-location').value||'Not entered',observedProblem:el('draft-observations').value||'Not entered'}));
+    compose.addEventListener('input',updateReview);
+    const flow=window.qfFlow.wizard(compose,{id:'repair-draft',title:'Report an issue',steps:[
+      {title:'Location',fields:[field('draft-title'),field('draft-location'),el('workspace-estate-label')]},
+      {title:'Observation',fields:[field('draft-observations')]},
+      {title:'Review',fields:[review,el('workspace-submit')]}
+    ]});compose.append(utilities,draftHelp);for(const empty of compose.querySelectorAll(':scope > .field-grid,:scope > .action-row'))if(!empty.children.length)empty.remove();updateReview();
+    const back=ui.node('button','All repairs');back.type='button';back.className='text-action';el('workspace-shell').prepend(back);back.hidden=true;
+    const layout=()=>{const detail=!el('workspace-detail').hidden,editing=compose.open;el('workspace-list').hidden=detail||editing;back.hidden=!detail&&!editing;};
+    compose.addEventListener('toggle',()=>{updateReview();layout();});
+    back.onclick=()=>{compose.open=false;el('workspace-detail').hidden=true;layout();};
+    el('workspace-new').addEventListener('click',()=>{flow.reset();updateReview();layout();});
+    el('saved-drafts').addEventListener('change',()=>{flow.reset();updateReview();layout();});
+    document.addEventListener('qf:job',()=>{updateReview();layout();});
+    document.addEventListener('qf:context',()=>{layout();updateReview();});
+    new MutationObserver(layout).observe(el('workspace-detail'),{attributes:true,attributeFilter:['hidden']});
+  }
   window.qfWorkspace={api,all,submit,recover,loadJob,refreshLists,get context(){return context;},get job(){return job;}};
 })();

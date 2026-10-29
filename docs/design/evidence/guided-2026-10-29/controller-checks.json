@@ -1,0 +1,22 @@
+{
+  "checks": [
+    "Empty first step stays visible",
+    "Invalid first field receives focus",
+    "Continue advances after required input",
+    "Step has a navigable URL",
+    "Third step follows contact",
+    "Changing steps sends no form submission",
+    "Final unchecked confirmation prevents submission",
+    "Explicit valid final action submits once",
+    "Back preserves entered fields",
+    "Final click rechecks prior-step requirements",
+    "Hidden conditional fields do not block progression",
+    "Inactive tab is hidden and inert",
+    "Arrow key selects and focuses the next tab",
+    "Reset aligns the selected tab and its URL",
+    "Error reveal selects the containing tab",
+    "Re-render creates one tablist",
+    "Re-render discards stale wizard nodes and handlers"
+  ],
+  "consoleErrors": []
+}

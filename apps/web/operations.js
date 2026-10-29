@@ -7,7 +7,7 @@
     const generation=epoch;if(!context||panel.hidden||refresh.disabled)return;refresh.disabled=true;
     try{const value=await window.qfWorkspace.api('admin/operations');if(generation!==epoch)return;
       status.textContent=value.alerts.length?value.alerts.map(a=>messages[a]||'Processing needs review.').join(' '):'Worker is current; no processing alerts.';
-      updated.textContent='Checked '+new Date(value.serverTime).toLocaleString('en-SG',{timeZone:'Asia/Singapore'})+' SGT';metrics.replaceChildren();
+      updated.textContent='Checked '+new Date(value.serverTime).toLocaleString('en-SG',{timeZone:'Asia/Singapore',hourCycle:'h23'})+' SGT';metrics.replaceChildren();
       for(const [key,label,suffix] of [['pendingWork','Pending processing',''],['failedWork','Failed processing',''],['oldestWorkSeconds','Oldest ready work',' s'],['timerLagSeconds','Timer delay',' s'],['unissuedNotices','Unissued initial notices',''],['missingAdminFollowUp','Missing Admin follow-ups',''],['scanFailures','File verification failures',''],['workerAgeSeconds','Last worker success',' s ago']]){const item=document.createElement('dl'),name=document.createElement('dt'),number=document.createElement('dd');name.textContent=label;number.textContent=value.metrics[key]===null?'No heartbeat recorded':String(value.metrics[key])+suffix;item.append(name,number);metrics.append(item);}
     }catch(error){if(generation===epoch)status.textContent=error.message;}finally{if(generation===epoch)refresh.disabled=false;}
   }

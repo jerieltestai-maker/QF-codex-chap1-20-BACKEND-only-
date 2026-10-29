@@ -13,8 +13,8 @@
       const list=node('dl');list.className='fact-list';
       for(const [key,item] of Object.entries(value)) {
         const term=node('dt',label(key)),detail=node('dd');
-        if(/(?:Cents|_cents)$/.test(key)&&item!==null&&/^-?\d+$/.test(String(item)))detail.textContent=new Intl.NumberFormat('en-SG',{style:'currency',currency:'SGD'}).format(Number(item)/100);
-        else if(item&&/(?:At|_at|Time)$/.test(key)&&typeof item==='string'&&Number.isFinite(Date.parse(item)))detail.textContent=new Date(item).toLocaleString('en-SG',{timeZone:'Asia/Singapore'})+' SGT';
+        if(/(?:Cents|_cents)$/.test(key)&&item!==null&&/^-?\d+$/.test(String(item)))detail.textContent=new Intl.NumberFormat('en-SG',{style:'currency',currency:'SGD',currencyDisplay:'code'}).format(Number(item)/100);
+        else if(item&&/(?:At|_at|Time)$/.test(key)&&typeof item==='string'&&Number.isFinite(Date.parse(item)))detail.textContent=new Date(item).toLocaleString('en-SG',{timeZone:'Asia/Singapore',hourCycle:'h23'})+' SGT';
         else detail.append(facts(item));
         list.append(term,detail);
       }
@@ -60,7 +60,7 @@
   function validationSummary(form,focus){
     form.querySelector('[data-validation-summary]')?.remove();const invalid=Array.from(form.querySelectorAll('input:invalid,select:invalid,textarea:invalid'));if(!invalid.length)return;
     const summary=node('div'),title=node('p','Check these fields'),list=node('ul');summary.dataset.validationSummary='';summary.className='field-errors';summary.tabIndex=-1;summary.setAttribute('role','alert');summary.append(title,list);
-    for(const control of invalid){fieldError(control);if(!control.id)control.id='qf-field-'+(++fieldSerial);const id=control.id+'-error',error=node('p',control.validationMessage);error.id=id;error.className='field-error';control.dataset.errorId=id;control.setAttribute('aria-invalid','true');control.setAttribute('aria-describedby',((control.getAttribute('aria-describedby')||'')+' '+id).trim());(control.closest('label')||control).after(error);const item=node('li'),link=node('a',(control.labels?.[0]?.textContent.trim()||control.name||'Required field')+': '+control.validationMessage);link.href='#'+control.id;link.onclick=event=>{event.preventDefault();control.focus();};item.append(link);list.append(item);}
+    for(const control of invalid){fieldError(control);if(!control.id)control.id='qf-field-'+(++fieldSerial);const id=control.id+'-error',error=node('p',control.validationMessage);error.id=id;error.className='field-error';control.dataset.errorId=id;control.setAttribute('aria-invalid','true');control.setAttribute('aria-describedby',((control.getAttribute('aria-describedby')||'')+' '+id).trim());(control.closest('label')||control).after(error);const item=node('li'),link=node('a',(control.labels?.[0]?.textContent.trim()||control.name||'Required field')+': '+control.validationMessage);link.href='#'+control.id;link.onclick=event=>{event.preventDefault();window.qfFlow?.reveal(control);control.focus();};item.append(link);list.append(item);}
     form.prepend(summary);if(focus)summary.focus();
   }
   document.addEventListener('invalid',event=>{const form=event.target.form;if(!form)return;event.preventDefault();if(pendingValidation.has(form))return;pendingValidation.add(form);setTimeout(()=>{pendingValidation.delete(form);validationSummary(form,true);},0);},true);

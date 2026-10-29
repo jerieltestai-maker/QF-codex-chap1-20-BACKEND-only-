@@ -6,7 +6,7 @@
   panel.append(node('h2','Feedback and aftercare'),status,content);document.querySelector('main').append(panel,adminPanel);
   let epoch=0,load=0,currentId=null,contextKey='',adminLoad=0;
   const role=()=>qf.context?.context?.role,scope=()=>qf.context?.user?.id+':'+qf.context?.context?.id;
-  const stamp=v=>v?new Date(v).toLocaleString('en-SG',{timeZone:'Asia/Singapore'})+' SGT':'Not issued';
+  const stamp=v=>v?new Date(v).toLocaleString('en-SG',{timeZone:'Asia/Singapore',hourCycle:'h23'})+' SGT':'Not issued';
   function pretty(value) {
     if(window.qfUI?.facts)return window.qfUI.facts(value);
     if(value===null||value===undefined)return node('span','Not available');
@@ -18,7 +18,13 @@
   const choice=(p,label,values)=>{const l=node('label',label),s=node('select');s.append(new Option('Choose explicitly',''),...values.map(([v,t])=>new Option(t,v)));l.append(s);p.append(l);return s;};
   const check=(p,label)=>{const l=node('label'),i=node('input');i.type='checkbox';l.append(i,document.createTextNode(label));p.append(l);return i;};
   function button(p,label,action) {const b=node('button',label),message=node('p'),born=epoch;b.type='button';message.className='action-feedback';message.setAttribute('role','status');b.onclick=async()=>{if(b.disabled||born!==epoch)return;b.disabled=true;const generation=epoch;message.textContent='Working…';try{if(!navigator.onLine)throw new Error('Connect before submitting. Your form remains unsubmitted.');await action();if(generation===epoch)message.textContent='Updated.';}catch(e){if(generation===epoch){status.textContent=e.message;message.textContent=e.message;}}finally{b.disabled=false;}};p.append(b,message);return b;}
-  function form(title) {const d=node('details');d.className='workflow-form';d.setAttribute('data-input-scope',title);d.append(node('summary',title));content.append(d);return d;}
+  let feedbackTarget=content,aftercareTarget=content;
+  function form(title,parent=feedbackTarget) {const d=node('details');d.className='workflow-form';d.setAttribute('data-input-scope',title);d.append(node('summary',title));parent.append(d);return d;}
+  function steps(parent,id,sections) {
+    if(!window.qfFlow)return;
+    const children=Array.from(parent.children).filter(child=>child.tagName!=='SUMMARY');let start=0;
+    window.qfFlow.wizard(parent,{id,title:id,steps:sections.map(([title,last])=>{const end=last?children.indexOf(last)+1:children.length,fields=children.slice(start,end);start=end;return {title,fields};})});
+  }
   function draft(p,id,kind,version,controls) {
     const key='qf-feedback:'+scope()+':'+id+':'+kind,generation=epoch;let saved;
     try{saved=JSON.parse(localStorage.getItem(key)||'null');}catch{saved=null;}
@@ -28,7 +34,7 @@
   }
   function rubric(p) {
     const labels=[['workmanship','Workmanship: How satisfactory was the finished repair?'],['timeliness','Timeliness: How well did the contractor keep the agreed start and finish commitments?'],['customerService','Customer service: How well did the contractor communicate and respond to the CM while working on site?'],['valueForMoney','Value for money: Considering the agreed final price and result, how good was the value?'],['recommendation','I would recommend this contractor for similar work.']];
-    const controls={};for(const [k,label] of labels)controls[k]=choice(p,label,k==='recommendation'?[[1,'Strongly disagree'],[2,'Disagree'],[3,'Neutral'],[4,'Agree'],[5,'Strongly agree']]:[1,2,3,4,5].map(v=>[v,v+' stars']));
+    const controls={};for(const [k,label] of labels){controls[k]=choice(p,label,k==='recommendation'?[[1,'Strongly disagree'],[2,'Disagree'],[3,'Neutral'],[4,'Agree'],[5,'Strongly agree']]:[1,2,3,4,5].map(v=>[v,v+' stars']));controls[k].required=true;}
     p.append(node('p','Agreed schedule changes are recorded separately. Every question is required. Explain any 1–2-star or negative recommendation answer.'));
     return controls;
   }
@@ -45,7 +51,7 @@
     const file=field(parent,'Optional repair evidence · PNG, JPEG or PDF up to 10 MiB','file'),message=node('p');file.accept='image/png,image/jpeg,application/pdf';parent.append(message);let ready=null,selected=false;
     file.onchange=async()=>{ready=null;selected=!!file.files?.length;if(!selected){message.textContent='No evidence selected.';return;}try{await upload.queue(data.jobId,'evidence',slot,file.files[0]);message.textContent='Selected in this session. Attach / resume before submitting.';}catch(error){message.textContent=error.message;}};
     button(parent,'Attach / resume repair evidence',async()=>{const result=await upload.resume(data.jobId,'evidence',slot);ready=result.state==='ready'?result.objects?.find(o=>o.variant==='original')?.id:null;message.textContent=ready?'Evidence is ready to include.':'File verification is '+result.state+'. Use Attach / resume to check again.';});
-    const generation=epoch;upload.get?.(data.jobId,'evidence',slot)?.then(row=>{if(generation!==epoch||currentId!==data.jobId||!row)return;selected=true;ready=row.state==='ready'?row.objects?.find(o=>o.variant==='original')?.id:null;message.textContent=ready?'Previously attached evidence remains ready to include.':'An unfinished file is retained in this session. Use Attach / resume before submitting.';}).catch(error=>{if(generation===epoch)message.textContent=error.message;});
+    const generation=epoch;upload.get?.(data.jobId,'evidence',slot)?.then(row=>{if(generation!==epoch||currentId!==data.jobId||!row)return;selected=true;ready=row.state==='ready'?row.objects?.find(o=>o.variant==='original')?.id:null;message.textContent=ready?'Attached evidence is ready to include.':'An unfinished file is retained in this session. Use Attach / resume before submitting.';}).catch(error=>{if(generation===epoch)message.textContent=error.message;});
     return ()=>{if(selected&&!ready)throw new Error('Attach and verify the selected evidence, or clear the file selection before submitting.');return ready?[ready]:[];};
   }
   async function command(data,path,body,clear) {
@@ -53,7 +59,7 @@
     await qf.submit('workspaces/'+data.jobId+'/'+path,body,data.version);clear?.();const submitted=document.activeElement?.closest?.('details');if(submitted)window.qfUI?.clearDirty?.(submitted);await open(data.jobId);await qf.refreshLists();
   }
   function renderEntry(p,e,shared=false) {
-    const box=node('article');box.setAttribute('data-input-scope','reputation-entry:'+e.id);box.className=e.muted?'data-row feedback-muted':'data-row';box.append(node('h4',e.kind==='external'?'Verified external reference':e.kind==='inspection'?'Inspection feedback':'30-day durability'),node('p','Observed '+stamp(e.observedAt)),pretty(e.facts));
+    const box=node('article'),evidence=node('details');evidence.append(node('summary','Recorded answers'),pretty(e.facts));box.setAttribute('data-input-scope','reputation-entry:'+e.id);box.className=e.muted?'data-row feedback-muted':'data-row';box.append(node('h4',e.kind==='external'?'Verified external reference':e.kind==='inspection'?'Inspection feedback':'30-day durability'),node('p','Observed '+stamp(e.observedAt)),evidence);
     for(const r of e.replies)box.append(node('p','Contractor reply: '+r.body));
     if(!shared&&role()==='contractor') {const text=field(box,'Your reply — Admin reviews before shared publication');button(box,'Submit reply for review',async()=>{await qf.submit('reputation/entries/'+e.id+'/reply',{entryVersion:e.entryVersion,text:text.value},e.version);await open(currentId);});}
     p.append(box);
@@ -61,39 +67,43 @@
   async function open(id) {
     const attempt=++load,generation=epoch,sameJob=currentId===id;currentId=id;
     panel.hidden=false;status.textContent='Loading current feedback and aftercare…';
-    let data,finance;try{[data,finance]=await Promise.all([qf.api('workspaces/'+id+'/feedback'),qf.api('workspaces/'+id+'/completion')]);}catch(error){if(attempt!==load||generation!==epoch)return;if(error.status===404||!sameJob)content.replaceChildren(node('p',error.status===404?'Feedback and aftercare are available after this job has an authorised completion record.':'Feedback could not be loaded. Your earlier saved drafts are preserved.'));if(error.status===404){status.textContent='';return;}throw error;}if(attempt!==load||generation!==epoch)return;
+    let data,finance;try{[data,finance]=await Promise.all([qf.api('workspaces/'+id+'/feedback'),qf.api('workspaces/'+id+'/completion')]);}catch(error){if(attempt!==load||generation!==epoch)return;if(error.status===404||!sameJob)content.replaceChildren(node('p',error.status===404?'Feedback and aftercare are available after this job has an authorised completion record.':'Feedback could not load. Saved drafts are preserved.'));if(error.status===404){status.textContent='';return;}throw error;}if(attempt!==load||generation!==epoch)return;
     const saved=sameJob?(window.qfUI?.captureInputs?.(content)||[]):[],adaptors=[];
-    panel.hidden=false;content.replaceChildren();status.textContent='';
+    panel.hidden=false;content.replaceChildren();status.textContent='';feedbackTarget=node('section');aftercareTarget=node('section');content.append(feedbackTarget,aftercareTarget);
     button(content,'Refresh current feedback and aftercare',()=>open(id));
-    if(data.obligation)content.append(node('p','30-day feedback: '+data.obligation.status+' · Due '+stamp(data.obligation.due_at)+' · First notice '+stamp(data.obligation.first_issued_at)));
+    if(data.obligation)feedbackTarget.append(node('p','30-day feedback · '+data.obligation.status+' · Due '+stamp(data.obligation.due_at)));
     if(data.canSubmit) {
       const f=form('Give feedback'),outcome=choice(f,'Can the repair be assessed?',[['rated','Assessable repair'],['unable','Unable to assess']]),rating=choice(f,'Durability rating — assessable repair only',[1,2,3,4,5].map(v=>[v,v+' stars'])),observation=field(f,'Observation about durability, or explanation if unable to assess');
       f.append(node('p','1–3 stars: describe wear, recurrence or another observed concern. 4–5 stars: describe what is still working. These examples are guidance. A low rating does not automatically request repair or establish liability.'));
       const clear=draft(f,id,'durability',data.version,{outcome,rating,observation}),confirmed=check(f,'I confirm this observation.');
       const adapt=()=>{rating.disabled=outcome.value!=='rated';};adaptors.push(adapt);outcome.addEventListener('change',adapt);adapt();
       button(f,'Submit feedback',()=>command(data,'feedback/submit',{obligationVersion:data.obligation.version,...durabilityInput(outcome.value,rating.value,observation.value,confirmed.checked)},clear));
+      outcome.required=observation.required=true;steps(f,'durability:'+id,[['Assessment',rating.parentElement],['Observation & confirm',null]]);
     }
     const inspectedRounds=finance.rounds.filter(r=>r.outcome);
     if(['cm','mcst'].includes(role())&&inspectedRounds.length) {
       const f=form('Inspection reputation questionnaire'),controls=rubric(f),reason=field(f,'Reason for low responses, or optional observation'),existing=data.entries.find(e=>e.kind==='inspection'),correction=existing?field(f,'Reason for correcting the previous feedback'):null;
       const clear=draft(f,id,'inspection',data.version,{...controls,reason,...(correction?{correction}: {})}),confirmed=check(f,'I confirm these five feedback answers. Work acceptance is recorded separately.');
       button(f,existing?'Submit corrected questionnaire':'Submit inspection questionnaire',()=>{reviewed(confirmed.checked);if(existing&&!correction.value.trim())throw new Error('Explain why the earlier feedback is being corrected.');return command(data,'reputation/inspection',{round:inspectedRounds.at(-1).round,rubric:validateRubric(controls,reason.value),reason:reason.value,confirmed:confirmed.checked,...(existing?{entryVersion:existing.entryVersion,correctionReason:correction.value}:{})},clear);});
+      steps(f,'inspection-feedback:'+id,[['Work',controls.timeliness.parentElement],['Service & value',controls.recommendation.parentElement],['Review & confirm',null]]);
     }
-    for(const e of data.entries)renderEntry(content,e);
+    for(const e of data.entries)renderEntry(feedbackTarget,e);
     const durability=data.entries.find(e=>e.kind==='durability');
     if(durability&&['cm','mcst'].includes(role())) {
       const f=form('Correct a submitted durability observation'),outcome=choice(f,'Corrected assessment outcome',[['rated','Assessable repair'],['unable','Unable to assess']]),rating=choice(f,'Corrected durability rating',[1,2,3,4,5].map(v=>[v,v+' stars'])),observation=field(f,'Corrected observation'),reason=field(f,'Why is this correction needed?');
-      f.append(node('p','This corrects the original observation and preserves its date and all earlier versions. For a new fault, request aftercare separately. Admin reviews the corrected version again.'));
+      f.append(node('p','Corrections preserve the observation date and earlier versions. Admin reviews them again. Request aftercare separately for a new fault.'));
       const clear=draft(f,id,'durability-correction',data.version,{outcome,rating,observation,reason}),confirmed=check(f,'I confirm this corrects the same original observation.');
       const adapt=()=>{rating.disabled=outcome.value!=='rated';};adaptors.push(adapt);outcome.addEventListener('change',adapt);adapt();
       button(f,'Submit observation correction',()=>{if(!reason.value.trim())throw new Error('Explain why the observation is being corrected.');return command(data,'feedback/correct',{entryVersion:durability.entryVersion,...durabilityInput(outcome.value,rating.value,observation.value,confirmed.checked),correctionReason:reason.value},clear);});
+      outcome.required=observation.required=reason.required=true;steps(f,'correct-durability:'+id,[['Assessment',rating.parentElement],['Observation & reason',reason.parentElement],['Confirm',null]]);
     }
     if(['cm','mcst'].includes(role())&&finance.completion?.confirmed_version&&!data.cases.some(c=>c.status!=='resolved')) {
-      const f=form('Request aftercare / Admin Support'),concern=field(f,'Observed concern'),help=field(f,'What help are you requesting?'),evidence=attachment(f,data,'aftercare-request');
+      const f=form('Request aftercare / Admin Support',aftercareTarget),concern=field(f,'Observed concern'),help=field(f,'What help are you requesting?'),evidence=attachment(f,data,'aftercare-request');
       button(f,'Request aftercare',()=>{if(!concern.value.trim()||!help.value.trim())throw new Error('Describe the observed concern and the help you are requesting.');return command(data,'aftercare/request',{concern:concern.value,requestedHelp:help.value,evidenceIds:evidence()});});
+      concern.required=help.required=true;steps(f,'request-aftercare:'+id,[['Concern',help.parentElement],['Evidence & send',null]]);
     }
     for(const c of data.cases) {
-      const f=form('Aftercare · '+c.status);f.setAttribute('data-input-scope','aftercare:'+c.id);f.append(node('p',c.description),node('p',c.requested_help));
+      const f=form('Aftercare · '+c.status,aftercareTarget);f.setAttribute('data-input-scope','aftercare:'+c.id);f.append(node('p',c.description),node('p',c.requested_help));
       for(const id of c.evidence_ids||[]){const link=node('a','View private aftercare evidence');link.href='/api/v1/files/'+encodeURIComponent(id);f.append(link);}
       if(role()==='admin'&&c.status!=='resolved') {
         const reason=field(f,'Reason and findings'),evidence=field(f,'Evidence of the decision or actual execution');
@@ -108,7 +118,10 @@
         for(const outcome of ['accepted','unsatisfactory'])button(f,outcome==='accepted'?'Accept remedy':'Unsatisfactory remedy',()=>{reviewed(scopeReviewed.checked&&evidenceReviewed.checked&&confirmed.checked,'Review the corrected scope, available evidence and this exact inspection outcome.');return command(data,'aftercare/inspect',{caseId:c.id,round:c.current_round,outcome,findings:findings.value,scopeReviewed:scopeReviewed.checked,evidenceReviewed:evidenceReviewed.checked,confirmed:confirmed.checked});});
       }
     }
-    for(const i of data.inspections)content.append(node('p','Inspection ['+i.round+(i.round===2?'nd':i.round===3?'rd':'th')+'] · '+i.outcome+' · '+i.findings));
+    for(const i of data.inspections)aftercareTarget.append(node('p','Inspection '+i.round+' · '+i.outcome+' · '+i.findings));
+    if(!aftercareTarget.children.length)aftercareTarget.append(node('p','No aftercare request.'));
+    if(!feedbackTarget.children.length)feedbackTarget.append(node('p','No feedback recorded.'));
+    window.qfFlow?.tabs(content,{id:'feedback-pages:'+id,items:[{title:'Feedback',element:feedbackTarget},{title:'Aftercare',element:aftercareTarget}]});
     window.qfUI?.restoreInputs?.(content,saved);for(const adapt of adaptors)adapt();window.qfUI?.restoreInputs?.(content,saved);
   }
   async function admin() {
@@ -120,6 +133,8 @@
     for(const [key,label] of [['referenceKey','Unique work reference'],['workDescription','Completed work'],['source','Source organisation'],['refereeContact','Referee contact — Admin only'],['independentChannel','Independently verified contact channel — Admin only'],['interviewEvidence','Interview evidence — Admin only'],['uncertainty','Uncertainty / limitations — Admin only']])fields[key]=field(f,label);
     const controls=rubric(f),reason=field(f,'Reason for low responses, or optional observation'),verified=check(f,'I independently verified the referee/contact and the completed work.');
     button(f,'Record reference for moderation',async()=>{const selected=orgs.find(o=>o.id===org.value);if(!selected)throw new Error('Choose a contractor.');reviewed(verified.checked,'Confirm independent verification of this external reference.');await qf.submit('admin/organisations/'+org.value+'/reputation/references',{...Object.fromEntries(Object.entries(fields).map(([k,c])=>[k,c.value])),referenceKey:fields.referenceKey.value,rubric:validateRubric(controls,reason.value),reason:reason.value,independentlyVerified:verified.checked},selected.version);await admin();});
+    org.required=fields.workDate.required=fields.trade.required=true;
+    steps(f,'external-reference',[['Completed work',fields.workDescription.parentElement],['Verification',fields.uncertainty.parentElement],['Work & service',controls.customerService.parentElement],['Value & recommendation',controls.recommendation.parentElement],['Review & confirm',null]]);
     if(!entries.length){const empty=node('p','No feedback or contractor replies are awaiting moderation.');empty.className='empty-state';adminPanel.append(empty);}
     for(const e of entries) {
       const box=node('details');box.setAttribute('data-input-scope','reputation:'+e.id);box.append(node('summary',e.kind+' · '+e.id+' · '+(e.moderation?.decision??'awaiting review')));adminPanel.append(box);renderEntry(box,e);

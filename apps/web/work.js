@@ -2,13 +2,13 @@
   'use strict';
   const qf=window.qfWorkspace,node=(tag,text)=>{const n=document.createElement(tag);if(text!==undefined)n.textContent=text;return n;};
   const panel=node('section'),list=node('div'),content=node('div'),status=node('p');panel.id='work-shell';panel.dataset.workflow='work';panel.className='workflow-panel';list.className='data-list';content.className='work-content';panel.hidden=true;status.setAttribute('role','status');status.setAttribute('aria-live','polite');
-  panel.append(node('h2','Authorised work and variations'),list,status,content);document.querySelector('main').append(panel);
+  panel.append(node('h2','Work'),list,status,content);document.querySelector('main').append(panel);
   let epoch=0,load=0,currentId=null;
   let currentVersion=0,contextSignature='';
   const scope=()=>qf.context?.user?.id+':'+qf.context?.context?.id;
   const uploads=window.qfWorkUploads.create({api:qf.api,submit:qf.submit,scope,current:id=>currentId===id,online:()=>navigator.onLine});
-  const role=()=>qf.context?.context?.role,stamp=value=>value?new Date(value).toLocaleString('en-SG',{timeZone:'Asia/Singapore'})+' SGT':'Not recorded';
-  const cents=value=>{let n=BigInt(value);const sign=n<0n?'-':'';if(n<0n)n=-n;return sign+'SGD '+n/100n+'.'+String(n%100n).padStart(2,'0');};
+  const role=()=>qf.context?.context?.role,stamp=value=>value?new Date(value).toLocaleString('en-SG',{timeZone:'Asia/Singapore',hourCycle:'h23'})+' SGT':'Not recorded';
+  const cents=value=>{let n=BigInt(value);const sign=n<0n?'-':'';if(n<0n)n=-n;return sign+'SGD '+(n/100n).toLocaleString('en-SG')+'.'+String(n%100n).padStart(2,'0');};
   const local=value=>value?new Date(Date.parse(value)+8*3600000).toISOString().slice(0,16):'';
   const instant=input=>{if(!input.value)throw new Error('Supply the date and time.');const date=new Date(input.value+':00+08:00');if(!Number.isFinite(date.getTime()))throw new Error('Enter a valid date and time.');return date.toISOString();};
   const money=value=>/^(0|[1-9][0-9]*)(\.[0-9]{1,2})?$/.test(value.trim());
@@ -30,8 +30,14 @@
   function field(parent,label,type='text',value='') {const wrapper=node('label',label),input=node(type==='textarea'?'textarea':'input');wrapper.className='field';if(type!=='textarea')input.type=type;input.value=value;input.maxLength=10000;if(type==='textarea')input.rows=3;retain(parent,label,input);wrapper.append(input);parent.append(wrapper);return input;}
   function choice(parent,label,options,value='') {const wrapper=node('label',label),select=node('select');select.append(new Option('Choose explicitly',''),...options.map(([v,t])=>new Option(t,v)));select.value=value;retain(parent,label,select);wrapper.append(select);parent.append(wrapper);return select;}
   function check(parent,label) {const wrapper=node('label'),input=node('input');wrapper.className='check-field';input.type='checkbox';wrapper.append(input,document.createTextNode(label));parent.append(wrapper);return input;}
-  function button(parent,label,action) {const b=node('button',label);b.type='button';b.onclick=async()=>{if(b.disabled)return;const generation=epoch;b.disabled=true;parent.setAttribute('aria-busy','true');notify('Working…',parent);try{await action();if(generation===epoch&&status.textContent==='Working…')notify('Ready. Review the updated information.',parent);}catch(e){if(generation===epoch){notify(e.message,parent);if(e.status===409||e.status===412)notify(e.message+' Reopen the current job before making a new decision.',parent);}}finally{parent.setAttribute('aria-busy','false');b.disabled=false;}};parent.append(b);return b;}
+  function button(parent,label,action) {const b=node('button',label);b.type='button';b.onclick=async()=>{if(b.disabled)return;const generation=epoch;b.disabled=true;parent.setAttribute('aria-busy','true');notify('Working…',parent);try{await action();if(generation===epoch&&status.textContent==='Working…')notify('Updated. Review the current details.',parent);}catch(e){if(generation===epoch){notify(e.message,parent);if(e.status===409||e.status===412)notify(e.message+' Reopen the current job before making a new decision.',parent);}}finally{parent.setAttribute('aria-busy','false');b.disabled=false;}};parent.append(b);return b;}
   function form(label) {const f=node('details');f.className='panel work-form';f.dataset.draftKey='qf-work-draft:'+JSON.stringify([scope(),currentId,label]);f.append(node('summary',label));const message=node('p');message.className='form-status';message.setAttribute('role','status');message.setAttribute('aria-live','polite');f._qfStatus=message;f.append(message);content.append(f);return f;}
+  const children=parent=>Array.from(parent.children);
+  const bodyChildren=parent=>children(parent).filter(child=>child!==parent._qfStatus&&child.tagName!=='SUMMARY'&&child.tag!=='summary');
+  function wizard(parent,id,title,steps) {
+    window.qfFlow?.wizard(parent,{id:'work-'+scope()+':'+currentId+':'+id,title,steps});
+  }
+  function taskPanel(title,nodes) {const section=node('section');section.className='work-task-page';section.setAttribute('aria-label',title);for(const child of nodes)section.append(child);if(!nodes.length)section.append(node('p','No work action due. Check Inspection, Payment or History.'));return section;}
   function facts(parent,values) {const dl=node('dl');dl.className='fact-list facts-grid';for(const [label,value] of values){dl.append(node('dt',label),node('dd',value===null||value===undefined||value===''?'Not recorded':String(value)));}parent.append(dl);return dl;}
   function historyRows(parent,label,rows,describe) {parent.append(node('h4',label));if(!rows?.length){const empty=node('p','No '+label.toLowerCase()+' recorded.');empty.className='empty-state';parent.append(empty);return;}const list=node('ol');list.className='history-list';for(const row of rows){const item=node('li');item.className='history-entry';describe(item,row);list.append(item);}parent.append(list);}
   function eventHistory(parent,rows) {historyRows(parent,'Dated events',rows,(item,row)=>{item.append(node('strong',words(row.kind||row.action||'Recorded update')),node('p',(row.actor_name||'System')+' · '+stamp(row.recorded_at)));const detail=row.details||{};const visible=Object.entries(detail).filter(([key,value])=>value!==null&&value!==undefined&&value!==''&&!/(?:^id$|Id$|Ids$|_id$|_ids$)/.test(key));for(const [key,value] of visible){if(typeof value!=='object')facts(item,[[words(key),/Cents$/.test(key)?cents(value):/(?:At|_at)$/.test(key)?stamp(value):typeof value==='boolean'?(value?'Yes':'No'):value]]);}});}
@@ -44,14 +50,14 @@
   }
   function slide(parent,label,action,valid=()=>true) {
     const wrapper=node('label',label+' — slide to confirm'),input=node('input');wrapper.className='slide-confirm';input.type='range';input.min='0';input.max='100';input.step='1';input.value='0';input.setAttribute('aria-label',label+' — slide to confirm');input.setAttribute('aria-valuetext','Move fully right to submit; keyboard users can press End.');wrapper.append(input);parent.append(wrapper);
-    const hint=node('p','Move the slider fully right to submit, or use the Confirm button. With the keyboard, the slider also supports End.');hint.className='field-hint';parent.append(hint);
+    const hint=node('p','Slide fully right, or choose Confirm.');hint.className='field-hint';parent.append(hint);
     let pending=false;
     const commit=async()=>{if(pending)return;if(!valid()){notify('Complete the required inputs and confirmation first.',parent);return;}const generation=epoch;pending=true;input.disabled=true;alternative.disabled=true;parent.setAttribute('aria-busy','true');notify('Submitting this exact version…',parent);try{await action();}catch(e){if(generation===epoch)notify(e.message,parent);}finally{pending=false;input.disabled=false;alternative.disabled=false;parent.setAttribute('aria-busy','false');}};
-    const alternative=button(parent,'Confirm — '+label,commit);alternative.className='slide-alternative';
+    const alternative=button(parent,'Confirm — '+label,commit);alternative.className='slide-alternative primary';
     input.addEventListener('change',async()=>{if(input.value!=='100')return;input.value='0';await commit();});
   }
   function documentUpload(parent,data,purpose,label,optional=false) {
-    const input=field(parent,label,'file');input.accept='application/pdf,image/png,image/jpeg';const message=node('p');message.className='attachment-status';message.setAttribute('role','status');parent.append(message);parent.append(node('p','PDF, PNG or JPEG, up to 10 MiB. An upload is separate from the final action below.'));
+    const input=field(parent,label,'file');input.accept='application/pdf,image/png,image/jpeg';const message=node('p');message.className='attachment-status';message.setAttribute('role','status');parent.append(message);parent.append(node('p','PDF, PNG or JPEG · up to 10 MiB. Attach before submitting.'));
     const slot=label+':'+(data.finance.completion?.round??0);
     let ready=null,selected=false,serial=0;const generation=epoch,partition=scope(),loaded=load;
     const valid=()=>generation===epoch&&loaded===load&&scope()===partition&&currentId===data.jobId;
@@ -85,8 +91,9 @@
     return ()=>{if(optional&&!selected)return null;if(!ready)throw new Error('Attach and check the '+label.toLowerCase()+' first.');return ready;};
   }
   function completionForms(data) {
-    const finance=data.finance;if(!finance)return;const c=finance.completion,r=role(),w=data.state;
-    content.append(node('h3','Completion, inspections and payment'));
+    const start=children(content).length,finance=data.finance;if(!finance)return {completion:[],payment:[],history:[]};const c=finance.completion,r=role(),w=data.state;
+    content.append(node('h3',c?'Inspection and invoice':'Completion'));
+    if(!c&&r!=='contractor')content.append(node('p','Awaiting completion and invoice from the Contractor.'));
     if(c) {
       content.append(node('p','Contractor-declared physical completion: '+stamp(c.completed_at)+' · Current round '+c.round),node('p','Invoice v'+c.invoice_version+': '+cents(c.amount_cents)+' · Authorised total: '+cents(w.amount_cents)));
       if(c.file_id){const a=node('a','View current invoice');a.href='/api/v1/files/'+c.file_id;content.append(a);}
@@ -99,7 +106,13 @@
       const confirmed=check(f,'All work is finished and the invoice is attached. This completion declaration cannot be undone. The CM will inspect the work.');
       const extra=node('details');extra.append(node('summary','Optional completion evidence'));f.append(extra);const evidence=documentUpload(extra,data,'evidence','Completion evidence',true);
       slide(f,'Submit completion and invoice together',()=>{const fileId=evidence();return command(data,'completion/submit',{invoiceFileId:invoice(),amountSgd:amount.value.trim(),completedAt:instant(at),explanation:explanation.value,evidenceIds:fileId?[fileId]:[],confirmed:confirmed.checked,...(c?{originatingRound:c.round}:{})});},()=>confirmed.checked&&money(amount.value)&&!!at.value&&(!c||!!explanation.value.trim()));
-      f.append(node('p','Completion photos are optional. Existing progress evidence remains available below.'));
+      amount.required=true;amount.inputMode='decimal';amount.pattern='(0|[1-9][0-9]*)(\\.[0-9]{1,2})?';at.required=true;explanation.required=!!c;
+      const all=bodyChildren(f),final=all.filter(el=>el===confirmed.parentElement||el.className==='slide-confirm'||el.className==='field-hint'||String(el.className||'').split(' ').includes('slide-alternative'));
+      wizard(f,'completion','Complete work',[
+        {title:'Invoice',fields:all.filter(el=>!final.includes(el)&&el!==at.parentElement&&el!==explanation.parentElement&&el!==extra)},
+        {title:'Completion',fields:[at.parentElement,explanation.parentElement,extra]},
+        {title:'Confirm',fields:final}
+      ]);
     }
     if(c&&!pending&&!latest?.outcome&&c.scope===w.scope&&['cm','mcst'].includes(r)&&w.status==='active') {
       const f=form('Inspection'+(c.round>1?' ['+c.round+(c.round===2?'nd':c.round===3?'rd':'th')+']':''));f.open=true;
@@ -107,21 +120,30 @@
       const review=outcome=>command(data,'completion/inspect',{round:c.round,outcome,checklist:{scopeReviewed:scope.checked,issuesReviewed:issues.checked,evidenceReviewed:evidence.checked,invoiceReviewed:invoice.checked},findings:findings.value,satisfactory:satisfactory.checked,confirmed:true});
       slide(f,'Approve Works',()=>review('accepted'),()=>satisfactory.checked&&scope.checked&&issues.checked&&evidence.checked&&invoice.checked);
       const negative=button(f,'Unsatisfactory work',()=>{if(!scope.checked||!issues.checked||!evidence.checked||!invoice.checked||!findings.value.trim())throw new Error('Review each checklist item and describe the specific incomplete or defective work. The satisfactory checkbox is not required for this outcome.');return review('unsatisfactory');});guarded(negative,[scope,issues,evidence,invoice,findings],()=>scope.checked&&issues.checked&&evidence.checked&&invoice.checked&&!!findings.value.trim());
+      for(const item of [scope,issues,evidence,invoice])item.required=true;
+      const reviewFields=[scope.parentElement,issues.parentElement,evidence.parentElement,invoice.parentElement];
+      wizard(f,'inspection-'+c.round,'Inspect work',[
+        {title:'Review',fields:reviewFields},
+        {title:'Outcome',fields:bodyChildren(f).filter(el=>!reviewFields.includes(el))}
+      ]);
     }
     if(c&&!c.accepted_round&&latest?.outcome==='unsatisfactory'&&r==='contractor') {
-      const f=form('Respond to inspection findings');f.append(node('p',latest.findings));const response=field(f,'Response / proposed remedy','textarea');const send=button(f,'Respond',()=>{if(!response.value.trim())throw new Error('Describe your response or proposed remedy.');return command(data,'completion/respond',{round:c.round,response:response.value});});guarded(send,[response],()=>!!response.value.trim());f.append(node('p','A response does not declare a physical remedy complete. Submit corrected work and its invoice when ready for a fresh inspection.'));
+      const f=form('Respond to inspection findings');f.append(node('p',latest.findings));const response=field(f,'Response / proposed remedy','textarea');const send=button(f,'Respond',()=>{if(!response.value.trim())throw new Error('Describe your response or proposed remedy.');return command(data,'completion/respond',{round:c.round,response:response.value});});guarded(send,[response],()=>!!response.value.trim());f.append(node('p','Responding does not complete the remedy. Submit corrected work and its invoice for a fresh inspection.'));
     }
     if(c&&!c.confirmed_version) {
       const f=form('View Reason — invoice reconciliation');f.append(node('p','Authorised total '+cents(w.amount_cents)+' · Invoice '+cents(c.amount_cents)+' · Difference '+cents(BigInt(c.amount_cents)-BigInt(w.amount_cents))),node('p',c.explanation||'No explanation recorded.'));
       if(r==='contractor'&&w.status==='active') {const invoice=documentUpload(f,data,'invoice','Corrected invoice'),amount=field(f,'Corrected invoice SGD'),explanation=field(f,'Correction reason','textarea');button(f,'Submit invoice-only correction',()=>{if(!money(amount.value)||!explanation.value.trim())throw new Error('Enter the corrected amount to at most two decimal places and explain the correction.');return command(data,'completion/invoice',{invoiceVersion:c.invoice_version,invoiceFileId:invoice(),amountSgd:amount.value.trim(),explanation:explanation.value});});}
       if(r==='mcst'&&w.status==='active'&&!pending&&c.accepted_round&&BigInt(c.amount_cents)===BigInt(w.amount_cents)) {f.append(node('p','Confirming this exact invoice assesses the Contractor’s QuoteFix fees and starts the payment workflow. It does not send money.'));const confirmed=check(f,'I confirm this exact reconciled invoice version and amount.');const confirm=button(f,'Confirm invoice',()=>{if(!confirmed.checked)throw new Error('Confirm this exact reconciled invoice version and amount.');return command(data,'payments/confirm-invoice',{invoiceVersion:c.invoice_version,amountSgd:BigInt(c.amount_cents)/100n+'.'+String(BigInt(c.amount_cents)%100n).padStart(2,'0'),confirmed:confirmed.checked});});guarded(confirm,[confirmed],()=>confirmed.checked);}
     }
+    const completionNodes=children(content).slice(start),paymentStart=children(content).length;
     if(w.status!=='cancelled')window.qfPayments.render(data,{content,node,form,field,check,choice,button,slide,documentUpload,command,stamp,cents,instant,role:r});
-    const history=form('Completion, inspection, invoice and payment history');
+    const paymentNodes=children(content).slice(paymentStart);
+    const history=form('Inspection and payment records');
     historyRows(history,'Inspection rounds',finance.rounds,(item,row)=>{item.append(node('strong','Inspection '+row.round+' · '+(row.outcome?words(row.outcome):'Awaiting review')));facts(item,[['Declared complete',stamp(row.completed_at)],['Declared by',row.declared_by],['Reviewed by',row.inspected_by],['Reviewed at',row.inspected_at?stamp(row.inspected_at):null],['Findings',row.findings],['Originating round',row.originating_round]]);});
     historyRows(history,'Invoice versions',finance.invoices,(item,row)=>{item.append(node('strong','Invoice v'+row.version+' · '+cents(row.amount_cents)));facts(item,[['Submitted by',row.submitted_by],['Recorded',stamp(row.recorded_at)],['Explanation',row.explanation]]);if(row.file_id){const link=node('a','View invoice version '+row.version);link.href='/api/v1/files/'+row.file_id;item.append(link);}});
     historyRows(history,'Invoice confirmations',finance.confirmations,(item,row)=>facts(item,[['Invoice version',row.invoice_version],['Amount',cents(row.amount_cents)],['Confirmed by',row.confirmed_by],['Recorded',stamp(row.recorded_at)]]));eventHistory(history,finance.events);
     for(const round of finance.rounds)for(const id of round.evidence_ids||[]){const a=node('a','View completion evidence');a.href='/api/v1/files/'+id;history.append(a);}
+    return {completion:completionNodes,payment:paymentNodes,history:[history]};
   }
   function proposalForm(data,kind,existing) {
     const w=data.state,p=existing?.proposal,f=form(existing?'Revise proposed terms':'Propose '+(kind==='start_schedule'?'an agreed start date':kind==='completion_schedule'?'a revised completion date':'a scope / price variation'));
@@ -130,7 +152,7 @@
     const timing=choice(f,'Timing impact',kind==='scope_price'?[['unchanged','Unchanged'],['changed','New agreed target date and time']]:[['changed','New agreed target date and time']],p?.timing||(kind==='scope_price'?'unchanged':'changed'));
     const at=field(f,kind==='start_schedule'?'Proposed start — Singapore time':'Proposed completion — Singapore time','datetime-local',local(p?.targetAt));
     const timingReason=field(f,'Reason for changed timing','textarea',p?.timingReason||'');
-    const timingFields=()=>{at.parentElement.hidden=timing.value!=='changed';timingReason.parentElement.hidden=timing.value!=='changed';};timing.addEventListener('change',timingFields);timingFields();
+    const timingFields=()=>{at.parentElement.hidden=timing.value!=='changed';timingReason.parentElement.hidden=timing.value!=='changed';at.required=timingReason.required=timing.value==='changed';};timing.addEventListener('change',timingFields);timingFields();
     const feasible=choice(f,'Can the original authorised work safely and feasibly continue?',[['yes','Yes'],['no','No — needs interruption review']],p?(p.canContinueOriginal?'yes':'no'):'');
     const proposed=choice(f,'Can the proposed work safely and feasibly continue?',[['yes','Yes'],['no','No — needs interruption review']],p?(p.canContinueApproved?'yes':'no'):'');
     const confirmed=check(f,role()==='contractor'?'I confirm these exact scope, price, timing and feasibility terms.':'I confirm this request. The Contractor must confirm its terms before approval.');
@@ -144,22 +166,34 @@
       if(timing.value==='changed')Object.assign(proposal,{targetAt:instant(at),timingReason:timingReason.value});
       await command(data,'variations',{kind,proposal,confirmed:confirmed.checked,...(existing?{variationId:existing.id,proposalVersion:existing.current_version}:{})});
     });
+    reason.required=true;timing.required=true;feasible.required=true;proposed.required=true;
+    if(scope){scope.required=true;amount.required=true;amount.inputMode='decimal';amount.pattern='(0|[1-9][0-9]*)(\\.[0-9]{1,2})?';}
+    const change=[reason.parentElement,...(scope?[scope.parentElement,amount.parentElement]:[])],schedule=[timing.parentElement,at.parentElement,timingReason.parentElement];
+    wizard(f,'proposal-'+kind+(existing?'-'+existing.id:''),'Propose a change',[
+      {title:'Change',fields:change},{title:'Timing',fields:schedule},
+      {title:'Confirm',fields:bodyChildren(f).filter(el=>!change.includes(el)&&!schedule.includes(el))}
+    ]);
   }
   function render(data) {
     content.replaceChildren();currentVersion=data.version;const w=data.state,r=role(),pending=data.variations.find(v=>['terms','decision'].includes(v.state));
-    content.append(node('h3',w.stage+' · '+data.contractor.name));const waiting=node('p',data.waitingOn.role==='none'?data.waitingOn.action:"Waiting on "+String(data.waitingOn.role).toUpperCase()+"'s action: "+data.waitingOn.action);waiting.className='state-note';content.append(waiting);facts(content,[['Authorised total',cents(w.amount_cents)],['Authorised scope',w.scope],['Actual Start',stamp(w.started_at)],['Completed by',stamp(w.completion_target_at)]]);
+    if(r==='contractor'){const waiting=node('p',data.waitingOn.role==='none'?data.waitingOn.action:'Pending: '+String(data.waitingOn.role).toUpperCase()+' '+data.waitingOn.action);waiting.className='work-status-bar work-pending';waiting.dataset.turn=String(data.waitingOn.role===r);content.append(waiting);}
+    const overview=node('details');overview.className='work-overview';overview.append(node('summary','Authorised work · '+cents(w.amount_cents)));facts(overview,[['Contractor',data.contractor.name],['Stage',w.stage],['Authorised scope',w.scope],['Actual Start',stamp(w.started_at)],['Completed by',stamp(w.completion_target_at)]]);content.append(overview);
     if(w.scheduled_start_at&&!w.started_at)content.append(node('p','Scheduled: Contractor starts on '+stamp(w.scheduled_start_at)));
     if(w.unknown_reason)content.append(node('p','Initial unknown-estimate reason: '+w.unknown_reason+' · First estimate submission deadline: '+stamp(w.estimate_due_at)));
+    const workStart=children(content).length;
     if(w.integrity_paused) {
       const hold=node('p','Ordinary work is paused pending explicit MCST warning clearance. Withdrawing or rejecting a variation does not lift this pause.');hold.className='state-note warning';content.append(hold);
       const f=form('Document necessary make-safe action'),description=field(f,'Necessary action, reason and incurred costs (does not authorise ordinary work)','textarea');
       button(f,'Record make-safe information',()=>{if(!description.value.trim())throw new Error('Describe the necessary make-safe action.');return command(data,'integrity/make-safe',{description:description.value,evidenceIds:[]});});
     }
     if(r==='contractor'&&w.status==='active'&&!w.integrity_paused&&!w.started_at) {
-      const f=form('Start'),mode=choice(f,'Completion estimate',[['known','Completed by date and time'],['unknown','Unable to estimate yet — reason required']]),at=field(f,'Completed by — Singapore time','datetime-local'),reason=field(f,'Unable to estimate reason','textarea'),confirmed=check(f,'I confirm I am starting the authorised work now.');
+      const f=form('Start');f.open=true;const mode=choice(f,'Completion estimate',[['known','Completed by date and time'],['unknown','Unable to estimate yet — reason required']]),at=field(f,'Completed by — Singapore time','datetime-local'),reason=field(f,'Unable to estimate reason','textarea'),confirmed=check(f,'I confirm I am starting the authorised work now.');
       const b=button(f,'Start',()=>{if(!confirmed.checked||!['known','unknown'].includes(mode.value)||mode.value==='unknown'&&!reason.value.trim())throw new Error('Confirm Start and supply a completion date and time or a reason it cannot yet be estimated.');return command(data,'work/start',{mode:mode.value,confirmed:confirmed.checked,...(mode.value==='known'?{completedBy:instant(at)}:{reason:reason.value})});});
       const validate=()=>{at.parentElement.hidden=mode.value!=='known';reason.parentElement.hidden=mode.value!=='unknown';b.disabled=!confirmed.checked||!(mode.value==='known'?at.value:mode.value==='unknown'&&reason.value.trim());};
       [mode,at,reason,confirmed].forEach(input=>input.addEventListener('input',validate));validate();
+      mode.required=true;
+      const timingRequired=()=>{at.required=mode.value==='known';reason.required=mode.value==='unknown';};mode.addEventListener('change',timingRequired);timingRequired();
+      b.className='primary';wizard(f,'start','Start work',[{title:'Estimate',fields:[mode.parentElement,at.parentElement,reason.parentElement]},{title:'Confirm',fields:[confirmed.parentElement,b]}]);
     }
     if(r==='contractor'&&w.status==='active'&&!w.integrity_paused&&w.started_at&&!w.completed_at) {
       if(!w.completion_target_at) {const f=form('Supply the first completion estimate'),at=field(f,'Completed by — Singapore time','datetime-local');button(f,'Supply completion estimate',()=>command(data,'work/estimate',{completedBy:instant(at)}));}
@@ -168,7 +202,7 @@
     }
     if(r==='contractor'&&w.status!=='cancelled') {
       const f=form('Attach repair evidence'),evidence=documentUpload(f,data,'evidence','Repair evidence'),note=field(f,'Optional evidence note','textarea');
-      f.append(node('p','Attach checked evidence to this authorised repair. This action does not start work, declare completion or record a payment.'));
+      f.append(node('p','Attach evidence to this repair. This does not start or complete work, or record payment.'));
       button(f,'Attach evidence to authorised repair',()=>command(data,'work/attachments',{fileId:evidence(),note:note.value}));
     }
     if(r==='admin'&&w.started_at&&!w.completion_target_at&&w.status!=='cancelled') {const f=form('Extend first-estimate submission deadline'),at=field(f,'New submission deadline — Singapore time','datetime-local'),reason=field(f,'Admin extension reason','textarea');button(f,'Record estimate-deadline extension',()=>command(data,'work/estimate/extend',{dueAt:instant(at),reason:reason.value}));}
@@ -183,6 +217,7 @@
       if(pending.kind==='scope_price')f.append(node('p','Current authorised amount: '+cents(p.before.amountCents)),node('p','Proposed final GST-inclusive total: '+cents(p.newTotalCents)+' · Price change: '+cents(p.deltaCents)),node('p','Current scope: '+p.before.scope),node('p','Proposed effective scope: '+p.scope),node('p','Estate threshold: '+cents(p.thresholdCents)+' · Last MCST-approved limit: '+(p.before.mcstAuthorisedCents===null?'None':cents(p.before.mcstAuthorisedCents))));
       f.append(node('p',p.timing==='changed'?'Proposed '+(pending.kind==='start_schedule'?'start':'completion')+': '+stamp(p.targetAt)+' · '+p.timingReason:'Timing remains unchanged.'),node('p','Original work can safely and feasibly continue: '+(p.canContinueOriginal?'Yes':'No')),node('p','Proposed work can safely and feasibly continue: '+(p.canContinueApproved?'Yes':'No')));
       f.append(node('p','Pending changes authorise no extra work. Decision: '+String(pending.approver_role).toUpperCase()));
+      const proposalFields=bodyChildren(f);
       const confirmed=check(f,'I reviewed this exact proposal version.'),reason=field(f,'Decision reason / additional detail','textarea'),reasonCode=choice(f,'Rejection reason',[['price','Price'],['scope','Scope'],['timing','Timing'],['not_needed','Not needed'],['other','Other — explanation required']]);
       if(r==='contractor'&&pending.state==='terms')button(f,'Confirm change of terms',()=>{if(!confirmed.checked)throw new Error('Review and confirm this exact proposal version.');return command(data,'variations/confirm',{variationId:pending.id,proposalVersion:pending.current_version,confirmed:confirmed.checked});});
       const warnings=pending.integrityPreview?.triggers??[];
@@ -192,6 +227,7 @@
       const decide=outcome=>{if(!confirmed.checked)throw new Error('Review and confirm this exact proposal version.');if(outcome==='rejected'&&(!reasonCode.value||reasonCode.value==='other'&&!reason.value.trim()))throw new Error('Choose a rejection reason and explain Other.');if((outcome==='intervention'||r==='admin')&&!reason.value.trim())throw new Error('Record a reason for this decision.');if(outcome==='approved'&&clearWarning&&(!clearWarning.checked||!warningExplanation.value.trim()))throw new Error('Explicitly clear these exact warnings and record an explanation before approving.');return command(data,'variations/decide',{variationId:pending.id,proposalVersion:pending.current_version,outcome,confirmed:confirmed.checked,reason:reason.value,...(clearWarning?{clearWarning:clearWarning.checked,warningExplanation:warningExplanation.value}:{}),...(outcome==='rejected'?{reasonCode:reasonCode.value}:{})});};
       if(pending.state==='decision'&&[pending.approver_role,'mcst','admin'].includes(r)) {button(f,pending.kind==='scope_price'?'Approve variation':'Okay — accept this exact date',()=>decide('approved'));button(f,'Reject variation',()=>decide('rejected'));button(f,'Admin Intervention',()=>decide('intervention'));}
       if(pending.canWithdraw)button(f,'Withdraw proposal',()=>decide('withdrawn'));
+      if(children(f).some(el=>el.type==='button'))wizard(f,'decision-'+pending.id,'Review change',[{title:'Proposal',fields:proposalFields},{title:'Decision',fields:bodyChildren(f).filter(el=>!proposalFields.includes(el))}]);
       if(pending.canRevise)proposalForm(data,pending.kind,pending);
     }
     if(w.status!=='cancelled'&&!data.finance?.completion?.confirmed_version) {
@@ -207,13 +243,21 @@
       button(f,'Okay — acknowledge notice only',()=>command(data,'work/notice',{taskId:notice.id,outcome:'okay'},notice.version));
       button(f,'Admin Intervention',()=>{if(!reason.value.trim())throw new Error('Explain why Admin intervention is needed.');return command(data,'work/notice',{taskId:notice.id,outcome:'intervention',reason:reason.value},notice.version);});
     }
-    completionForms(data);
-    const history=form('Dated work history and every variation version');eventHistory(history,data.events);
+    const workNodes=children(content).slice(workStart),financial=completionForms(data);
+    const history=form('Work and variation records');eventHistory(history,data.events);
     historyRows(history,'Authorised terms',data.terms,(item,row)=>{item.append(node('strong','Terms v'+row.version+' · '+cents(row.amount_cents)));facts(item,[['Effective scope',row.scope],['MCST-approved limit',row.mcst_authorised_cents===null?'No MCST limit':cents(row.mcst_authorised_cents??0)],['Basis',words(row.source_type||'Authorisation')],['Recorded by',row.actor_name],['Recorded at',stamp(row.recorded_at)]]);});
     historyRows(history,'Proposal versions',data.variationVersions,(item,row)=>{const p=row.proposal||{};item.append(node('strong','Proposal v'+row.version));facts(item,[['Change reason',p.reason],['Scope',p.scope],['Proposed total',p.newTotalCents!==undefined?cents(p.newTotalCents):null],['Timing',p.timing==='changed'?stamp(p.targetAt)+' · '+(p.timingReason||''):words(p.timing)],['Contractor confirmed',row.contractor_confirmed?'Yes':'No'],['Recorded by',row.actor_name],['Recorded at',stamp(row.recorded_at)]]);});
     historyRows(history,'Variation decisions',data.decisions,(item,row)=>{item.append(node('strong',words(row.outcome)+' · proposal v'+row.variation_version));facts(item,[['Reason',row.reason],['Decision by',row.actor_name||words(row.actor_role)],['Recorded at',stamp(row.recorded_at)]]);});
     for(const file of data.evidence||[]){const a=node('a','View attached repair evidence · '+file.variant);a.href='/api/v1/files/'+file.id;history.append(a);}
     for(const e of data.events)for(const id of e.details?.fileIds||[]){const a=node('a','View progress evidence');a.href='/api/v1/files/'+id;history.append(a);}
+    if(window.qfFlow){
+      const items=[{title:'Work',element:taskPanel('Work',workNodes)},{title:'Inspection',element:taskPanel('Completion and inspection',financial.completion)}];
+      if(financial.payment.length)items.push({title:'Payment',element:taskPanel('Payment',financial.payment)});
+      items.push({title:'History',element:taskPanel('History',[history,...financial.history])});
+      const c=data.finance?.completion,preferred=pending||w.integrity_paused?'Work':financial.payment.length&&c?.confirmed_version?'Payment':c?'Inspection':'Work';
+      const tabs=node('div');tabs.className='work-task-tabs';content.append(tabs);
+      window.qfFlow.tabs(tabs,{id:'work-tabs-'+scope()+':'+currentId,items,initial:items.findIndex(item=>item.title===preferred)});
+    }
   }
   async function open(id,navigate=false) {
     const attempt=++load,generation=epoch;currentId=id;let data,finance;panel.setAttribute('aria-busy','true');notify('Loading the current authorised work, inspection and payment records…');
@@ -223,14 +267,14 @@
       if(attempt!==load||generation!==epoch)return;if(data.version===finance.version)break;
     }
     if(data.version!==finance.version)throw new Error('This job changed while loading. Reopen it to review the current completion and payment records.');data.finance=finance;
-    if(attempt!==load||generation!==epoch||currentId!==id)return;panel.hidden=false;render(data);notify('Current work and financial records loaded.');if(typeof CustomEvent==='function'){document.dispatchEvent(new CustomEvent('qf:work-loaded',{detail:{jobId:id}}));if(navigate)document.dispatchEvent(new CustomEvent('qf:navigate',{detail:{screen:'work'}}));}
+    if(attempt!==load||generation!==epoch||currentId!==id)return;panel.hidden=false;render(data);notify('');if(typeof CustomEvent==='function'){document.dispatchEvent(new CustomEvent('qf:work-loaded',{detail:{jobId:id}}));if(navigate)document.dispatchEvent(new CustomEvent('qf:navigate',{detail:{screen:'work'}}));}
     } finally {if(attempt===load&&generation===epoch)panel.setAttribute('aria-busy','false');}
   }
   async function jobs() {
     const generation=epoch;if(role()!=='contractor')return;
     const records=await qf.api('contractor/jobs');if(generation!==epoch)return;
     const assigned=records.filter(j=>j.selection?.status==='authorised');panel.hidden=false;list.replaceChildren(node('h3','Your authorised jobs'));
-    if(!assigned.length){const empty=node('p','No authorised jobs yet. Review eligible RFQ opportunities and your submitted quotations. Work becomes available after selection and any required approval.');empty.className='empty-state';list.append(empty);}
+    if(!assigned.length){const empty=node('p','No authorised jobs yet. Check RFQ opportunities or submitted quotations. Work opens after selection and required approval.');empty.className='empty-state';list.append(empty);}
     for(const job of assigned)button(list,job.rfq.publicDescription,()=>open(job.jobId,true));
   }
   document.addEventListener('qf:job',e=>{if(role()==='contractor')return;const generation=epoch,id=e.detail.job.id;content.replaceChildren();panel.hidden=true;open(id).catch(error=>{if(generation!==epoch||id!==currentId)return;if(error.status!==404){panel.hidden=false;notify(error.message+' Reopen the job to retry.');}});});

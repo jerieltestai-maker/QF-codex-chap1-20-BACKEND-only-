@@ -11,6 +11,14 @@ class Element {
   onclick?:()=>Promise<void>;onchange?:()=>void;
   constructor(readonly tag:string,private text=''){}
   get tagName(){return this.tag.toUpperCase();}
+  get classList(){
+    const tokens=()=>this.className.split(/[\t\n\f\r ]+/).filter(Boolean);
+    return {
+      add:(...values:string[])=>{this.className=[...new Set([...tokens(),...values])].join(' ');},
+      contains:(value:string)=>tokens().includes(value),
+      remove:(...values:string[])=>{this.className=tokens().filter(value=>!values.includes(value)).join(' ');}
+    };
+  }
   get nodeType(){return this.tag==='text'?3:1;}
   get childNodes():Array<Element|{nodeType:number;textContent:string}>{return [...(this.text?[{nodeType:3,textContent:this.text}]:[]),...this.children];}
   get options(){return this.children.filter(n=>n.tag==='option');}
@@ -80,7 +88,7 @@ test('actual conversation controls follow prequote Q&A and initial-quote visit p
 });
 
 test('changing a quote expiry requires a fresh explicit expiry acknowledgment',async()=>{
-  const f=await forms();await f.open();f.fill();const expiry=f.field('Expiry —');expiry.value='2028-01-01';await expiry.fire('input');assert.equal(f.field('I confirm this expiry date or date/time.').checked,false);await f.click('Submit initial quote');assert.equal(f.requests.length,0);
+  const f=await forms();await f.open();f.fill();const expiry=f.field('Quote expiry');expiry.value='2028-01-01';await expiry.fire('input');assert.equal(f.field('I confirm this expiry date or date/time.').checked,false);await f.click('Submit initial quote');assert.equal(f.requests.length,0);
 });
 
 test('same-job comparison refresh cannot be overwritten by an older result',async()=>{

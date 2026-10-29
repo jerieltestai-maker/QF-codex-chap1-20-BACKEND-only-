@@ -20,7 +20,7 @@ const report={status:'running',scope:'Isolated fictional PostgreSQL schema; loca
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 let f,browser,page,timer,workerRun,jobId,stage='startup';
 async function wait(predicate,message,timeout=15000){const end=Date.now()+timeout;while(Date.now()<end){if(await predicate())return;await sleep(120);}throw new Error(message);}
-async function check(name,action){stage=name;process.stdout.write('[journey] '+name+'\n');await action();report.checks.push({name,status:'passed'});await writeFile(join(output,'report.json'),JSON.stringify(report,null,2)+'\n');}
+async function check(name,action){stage=name;process.stdout.write('[journey] '+name+'\n');await action();const caughtErrors=await evaluate(()=>[...document.querySelectorAll('[role="status"],[role="alert"],.form-status')].map(node=>node.textContent.trim()).filter(text=>/\b(?:ReferenceError|TypeError|SyntaxError)\b|\bis not defined\b|\bis not a function\b|Cannot (?:read|set) propert/i.test(text)));assert.deepEqual(caughtErrors,[],'A workflow caught and displayed a programming error');report.checks.push({name,status:'passed'});await writeFile(join(output,'report.json'),JSON.stringify(report,null,2)+'\n');}
 async function evaluate(fn,arg){return page.eval(fn,arg);}
 const requests=[];
 async function pace(){for(const [group,budget] of Object.entries({read:520,command:100,identity:8})){const active=requests.filter(r=>r.group===group&&r.at>Date.now()-61000);if(active.length>=budget){process.stdout.write('[journey] Allowing the normal '+group+' rate-limit window to advance.\n');await sleep(Math.max(0,active[0].at+61500-Date.now()));}}}
@@ -31,7 +31,12 @@ async function mark(description){await pace();return evaluate(({description})=>{
   if(description.summary){root=[...root.querySelectorAll('details')].find(n=>n.querySelector(':scope > summary')?.textContent.trim()===description.summary);if(!root)throw new Error('Journey details missing: '+description.summary);root.open=true;}
   let target=description.selector?root.querySelector(description.selector):description.label?[...root.querySelectorAll('label')].find(n=>n.textContent.trim().startsWith(description.label))?.querySelector('input,textarea,select'):[...root.querySelectorAll('button,a')].find(n=>n.textContent.trim()===description.text);
   if(!target)throw new Error('Journey target missing: '+(description.text||description.label||description.selector));
-  for(let ancestor=target.parentElement;ancestor;ancestor=ancestor.parentElement)if(ancestor.tagName==='DETAILS')ancestor.open=true;
+  const ancestors=[];for(let ancestor=target.parentElement;ancestor;ancestor=ancestor.parentElement)ancestors.unshift(ancestor);
+  for(const ancestor of ancestors){
+    if(ancestor.tagName==='DETAILS')ancestor.open=true;
+    if(ancestor.classList.contains('qf-tab-panel'))document.querySelector('[role="tab"][aria-controls="'+ancestor.id+'"]')?.click();
+    if(ancestor.classList.contains('qf-step-page')&&ancestor.hidden)document.querySelector('.qf-steps [aria-controls="'+ancestor.id+'"]')?.click();
+  }
   target.setAttribute('data-journey-target','current');target.scrollIntoView({block:'center',inline:'nearest'});
   const box=target.getBoundingClientRect();if(!box.width||!box.height)throw new Error('Journey target is not visible: '+(description.text||description.label||description.selector));
   return {x:box.x+box.width/2,y:box.y+box.height/2,disabled:target.disabled===true};
@@ -60,13 +65,19 @@ try {
   await page.goto('http://localhost:'+port,{settleMs:350});await wait(()=>evaluate(()=>!!window.qfWorkspace),'Web modules did not initialise');
   await check('CM creates private workspace without publishing a repair',async()=>{
     await login('cm');await click({selector:'#new-repair'});
-    await fill({selector:'#draft-title'},'Fictional valve repair — browser journey');await fill({selector:'#draft-observations'},'Observed a steady drip at an accessible isolation valve.');await fill({selector:'#draft-location'},'Private service room');
+    await click({root:'#workspace-compose .qf-step-actions',text:'Continue'});
+    assert.equal(await evaluate(()=>document.querySelector('#workspace-compose .qf-steps [aria-current=step]').textContent.trim()),'1Location','An empty location step must not advance');
+    await fill({selector:'#draft-title'},'Fictional valve repair — browser journey');await fill({selector:'#draft-location'},'Private service room');await fill({selector:'#draft-observations'},'Observed a steady drip at an accessible isolation valve.');
+    await click({root:'#workspace-compose .qf-step-actions',text:'Back'});
+    assert.equal(await evaluate(()=>document.querySelector('#draft-observations').value),'Observed a steady drip at an accessible isolation valve.','Back lost the observation draft');
+    assert.match(await evaluate(()=>location.hash),/flow=repair-draft.*step=1/);
     await click({selector:'#workspace-submit'});await wait(async()=>{const rows=await f.db.query('SELECT id FROM job_records');if(rows.length===1){jobId=rows[0].id;return true;}return false;},'Private workspace not created');
     const [publication]=await f.db.query('SELECT count(*)::integer AS count FROM rfq_publications WHERE job_id=$1',[jobId]);assert.equal(publication.count,0);
     await wait(()=>evaluate(()=>window.qfWorkspace.job?.id===window.__journeyJobId||!!window.qfWorkspace.job),'Created workspace did not open');await screenshot('cm-private-repair');
   });
   await check('CM reviews contractor preview and publishes with both explicit acknowledgments',async()=>{
     await fill({selector:'#rfq-categories'},['plumbing']);await fill({selector:'#rfq-description'},'Repair a dripping isolation valve, including testing and making good.');await fill({selector:'#rfq-location'},'Accessible service room');await fill({selector:'#rfq-no-photo'},'The location is safe to describe, but no photograph is available for this fictional test.');
+    assert.equal(await evaluate(()=>{const current=()=>document.querySelector('#rfq-panel .qf-steps [aria-current=step]')?.textContent,before=current();document.dispatchEvent(new CustomEvent('qf:context',{detail:window.qfWorkspace.context}));return current()===before;}),true,'Refreshing the same context reset the RFQ step');
     await click({selector:'#rfq-save'});await wait(async()=>{const [row]=await f.db.query('SELECT version FROM job_records WHERE id=$1',[jobId]);return row.version===2;},'RFQ intake save not acknowledged');await sleep(200);
     await click({selector:'#rfq-preview'});await wait(()=>evaluate(()=>document.querySelector('#rfq-preview-content').textContent.includes('dripping isolation valve')),'Contractor preview did not render');
     await fill({selector:'#rfq-facts'},true);await fill({selector:'#rfq-privacy'},true);await click({selector:'#rfq-publish'});
@@ -75,7 +86,7 @@ try {
   await check('Admin explicitly configures trade matrix and approves company evidence',async()=>{
     await login('admin');await chooseScreen('verification');await wait(()=>evaluate(()=>document.querySelector('#verification-list [data-organisation]')),'Admin verification list not ready');
     await click({selector:'#verification-list [data-organisation="'+ids.organisation+'"]'});await wait(()=>evaluate(()=>!document.querySelector('#verification-detail').hidden),'Verification detail did not open');
-    await fill({selector:'#trade-category'},'plumbing');await fill({selector:'#trade-reason'},'Explicit fictional browser review: this test trade has no additional credentials.');await fill({root:'#verification-shell',label:'I confirm these trade requirements, including an empty required list if selected.'},true);await click({selector:'#trade-configure'});await wait(()=>evaluate(()=>document.querySelector('#verification-status').textContent.includes('matrix recorded')),'Trade configuration not acknowledged');
+    await fill({selector:'#trade-category'},'plumbing');await fill({selector:'#trade-reason'},'Explicit fictional browser review: this test trade has no additional credentials.');await fill({root:'#verification-shell',label:'I confirm these trade requirements, including an empty required list if selected.'},true);await click({selector:'#trade-configure'});await wait(()=>evaluate(()=>document.querySelector('#verification-status').textContent.includes('Trade requirements saved')),'Trade configuration not acknowledged');
     await fill({selector:'#verification-outcome'},'approved');await fill({selector:'#verification-approved'},['plumbing']);await fill({selector:'#verification-reason'},'Offline company authenticity checks represented by this isolated fictional test.');await fill({root:'#verification-shell',label:'I confirm this verification decision for the displayed company or credential and reviewed its current evidence.'},true);await click({selector:'#verification-decide'});
     await wait(async()=>{const [row]=await f.db.query('SELECT verified FROM organisations WHERE id=$1',[ids.organisation]);return row.verified===true;},'Company approval was not recorded');await screenshot('admin-verification');
   });
@@ -112,14 +123,18 @@ try {
   });
   await check('CM inspects the current round and explicitly approves satisfactory works',async()=>{
     await login('cm');await openEstateJob();await openWork();
-    await click({root:'#work-shell',summary:'Inspection',text:'Confirm — Approve Works'});assert.equal((await f.db.query('SELECT count(*)::integer AS count FROM inspections WHERE job_id=$1',[jobId]))[0].count,0,'Unchecked inspection was accepted');
+    await mark({root:'#work-shell',summary:'Inspection',label:'I reviewed the agreed scope and approved variations.'});
+    await click({root:'#work-shell details:has(.qf-wizard[data-flow*="inspection-"]) .qf-step-actions',text:'Continue'});
+    assert.equal(await evaluate(()=>document.querySelector('#work-shell .qf-wizard[data-flow*="inspection-"] .qf-steps [aria-current=step]').textContent.trim()),'1Review');
+    assert.equal((await f.db.query('SELECT count(*)::integer AS count FROM inspections WHERE job_id=$1',[jobId]))[0].count,0,'Unchecked inspection was accepted');
     for(const label of ['I reviewed the agreed scope and approved variations.','I reviewed completion and visible issues.','I reviewed available evidence (photos are optional).','I reviewed the invoice and charges.','I agree the works are Complete and Satisfactory'])await fill({root:'#work-shell',summary:'Inspection',label},true);
     await screenshot('cm-inspection');await click({root:'#work-shell',summary:'Inspection',text:'Confirm — Approve Works'});await wait(async()=>{const [row]=await f.db.query('SELECT accepted_round FROM completion_state WHERE job_id=$1',[jobId]);return row.accepted_round===1;},'Exact inspection approval was not recorded');
   });
   await check('MCST confirms the exact reconciled invoice and records external bank payment',async()=>{
     await login('mcst');await openEstateJob();await openWork();await fill({root:'#work-shell',label:'I confirm this exact reconciled invoice version and amount.'},true);await click({root:'#work-shell',text:'Confirm invoice'});
     await wait(async()=>{const [row]=await f.db.query('SELECT confirmed_version FROM completion_state WHERE job_id=$1',[jobId]);return row.confirmed_version===1;},'MCST invoice confirmation not recorded');
-    await upload('Completed-transfer proof','Attach / resume completed-transfer proof');await fill({root:'#work-shell',summary:'Payment Sent',label:'Transfer amount SGD'},'90.00');await fill({root:'#work-shell',summary:'Payment Sent',label:'Actual bank transfer date'},'2026-11-02');await fill({root:'#work-shell',summary:'Payment Sent',label:'This bank transfer has been completed.'},true);await keySlide('Payment Sent');
+    await wait(()=>evaluate(()=>[...document.querySelectorAll('#work-shell summary')].some(n=>n.textContent==='Payment Sent')),'Payment form did not render after invoice confirmation');
+    await fill({root:'#work-shell',summary:'Payment Sent',label:'Transfer amount SGD'},'90.00');await fill({root:'#work-shell',summary:'Payment Sent',label:'Actual bank transfer date'},'2026-11-02');await upload('Completed-transfer proof','Attach / resume completed-transfer proof');await fill({root:'#work-shell',summary:'Payment Sent',label:'This bank transfer has been completed.'},true);await keySlide('Payment Sent');
     await wait(async()=>{const [row]=await f.db.query('SELECT count(*)::integer AS count FROM payment_transfers WHERE job_id=$1',[jobId]);return row.count===1;},'Completed payment record not created');await screenshot('mcst-payment');
   });
   await check('Contractor confirms actual receipt and server closes fully settled work',async()=>{

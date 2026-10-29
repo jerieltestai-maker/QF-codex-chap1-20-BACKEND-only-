@@ -9,7 +9,7 @@ class Element {
   constructor(readonly tag:string,private text='') {}
   get textContent():string{return this.text+this.children.map(n=>n.textContent).join('');}
   set textContent(value:string){this.text=value;this.children=[];}
-  append(...items:Element[]){for(const item of items){item.parentElement=this;this.children.push(item);}}
+  append(...items:Element[]){for(const item of items){if(item.parentElement)item.parentElement.children=item.parentElement.children.filter(child=>child!==item);item.parentElement=this;this.children.push(item);}}
   replaceChildren(...items:Element[]){this.children=[];this.append(...items);}
   setAttribute(){}
   addEventListener(name:string,callback:()=>unknown){const list=this.listeners.get(name)||[];list.push(callback);this.listeners.set(name,list);}
@@ -19,7 +19,7 @@ class Element {
 const source=await readFile('apps/web/payments.js','utf8')+'\n'+await readFile('apps/web/work.js','utf8');
 function storage(){const values=new Map<string,string>();return {getItem:(k:string)=>values.get(k)||null,setItem:(k:string,v:string)=>{values.set(k,v);},removeItem:(k:string)=>{values.delete(k);},values};}
 const flush=async()=>{for(let i=0;i<4;i++)await new Promise<void>(r=>setImmediate(r));};
-async function forms(role:string,finance:Data,shared=storage(),user='fictional-user',workOverrides:Data={}) {
+async function forms(role:string,finance:Data,shared=storage(),user='fictional-user',workOverrides:Data={},flowEnabled=false) {
   const main=new Element('main'),events=new Map<string,Array<(e:Data)=>unknown>>(),requests:Data[]=[],attachments=new Map<string,Data>();
   const doc={activeElement:null as Element|null,querySelector:()=>main,createElement:(tag:string)=>new Element(tag),createTextNode:(s:string)=>new Element('text',s),addEventListener:(name:string,cb:(e:Data)=>unknown)=>{const list=events.get(name)||[];list.push(cb);events.set(name,list);}};
   const context={user:{id:user},context:{id:role+'-membership',role}},version=finance.version||10;
@@ -27,7 +27,9 @@ async function forms(role:string,finance:Data,shared=storage(),user='fictional-u
   const details={jobId:'job',version,completion:null,rounds:[],invoices:[],confirmations:[],transfers:[],balanceIssues:[],events:[],balances:{payableCents:'10000',sentCents:'0',receivedCents:'0',disputedCents:'0',unsentCents:'10000',outstandingCents:'10000'},...finance};
   const qf={context,api:async(path:string)=>path==='contractor/jobs'?[{jobId:'job',rfq:{publicDescription:'Fictional selected job'},selection:{status:'authorised'}}]:path.endsWith('/completion')?structuredClone(details):structuredClone(work),submit:async(path:string,body:unknown,v:number)=>{requests.push({path,body,version:v});return {version:v+1};},loadJob:async()=>{},refreshLists:async()=>{}};
   const upload={get:async(_id:string,purpose:string,slot:string)=>attachments.get(slot)||(purpose==='evidence'?undefined:{state:'ready',objects:[{id:purpose+'-ready',variant:'original'}]}),resume:async(_id:string,purpose:string,slot:string)=>upload.get(_id,purpose,slot),queue:async(_id:string,purpose:string,slot:string)=>{const row={state:'ready',objects:[{id:purpose+'-selected',variant:'original'}]};attachments.set(slot,row);return row;},remove:async(_id:string,_p:string,slot:string)=>{attachments.delete(slot);},remember:async()=>{}};
-  const window={qfWorkspace:qf,qfWorkUploads:{create:()=>upload},addEventListener:()=>{}};
+  const flowCalls:Array<{kind:string;parent:Element;config:Data}>=[];
+  const flow={wizard:(parent:Element,config:Data)=>{flowCalls.push({kind:'wizard',parent,config});},tabs:(parent:Element,config:Data)=>{flowCalls.push({kind:'tabs',parent,config});for(const item of config.items)parent.append(item.element);}};
+  const window={qfWorkspace:qf,qfWorkUploads:{create:()=>upload},addEventListener:()=>{},...(flowEnabled?{qfFlow:flow}:{})};
   class Option extends Element{constructor(text:string,value:string){super('option',text);this.value=value;}}
   runInNewContext(source,{window,document:doc,navigator:{onLine:true},localStorage:shared,sessionStorage:storage(),Option,crypto:{},console});
   async function event(name:string,data:Data={}){for(const cb of events.get(name)||[])await cb(data);await flush();}
@@ -39,7 +41,7 @@ async function forms(role:string,finance:Data,shared=storage(),user='fictional-u
   async function check(label:string){const input=field(label);input.checked=true;await input.fire('input');}
   async function slide(label:string){const input=field(label+' — slide to confirm');input.value='100';doc.activeElement=input;await input.fire('change');await flush();}
   await event('qf:context');if(role==='contractor')await click('Fictional selected job');else await event('qf:job',{detail:{job:{id:'job'}}});
-  return {all,field,click,value,check,slide,requests,storage:shared,context,event,main};
+  return {all,field,click,value,check,slide,requests,storage:shared,context,event,main,flowCalls};
 }
 test('CH11-T02: actual completion form has optional evidence; upload readiness alone sends nothing and unchecked declaration cannot slide-submit',async()=>{
   const f=await forms('contractor',{});
@@ -114,4 +116,42 @@ test('A pending exact-version variation removes completion submit until its term
   assert.equal(f.all().some(n=>n.tag==='summary'&&n.textContent==='Work is complete'),false);assert.ok(f.main.textContent.includes('Resolve the pending variation before declaring completion'));
   await f.click('Confirm change of terms');assert.equal(f.requests.length,0);await f.check('I reviewed this exact proposal version.');await f.click('Confirm change of terms');
   assert.equal(f.requests.length,1);const request=f.requests[0];assert.ok(request);assert.equal(request.body.proposalVersion,1);
+});
+
+
+test('Work forms compose chronological steps and keep completion declarations only at the final action',async()=>{
+  const f=await forms('contractor',{},storage(),'fictional-user',{},true);
+  const wizard=f.flowCalls.find(call=>call.config.id.endsWith(':completion'));
+  assert.ok(wizard);assert.deepEqual(Array.from(wizard.config.steps,(step:Data)=>step.title),['Invoice','Completion','Confirm']);
+  const allFields=wizard.config.steps.flatMap((step:Data)=>Array.from(step.fields));
+  assert.equal(new Set(allFields).size,allFields.length,'A control cannot appear in multiple steps');
+  assert.ok(wizard.config.steps[0].fields.some((field:Element)=>field.textContent==='Invoice'));
+  assert.ok(wizard.config.steps[1].fields.some((field:Element)=>field.textContent.includes('Actual physical completion')));
+  assert.ok(wizard.config.steps[2].fields.some((field:Element)=>field.textContent.includes('This completion declaration cannot be undone')));
+  assert.ok(wizard.config.steps[2].fields.some((field:Element)=>field.textContent==='Confirm — Submit completion and invoice together'));
+  const tabs=f.flowCalls.find(call=>call.kind==='tabs');assert.ok(tabs);
+  assert.deepEqual(Array.from(tabs.config.items,(item:Data)=>item.title),['Work','Inspection','History']);assert.equal(tabs.config.initial,0);
+  assert.equal(f.requests.length,0);
+});
+
+test('Inspection review precedes outcome while Payment Sent separates completed-transfer facts, proof and consent',async()=>{
+  const c={round:1,scope:'Agreed valve repair',invoice_version:1,confirmed_version:null,accepted_round:null,amount_cents:'10000'};
+  const inspect=await forms('cm',{completion:c,rounds:[{round:1,outcome:null}]},storage(),'fictional-user',{},true);
+  const inspection=inspect.flowCalls.find(call=>call.config.id.endsWith(':inspection-1'));assert.ok(inspection);
+  assert.deepEqual(Array.from(inspection.config.steps,(step:Data)=>step.title),['Review','Outcome']);
+  assert.equal(inspection.config.steps[0].fields.length,4);
+  assert.ok(inspection.config.steps[1].fields.some((field:Element)=>field.textContent==='Unsatisfactory work'));
+  assert.equal(inspect.flowCalls.find(call=>call.kind==='tabs')?.config.initial,1);
+  const payment=await forms('mcst',{completion:{...c,confirmed_version:1,accepted_round:1}},storage(),'fictional-user',{},true);
+  const transfer=payment.flowCalls.find(call=>call.config.id.endsWith(':transfer'));assert.ok(transfer);
+  assert.deepEqual(Array.from(transfer.config.steps,(step:Data)=>step.title),['Transfer','Proof','Confirm']);
+  assert.ok(transfer.config.steps[0].fields.some((field:Element)=>field.textContent==='Transfer amount SGD'));
+  assert.ok(transfer.config.steps[1].fields.some((field:Element)=>field.textContent==='Completed-transfer proof'));
+  assert.ok(transfer.config.steps[2].fields.some((field:Element)=>field.textContent==='This bank transfer has been completed.'));
+  assert.ok(transfer.config.steps[2].fields.some((field:Element)=>field.textContent==='Confirm — Payment Sent'));
+  const fields=transfer.config.steps.flatMap((step:Data)=>Array.from(step.fields));assert.equal(new Set(fields).size,fields.length);
+  assert.equal(payment.flowCalls.find(call=>call.kind==='tabs')?.config.initial,2);
+  await payment.value('Transfer amount SGD','40.00');await payment.value('Actual bank transfer date','2026-11-19');
+  assert.ok(transfer.config.steps[2].fields[0].textContent.includes('SGD 40.00'));
+  assert.equal(payment.requests.length,0);
 });
