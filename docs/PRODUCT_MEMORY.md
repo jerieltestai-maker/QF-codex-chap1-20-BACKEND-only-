@@ -1,5 +1,13 @@
 # QuoteFix working product memory
 
+## Owner-authorised demo data — 30 October 2026
+
+The owner requests populated demo data in Docker Desktop's **qfwebapp**, retaining ASTRA as lead with GPT-6.1 SOL delegation and direct execution. The verified target is this workspace's local PostgreSQL container on port 5432 and the prototype shown at http://127.0.0.1:3000. The unrelated projects on ports 5433/5434 are outside scope.
+
+Nine clearly `[Demo]` repairs now cover private draft, three-offer comparison, MCST approval, agreed future Start, ongoing work/support, inspection, transfer recording, receipt and Closed. Two additional fictional contractors join the existing accounts. Sample invoices/proofs are explicitly fictional and passed the real scanner. Missing Alpha settings were initialized through audited Admin commands solely for the demonstration: SGD 3,000 approval threshold, fictional plumbing prerequisites and 20/30/20 percent integrity thresholds with three quotes. These are sample local configuration, not new product policy.
+
+The backup was restored and fingerprint-verified before seeding. All 96 recorded seed operations are reconciled; reruns preserve seeded business rows and subsequent manual walkthrough changes. Original six account identities/passwords and `.env` remained unchanged, as did all 15 migration files. Preserve ignored `work/demo-seed/manifest-v1.json` for safe reruns. [Demo walkthrough and verification](implementation/DEMO_DATA.md) records scenarios, tooling, ASTRA review and scope limits.
+
 ## Guided frontend redesign — 29 October 2026
 
 The owner rejected the earlier desktop visual design and requests a full frontend based on `QuoteFix-Design-System.zip`, with lower cognitive load, shorter copy, sequential setup/task subpages, accordions and dropdowns. The owner explicitly confirms **http://127.0.0.1:3000 is the live target**; this task does not require a new cloud deployment. Existing API permissions, consequential confirmations, SQL migrations and operational data remain authoritative.

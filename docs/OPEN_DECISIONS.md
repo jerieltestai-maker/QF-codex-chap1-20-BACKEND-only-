@@ -1,5 +1,9 @@
 # QuoteFix decisions and remaining questions
 
+## Owner-authorised demo data — 30 October 2026
+
+The owner authorizes additive fictional lifecycle data in Docker project **qfwebapp** for the local desktop app, with ASTRA-led design/review and GPT-6.1 SOL implementation. This permits sample absent-only local procurement/trade/integrity setup and simulated financial records clearly labelled `[Demo]`; it does not establish real contractor verification, bank transactions or production policy. [Execution record](implementation/DEMO_DATA.md) documents the actual dataset and preserved original accounts/configuration. G02/G04/G14/G15, specialist/fault rules, native-device and release gates remain unchanged.
+
 ## Guided frontend redesign — 29 October 2026
 
 The owner explicitly authorizes an ASTRA-led refactor, GPT-6.1 SOL implementation agents, upstream Impeccable installation, and direct application of Clarify/Distill. This resolves the requested review/execution method; it changes no open domain-policy decision. See [copy review](design/COPY_REFACTOR_2026_10_29.md).

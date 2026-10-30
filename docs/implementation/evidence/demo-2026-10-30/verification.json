@@ -1,0 +1,64 @@
+{
+  "at": "2026-10-30T06:12:21.813Z",
+  "businessRecordsUnchangedOnRerun": true,
+  "originalAccountsPreserved": 6,
+  "configurationPreserved": true,
+  "totalAccounts": 8,
+  "completedScenarios": 9,
+  "recordedOperations": 96,
+  "pendingOperations": [],
+  "counts": {
+    "job_records": 9,
+    "quotes": 10,
+    "work_state": 6,
+    "payment_transfers": 2,
+    "contractor_selections": 7,
+    "completion_state": 4,
+    "completion_rounds": 4,
+    "support_cases": 1
+  },
+  "uploads": [
+    {
+      "state": "ready",
+      "count": 6
+    }
+  ],
+  "jobs": [
+    {
+      "title": "[Demo] Bin centre pipe",
+      "stage": "CM's Inspecting of work"
+    },
+    {
+      "title": "[Demo] Car park drain",
+      "stage": "Requesting for quotes"
+    },
+    {
+      "title": "[Demo] Clubhouse tap",
+      "stage": "Confirming payment"
+    },
+    {
+      "title": "[Demo] Completed garden tap repair",
+      "stage": "Closed"
+    },
+    {
+      "title": "[Demo] Corridor pipe leak",
+      "stage": "Carrying out work"
+    },
+    {
+      "title": "[Demo] Lobby washroom tap",
+      "stage": "Report an issue"
+    },
+    {
+      "title": "[Demo] Pool shower valve",
+      "stage": "Arranging payment"
+    },
+    {
+      "title": "[Demo] Pump-room valve",
+      "stage": "MCST Reviewing selected Contractor"
+    },
+    {
+      "title": "[Demo] Service-room tap",
+      "stage": "Starting work"
+    }
+  ]
+}
